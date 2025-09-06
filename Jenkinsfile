@@ -982,11 +982,6 @@ print('✅ No secrets detected')
             }
             
             post {
-                '''
-                }
-            }
-            
-            post {
                 success {
                     echo '✅ Staging deployment successful'
                     // Send notification
@@ -1316,7 +1311,6 @@ print('✅ No secrets detected')
                 }
             }
         }
-    }
 
     post {
         always {
