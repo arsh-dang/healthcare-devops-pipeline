@@ -23,7 +23,7 @@
 ### 3. SonarQube Credentials (ID: `sonarqube-token`)
 - Kind: Username with password
 - Username: admin
-- Password: admin
+- Password: Password@123
 - ID: `sonarqube-token`
 - Description: SonarQube Authentication
 
