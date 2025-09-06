@@ -1289,7 +1289,6 @@ print('✅ No secrets detected')
                         git push origin "v${BUILD_NUMBER}" || true
                     '''
                 }
-            }
             
             post {
                 success {
