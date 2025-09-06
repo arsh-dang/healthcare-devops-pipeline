@@ -35,7 +35,7 @@
     "start": "PORT=3000 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "test:ci": "CI=true react-scripts test --coverage --watchAll=false --testPathPattern='src/.*\\.test\\.(js|jsx)$' --collectCoverageFrom='src/**/*.{js,jsx}'",
+    "test:ci": "CI=true react-scripts test --coverage --watchAll=false --collectCoverageFrom='src/**/*.{js,jsx}' --collectCoverageFrom='!src/index.js'",
     "test:integration": "node test-integration.js",
     "test:e2e": "cd server && npm run test:e2e",
     "test:performance": "cd server && npm run test:performance",
@@ -113,12 +113,6 @@
     "testMatch": [
       "<rootDir>/src/**/__tests__/**/*.{js,jsx}",
       "<rootDir>/src/**/*.{test,spec}.{js,jsx}"
-    ],
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/node_modules_cache/",
-      "/build/",
-      "/server/"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!(autocannon|hdr-histogram-js|@assemblyscript/loader|date-fns)/)"
