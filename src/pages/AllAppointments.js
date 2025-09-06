@@ -30,6 +30,7 @@ function AllAppointmentsPage() {
         setIsLoading(false);
       })
       .catch((error) => {
+        // eslint-disable-next-line no-console
         console.error("Error fetching appointments:", error);
         setError(error.message);
         setIsLoading(false);

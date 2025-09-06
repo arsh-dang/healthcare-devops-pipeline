@@ -54,6 +54,7 @@ function AppointmentItem(props) {
         }
       })
       .catch(error => {
+        // eslint-disable-next-line no-console
         console.error("Error deleting appointment:", error);
         alert("Failed to delete appointment. Please try again.");
       })

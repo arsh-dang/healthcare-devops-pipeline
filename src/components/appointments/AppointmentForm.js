@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import PropTypes from 'prop-types';
 
 import Card from "../ui/Card";
 import classes from "./AppointmentForm.module.css";
@@ -136,5 +137,10 @@ function AppointmentForm(props) {
     </Card>
   );
 }
+
+AppointmentForm.propTypes = {
+  onAddAppointment: PropTypes.func.isRequired,
+  disabled: PropTypes.bool
+};
 
 export default AppointmentForm;

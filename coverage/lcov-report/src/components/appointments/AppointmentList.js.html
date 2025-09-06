@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -106,20 +106,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -143,21 +143,21 @@
 import AppointmentItem from "./AppointmentItem";
 import classes from "./AppointmentList.module.css";
 &nbsp;
-function <span class="fstat-no" title="function not covered" >AppointmentList(</span>props) {
-  const appointments = <span class="cstat-no" title="statement not covered" >props.appointments || [];</span>
+function AppointmentList(props) {
+  const appointments = props.appointments || [];
   
-<span class="cstat-no" title="statement not covered" >  if (appointments.length === 0) {</span>
-<span class="cstat-no" title="statement not covered" >    return (</span>
+  if (appointments.length === 0) {
+    return (
       &lt;div className={classes.empty}&gt;
         &lt;p&gt;No appointments found.&lt;/p&gt;
       &lt;/div&gt;
     );
   }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;ul className={classes.list}&gt;
-      {appointments.map(<span class="fstat-no" title="function not covered" >(a</span>ppointment) =&gt; (
-<span class="cstat-no" title="statement not covered" >        &lt;AppointmentItem</span>
+      {appointments.map((appointment) =&gt; (
+        &lt;AppointmentItem
           key={appointment.id}
           id={appointment.id}
           image={appointment.image}
@@ -168,7 +168,7 @@ function <span class="fstat-no" title="function not covered" >AppointmentList(</
           doctorSpecialty={appointment.doctorSpecialty}
           clinicName={appointment.clinicName}
           dateTime={appointment.dateTime}
-          onDelete={props.onDeleteAppointment || (<span class="fstat-no" title="function not covered" >()</span> =&gt; {})}
+          onDelete={props.onDeleteAppointment || (() =&gt; {})}
           data-testid={`appointment-item-${appointment.id}`}
         /&gt;
       ))}
@@ -184,7 +184,7 @@ export default AppointmentList;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-06T16:30:45.873Z
+                at 2025-09-06T16:35:03.794Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

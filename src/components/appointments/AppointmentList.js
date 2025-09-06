@@ -1,5 +1,5 @@
-import React from "react";
 import AppointmentItem from "./AppointmentItem";
+import PropTypes from 'prop-types';
 import classes from "./AppointmentList.module.css";
 
 function AppointmentList(props) {
@@ -34,5 +34,10 @@ function AppointmentList(props) {
     </ul>
   );
 }
+
+AppointmentList.propTypes = {
+  appointments: PropTypes.array.isRequired,
+  onDeleteAppointment: PropTypes.func
+};
 
 export default AppointmentList;

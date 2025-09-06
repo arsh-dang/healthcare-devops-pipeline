@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createContext } from "react";
+import PropTypes from 'prop-types';
 
 const SavedAppointmentsContext = createContext({
     savedAppointments: [],
@@ -49,5 +50,9 @@ export function SavedAppointmentsProvider(props) {
         </SavedAppointmentsContext.Provider>
     );
 }
+
+SavedAppointmentsProvider.propTypes = {
+    children: PropTypes.node.isRequired
+};
 
 export default SavedAppointmentsContext;
