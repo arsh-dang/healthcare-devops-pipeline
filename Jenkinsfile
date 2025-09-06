@@ -181,7 +181,7 @@ pipeline {
                             sh '''
                                 export CI=true
                                 export GENERATE_SOURCEMAP=false
-                                pnpm test -- --coverage --watchAll=false --testResultsProcessor=jest-sonar-reporter --coverageReporters=text,lcov,cobertura,html
+                                pnpm test:ci
                             '''
                             
                             // Run backend unit tests

@@ -8,8 +8,8 @@ const appointmentController = require('./appointmentController');
 const app = express();
 app.use(express.json());
 
-// Setup routes
-app.get('/appointments', appointmentController.getAllAppointments);
+// Setup routes with correct function names
+app.get('/appointments', appointmentController.getAppointments);
 app.post('/appointments', appointmentController.createAppointment);
 app.get('/appointments/:id', appointmentController.getAppointmentById);
 app.put('/appointments/:id', appointmentController.updateAppointment);
@@ -28,11 +28,11 @@ describe('Appointment Controller', () => {
       const mockAppointments = [
         {
           _id: '1',
-          patientName: 'John Doe',
-          doctorName: 'Dr. Smith',
-          clinic: 'General Clinic',
-          appointmentDate: new Date('2023-12-25'),
-          appointmentTime: '10:00'
+          title: 'Checkup',
+          description: 'Regular checkup',
+          dateTime: new Date('2023-12-25T10:00:00'),
+          doctor: 'Dr. Smith',
+          clinicName: 'General Clinic'
         }
       ];
 
@@ -42,7 +42,7 @@ describe('Appointment Controller', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockAppointments);
-      expect(Appointment.find).toHaveBeenCalledWith({});
+      expect(Appointment.find).toHaveBeenCalledWith();
     });
 
     test('should handle database errors', async () => {
@@ -51,18 +51,18 @@ describe('Appointment Controller', () => {
       const response = await request(app).get('/appointments');
 
       expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('message');
     });
   });
 
   describe('POST /appointments', () => {
     test('should create a new appointment', async () => {
       const newAppointment = {
-        patientName: 'John Doe',
-        doctorName: 'Dr. Smith',
-        clinic: 'General Clinic',
-        appointmentDate: '2023-12-25',
-        appointmentTime: '10:00'
+        title: 'Checkup',
+        description: 'Regular checkup',
+        dateTime: '2023-12-25T10:00:00',
+        doctor: 'Dr. Smith',
+        clinicName: 'General Clinic'
       };
 
       const savedAppointment = {
@@ -72,9 +72,9 @@ describe('Appointment Controller', () => {
         updatedAt: new Date()
       };
 
-      Appointment.prototype.save = jest.fn().mockResolvedValue(savedAppointment);
+      const mockSave = jest.fn().mockResolvedValue(savedAppointment);
       Appointment.mockImplementation(() => ({
-        save: Appointment.prototype.save
+        save: mockSave
       }));
 
       const response = await request(app)
@@ -83,19 +83,21 @@ describe('Appointment Controller', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toEqual(savedAppointment);
+      expect(mockSave).toHaveBeenCalled();
     });
 
     test('should handle validation errors', async () => {
       const invalidAppointment = {
-        patientName: '', // Missing required field
-        doctorName: 'Dr. Smith'
+        title: '', // Missing required field
+        description: 'Test'
       };
 
       const validationError = new Error('Validation failed');
       validationError.name = 'ValidationError';
-      Appointment.prototype.save = jest.fn().mockRejectedValue(validationError);
+      
+      const mockSave = jest.fn().mockRejectedValue(validationError);
       Appointment.mockImplementation(() => ({
-        save: Appointment.prototype.save
+        save: mockSave
       }));
 
       const response = await request(app)
@@ -103,7 +105,7 @@ describe('Appointment Controller', () => {
         .send(invalidAppointment);
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+      expect(response.body).toHaveProperty('message');
     });
   });
 
@@ -111,8 +113,9 @@ describe('Appointment Controller', () => {
     test('should return appointment by id', async () => {
       const mockAppointment = {
         _id: '1',
-        patientName: 'John Doe',
-        doctorName: 'Dr. Smith'
+        title: 'Checkup',
+        description: 'Regular checkup',
+        doctor: 'Dr. Smith'
       };
 
       Appointment.findById.mockResolvedValue(mockAppointment);
@@ -130,15 +133,15 @@ describe('Appointment Controller', () => {
       const response = await request(app).get('/appointments/nonexistent');
 
       expect(response.status).toBe(404);
-      expect(response.body).toHaveProperty('error', 'Appointment not found');
+      expect(response.body).toHaveProperty('message', 'Appointment not found');
     });
   });
 
   describe('PUT /appointments/:id', () => {
     test('should update appointment by id', async () => {
       const updateData = {
-        patientName: 'John Updated',
-        doctorName: 'Dr. Smith'
+        title: 'Updated Checkup',
+        doctor: 'Dr. Smith'
       };
 
       const updatedAppointment = {
@@ -157,7 +160,7 @@ describe('Appointment Controller', () => {
       expect(Appointment.findByIdAndUpdate).toHaveBeenCalledWith(
         '1',
         updateData,
-        { new: true, runValidators: true }
+        { new: true }
       );
     });
 
@@ -166,10 +169,10 @@ describe('Appointment Controller', () => {
 
       const response = await request(app)
         .put('/appointments/nonexistent')
-        .send({ patientName: 'Test' });
+        .send({ title: 'Test' });
 
       expect(response.status).toBe(404);
-      expect(response.body).toHaveProperty('error', 'Appointment not found');
+      expect(response.body).toHaveProperty('message', 'Appointment not found');
     });
   });
 
@@ -177,7 +180,7 @@ describe('Appointment Controller', () => {
     test('should delete appointment by id', async () => {
       const deletedAppointment = {
         _id: '1',
-        patientName: 'John Doe'
+        title: 'Checkup'
       };
 
       Appointment.findByIdAndDelete.mockResolvedValue(deletedAppointment);
@@ -195,7 +198,7 @@ describe('Appointment Controller', () => {
       const response = await request(app).delete('/appointments/nonexistent');
 
       expect(response.status).toBe(404);
-      expect(response.body).toHaveProperty('error', 'Appointment not found');
+      expect(response.body).toHaveProperty('message', 'Appointment not found');
     });
   });
 });

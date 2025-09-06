@@ -74,7 +74,7 @@ function AppointmentItem(props) {
     }) : '';
 
   return (
-    <li className={classes.item}>
+    <li className={classes.item} data-testid={`appointment-item-${props.id}`}>
       <Card>
         <div className={classes.image}>
           <img src={props.image} alt={props.clinicName || props.title} />

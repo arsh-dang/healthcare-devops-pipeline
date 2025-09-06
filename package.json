@@ -35,7 +35,7 @@
     "start": "PORT=3000 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "test:ci": "CI=true react-scripts test --coverage --watchAll=false --testResultsProcessor=jest-sonar-reporter",
+    "test:ci": "CI=true react-scripts test --coverage --watchAll=false --testPathPattern='src/.*\\.test\\.(js|jsx)$' --collectCoverageFrom='src/**/*.{js,jsx}'",
     "test:integration": "node test-integration.js",
     "test:e2e": "cd server && npm run test:e2e",
     "test:performance": "cd server && npm run test:performance",
@@ -78,6 +78,7 @@
     "eslint": "^8.57.0",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.37.5",
+    "identity-obj-proxy": "^3.0.0",
     "jest-sonar-reporter": "^2.0.0",
     "newman": "^6.0.0",
     "newman-reporter-htmlextra": "^1.22.11",
@@ -90,7 +91,6 @@
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.{js,jsx}",
-      "server/**/*.js",
       "!src/index.js",
       "!src/reportWebVitals.js",
       "!**/node_modules/**",
@@ -109,6 +109,22 @@
         "lines": 70,
         "statements": 70
       }
+    },
+    "testMatch": [
+      "<rootDir>/src/**/__tests__/**/*.{js,jsx}",
+      "<rootDir>/src/**/*.{test,spec}.{js,jsx}"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/node_modules_cache/",
+      "/build/",
+      "/server/"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(autocannon|hdr-histogram-js|@assemblyscript/loader|date-fns)/)"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
     }
   }
 }

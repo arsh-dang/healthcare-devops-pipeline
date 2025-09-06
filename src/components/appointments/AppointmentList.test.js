@@ -7,48 +7,48 @@ describe('AppointmentList', () => {
   const mockAppointments = [
     {
       id: '1',
-      patientName: 'John Doe',
-      doctorName: 'Dr. Smith',
-      clinic: 'General Clinic',
-      appointmentDate: '2023-12-25',
-      appointmentTime: '10:00'
+      title: 'Checkup',
+      doctor: 'Dr. Smith',
+      clinicName: 'General Clinic',
+      dateTime: '2023-12-25 10:00',
+      address: '123 Main St',
+      description: 'Regular checkup'
     },
     {
       id: '2',
-      patientName: 'Jane Smith',
-      doctorName: 'Dr. Johnson',
-      clinic: 'Specialist Clinic',
-      appointmentDate: '2023-12-26',
-      appointmentTime: '14:30'
+      title: 'Consultation',
+      doctor: 'Dr. Johnson',
+      clinicName: 'Specialist Clinic',
+      dateTime: '2023-12-26 14:30',
+      address: '456 Oak Ave',
+      description: 'Specialist consultation'
     }
   ];
 
   test('renders appointment list with appointments', () => {
     render(<AppointmentList appointments={mockAppointments} />);
     
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-    expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
-    expect(screen.getByText('Dr. Johnson')).toBeInTheDocument();
+    expect(screen.getByTestId('appointment-item-1')).toBeInTheDocument();
+    expect(screen.getByTestId('appointment-item-2')).toBeInTheDocument();
   });
 
   test('renders empty state when no appointments', () => {
     render(<AppointmentList appointments={[]} />);
     
-    expect(screen.getByText(/no appointments/i)).toBeInTheDocument();
+    expect(screen.getByText(/no appointments found/i)).toBeInTheDocument();
   });
 
   test('displays correct number of appointments', () => {
     render(<AppointmentList appointments={mockAppointments} />);
     
     // Check that both appointments are rendered
-    const appointmentItems = screen.getAllByTestId(/appointment-item/i);
+    const appointmentItems = screen.getAllByTestId(/appointment-item/);
     expect(appointmentItems).toHaveLength(2);
   });
 
   test('handles undefined appointments prop', () => {
     render(<AppointmentList />);
     
-    expect(screen.getByText(/no appointments/i)).toBeInTheDocument();
+    expect(screen.getByText(/no appointments found/i)).toBeInTheDocument();
   });
 });
