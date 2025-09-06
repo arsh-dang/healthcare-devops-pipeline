@@ -762,10 +762,10 @@ print('✅ No secrets detected')
                               curl -f "$(terraform output -raw grafana_url)/api/health" && echo "✅ Grafana is healthy" || echo "⚠️ Grafana connectivity failed"
                             
                             echo "✅ Infrastructure as Code deployment completed with monitoring stack"
-                        '''
+                            
+                            # Additional verification
                             terraform output
                             
-                            # Verify Kubernetes resources
                             echo "=== Verifying Kubernetes Resources ==="
                             kubectl get all -n $(terraform output -raw namespace) || echo "Resources verification failed"
                         '''
