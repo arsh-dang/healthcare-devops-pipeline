@@ -7,8 +7,8 @@ pipeline {
         DOCKER_REPO = 'yourusername/healthcare-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
         
-        // PATH Configuration for macOS
-        PATH = "${env.PATH}:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/opt/homebrew/bin"
+        // PATH Configuration for macOS and local tools
+        PATH = "${env.PATH}:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/opt/homebrew/bin:${WORKSPACE}/local-bin"
         
         // Application Configuration
         APP_NAME = 'healthcare-app'
@@ -506,18 +506,23 @@ except Exception as e:
                         script {
                             // Multi-tool container scanning
                             sh '''
+                                # Create local bin directory
+                                mkdir -p ./local-bin
+                                export PATH="$PWD/local-bin:$PATH"
+                                
                                 # Trivy scanning
                                 if ! command -v trivy &> /dev/null; then
-                                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+                                    echo "Installing Trivy to local directory..."
+                                    curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./local-bin
                                 fi
                                 
                                 # Scan frontend image
-                                trivy image --format json --output trivy-frontend-detailed.json ${FRONTEND_IMAGE} || true
-                                trivy image --format table ${FRONTEND_IMAGE} > trivy-frontend-summary.txt || true
+                                ./local-bin/trivy image --format json --output trivy-frontend-detailed.json ${FRONTEND_IMAGE} || true
+                                ./local-bin/trivy image --format table ${FRONTEND_IMAGE} > trivy-frontend-summary.txt || true
                                 
                                 # Scan backend image  
-                                trivy image --format json --output trivy-backend-detailed.json ${BACKEND_IMAGE} || true
-                                trivy image --format table ${BACKEND_IMAGE} > trivy-backend-summary.txt || true
+                                ./local-bin/trivy image --format json --output trivy-backend-detailed.json ${BACKEND_IMAGE} || true
+                                ./local-bin/trivy image --format table ${BACKEND_IMAGE} > trivy-backend-summary.txt || true
                                 
                                 # Grype scanning for additional validation
                                 if command -v grype &> /dev/null; then
@@ -575,13 +580,18 @@ print('✅ Container security scan passed')
                         
                         script {
                             sh '''
+                                # Create local bin directory if not exists
+                                mkdir -p ./local-bin
+                                export PATH="$PWD/local-bin:$PATH"
+                                
                                 # TruffleHog for secrets detection
                                 if ! command -v trufflehog &> /dev/null; then
-                                    curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+                                    echo "Installing TruffleHog to local directory..."
+                                    curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b ./local-bin
                                 fi
                                 
                                 # Scan filesystem for secrets
-                                trufflehog filesystem . --json > secrets-scan.json || true
+                                ./local-bin/trufflehog filesystem . --json > secrets-scan.json || true
                                 
                                 # GitLeaks for additional validation
                                 if command -v gitleaks &> /dev/null; then
