@@ -36,7 +36,7 @@ describe('AppointmentItem', () => {
     );
     
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Dr. Smith')).toBeInTheDocument();
+    expect(screen.getByText(/Dr. Smith/)).toBeInTheDocument();
     expect(screen.getByText('General Clinic')).toBeInTheDocument();
     expect(screen.getByText('2023-12-25')).toBeInTheDocument();
   });

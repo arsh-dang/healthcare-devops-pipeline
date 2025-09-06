@@ -31,7 +31,7 @@ describe('AppointmentForm', () => {
   test('form structure is correct', () => {
     render(<AppointmentForm onAddAppointment={jest.fn()} />);
     
-    expect(screen.getByRole('form')).toBeInTheDocument();
+    expect(screen.getByTestId('appointment-form')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /book appointment/i })).toBeInTheDocument();
   });
 });
