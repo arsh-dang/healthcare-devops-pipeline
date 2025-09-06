@@ -1,5 +1,5 @@
-# Advanced Infrastructure as Code with Terraform
-# Supports multiple cloud providers and environments
+# Healthcare DevOps Infrastructure as Code
+# Supports multiple environments with integrated monitoring
 
 terraform {
   required_version = ">= 1.0"
@@ -45,6 +45,18 @@ variable "replica_count" {
     frontend = 2
     backend  = 3
   }
+}
+
+variable "enable_monitoring" {
+  description = "Enable monitoring stack deployment"
+  type        = bool
+  default     = true
+}
+
+variable "monitoring_retention_days" {
+  description = "Prometheus data retention in days"
+  type        = number
+  default     = 15
 }
 
 variable "resource_limits" {
