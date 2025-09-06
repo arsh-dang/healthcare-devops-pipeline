@@ -330,14 +330,33 @@ pipeline {
                 script {
                     // SonarQube analysis with local SonarQube scanner
                     sh '''
-                        echo "Downloading SonarQube Scanner..."
+                        echo "Setting up SonarQube Scanner..."
                         if [ ! -d "sonar-scanner" ]; then
-                            wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-                            unzip -q sonar-scanner-cli-4.8.0.2856-linux.zip
-                            mv sonar-scanner-4.8.0.2856-linux sonar-scanner
+                            echo "Detecting OS and downloading appropriate SonarQube Scanner..."
+                            
+                            # Detect OS and set appropriate download URL
+                            if [[ "$OSTYPE" == "darwin"* ]]; then
+                                echo "macOS detected, downloading macOS version..."
+                                SCANNER_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip"
+                                SCANNER_DIR="sonar-scanner-4.8.0.2856-macosx"
+                            else
+                                echo "Linux detected, downloading Linux version..."
+                                SCANNER_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip"
+                                SCANNER_DIR="sonar-scanner-4.8.0.2856-linux"
+                            fi
+                            
+                            echo "Downloading from: $SCANNER_URL"
+                            curl -L -o sonar-scanner-cli.zip "$SCANNER_URL"
+                            unzip -q sonar-scanner-cli.zip
+                            mv "$SCANNER_DIR" sonar-scanner
+                            rm sonar-scanner-cli.zip
+                            chmod +x sonar-scanner/bin/sonar-scanner
+                            echo "SonarQube Scanner downloaded and configured"
+                        else
+                            echo "SonarQube Scanner already exists"
                         fi
                         
-                        echo "Running SonarQube analysis with properties file..."
+                        echo "Running SonarQube analysis..."
                         ./sonar-scanner/bin/sonar-scanner \
                           -Dsonar.host.url=${SONAR_HOST_URL} \
                           -Dsonar.login=${SONAR_TOKEN} \
