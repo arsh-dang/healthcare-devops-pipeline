@@ -697,8 +697,6 @@ print('✅ No secrets detected')
                         
                         // Apply infrastructure changes for staging (including monitoring)
                         sh '''
-                            // Apply infrastructure changes with conflict resolution
-                        sh '''
                             echo "Applying complete infrastructure changes for staging..."
                             
                             # First, try to clean up any existing conflicting resources
@@ -726,18 +724,19 @@ print('✅ No secrets detected')
                                 
                                 # Retry with simpler configuration (without persistent storage initially)
                                 echo "Retrying with basic configuration..."
-                                terraform plan 
-                                    -var="environment=staging" 
-                                    -var="namespace=healthcare" 
-                                    -var='replica_count={"frontend"=2,"backend"=3}' 
-                                    -var="enable_persistent_storage=false" 
-                                    -out=tfplan-staging-basic 
+                                terraform plan \
+                                    -var="environment=staging" \
+                                    -var="namespace=healthcare" \
+                                    -var='replica_count={"frontend"=2,"backend"=3}' \
+                                    -var="enable_persistent_storage=false" \
+                                    -out=tfplan-staging-basic \
                                     -detailed-exitcode || true
                                     
                                 terraform apply -auto-approve tfplan-staging-basic || echo "Basic infrastructure deployment completed with warnings"
                             }
                         '''
-                            
+                        
+                        sh '''
                             echo "Getting Terraform outputs..."
                             terraform output -json > terraform-outputs-staging.json
                             
