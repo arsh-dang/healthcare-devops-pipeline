@@ -1,581 +1,581 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="159" lines-covered="156" line-rate="0.9811" branches-valid="78" branches-covered="78" branch-rate="1" timestamp="1757175525497" complexity="0" version="0.1">
+<coverage lines-valid="159" lines-covered="1" line-rate="0.0062" branches-valid="78" branches-covered="0" branch-rate="0" timestamp="1757176245892" complexity="0" version="0.1">
   <sources>
     <source>/Users/arshdang/Documents/SIT223/7.3HD/healthcare-app</source>
   </sources>
   <packages>
-    <package name="src" line-rate="1" branch-rate="1">
+    <package name="src" line-rate="0" branch-rate="1">
       <classes>
-        <class name="App.js" filename="src/App.js" line-rate="1" branch-rate="1">
+        <class name="App.js" filename="src/App.js" line-rate="0" branch-rate="1">
           <methods>
-            <method name="App" hits="5" signature="()V">
+            <method name="App" hits="0" signature="()V">
               <lines>
-                <line number="8" hits="5"/>
+                <line number="8" hits="0"/>
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="9" hits="5" branch="false"/>
+            <line number="9" hits="0" branch="false"/>
           </lines>
         </class>
       </classes>
     </package>
-    <package name="src.components.appointments" line-rate="1" branch-rate="1">
+    <package name="src.components.appointments" line-rate="0" branch-rate="0">
       <classes>
-        <class name="AppointmentForm.js" filename="src/components/appointments/AppointmentForm.js" line-rate="1" branch-rate="1">
+        <class name="AppointmentForm.js" filename="src/components/appointments/AppointmentForm.js" line-rate="0" branch-rate="0">
           <methods>
-            <method name="AppointmentForm" hits="26" signature="()V">
+            <method name="AppointmentForm" hits="0" signature="()V">
               <lines>
-                <line number="7" hits="26"/>
+                <line number="7" hits="0"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="12" signature="()V">
+            <method name="(anonymous_1)" hits="0" signature="()V">
               <lines>
-                <line number="17" hits="12"/>
+                <line number="17" hits="0"/>
               </lines>
             </method>
-            <method name="submitHandler" hits="2" signature="()V">
+            <method name="submitHandler" hits="0" signature="()V">
               <lines>
-                <line number="24" hits="2"/>
+                <line number="24" hits="0"/>
               </lines>
             </method>
-            <method name="(anonymous_3)" hits="2" signature="()V">
+            <method name="(anonymous_3)" hits="0" signature="()V">
               <lines>
-                <line number="32" hits="2"/>
+                <line number="32" hits="0"/>
               </lines>
             </method>
-            <method name="(anonymous_4)" hits="2" signature="()V">
+            <method name="(anonymous_4)" hits="0" signature="()V">
               <lines>
-                <line number="33" hits="2"/>
+                <line number="33" hits="0"/>
               </lines>
             </method>
-            <method name="handleClinicChange" hits="4" signature="()V">
+            <method name="handleClinicChange" hits="0" signature="()V">
               <lines>
-                <line number="50" hits="4"/>
+                <line number="50" hits="0"/>
               </lines>
             </method>
-            <method name="handleDoctorChange" hits="1" signature="()V">
+            <method name="handleDoctorChange" hits="0" signature="()V">
               <lines>
-                <line number="54" hits="1"/>
+                <line number="54" hits="0"/>
               </lines>
             </method>
-            <method name="(anonymous_7)" hits="104" signature="()V">
+            <method name="(anonymous_7)" hits="0" signature="()V">
               <lines>
-                <line number="82" hits="104"/>
+                <line number="82" hits="0"/>
               </lines>
             </method>
-            <method name="(anonymous_8)" hits="29" signature="()V">
+            <method name="(anonymous_8)" hits="0" signature="()V">
               <lines>
-                <line number="99" hits="29"/>
+                <line number="99" hits="0"/>
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="8" hits="26" branch="false"/>
-            <line number="9" hits="26" branch="false"/>
-            <line number="10" hits="26" branch="false"/>
-            <line number="12" hits="26" branch="false"/>
-            <line number="13" hits="26" branch="false"/>
-            <line number="14" hits="26" branch="false"/>
-            <line number="17" hits="26" branch="false"/>
-            <line number="18" hits="12" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="19" hits="12" branch="true" condition-coverage="100% (4/4)"/>
-            <line number="20" hits="10" branch="false"/>
-            <line number="25" hits="2" branch="false"/>
-            <line number="27" hits="2" branch="false"/>
-            <line number="28" hits="2" branch="false"/>
-            <line number="29" hits="2" branch="false"/>
-            <line number="32" hits="2" branch="false"/>
-            <line number="33" hits="2" branch="false"/>
-            <line number="35" hits="2" branch="false"/>
-            <line number="47" hits="2" branch="false"/>
-            <line number="51" hits="4" branch="false"/>
-            <line number="55" hits="1" branch="false"/>
-            <line number="58" hits="26" branch="false"/>
-            <line number="83" hits="104" branch="false"/>
-            <line number="100" hits="29" branch="false"/>
-          </lines>
-        </class>
-        <class name="AppointmentItem.js" filename="src/components/appointments/AppointmentItem.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="AppointmentItem" hits="70" signature="()V">
-              <lines>
-                <line number="8" hits="70"/>
-              </lines>
-            </method>
-            <method name="toggleSaveStatusHandler" hits="6" signature="()V">
-              <lines>
-                <line number="14" hits="6"/>
-              </lines>
-            </method>
-            <method name="deleteAppointmentHandler" hits="17" signature="()V">
-              <lines>
-                <line number="32" hits="17"/>
-              </lines>
-            </method>
-            <method name="(anonymous_3)" hits="10" signature="()V">
-              <lines>
-                <line number="40" hits="10"/>
-              </lines>
-            </method>
-            <method name="(anonymous_4)" hits="8" signature="()V">
-              <lines>
-                <line number="46" hits="8"/>
-              </lines>
-            </method>
-            <method name="(anonymous_5)" hits="4" signature="()V">
-              <lines>
-                <line number="56" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_6)" hits="12" signature="()V">
-              <lines>
-                <line number="60" hits="12"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="9" hits="70" branch="false"/>
-            <line number="10" hits="70" branch="false"/>
-            <line number="12" hits="70" branch="false"/>
-            <line number="15" hits="6" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="16" hits="2" branch="false"/>
-            <line number="18" hits="4" branch="false"/>
-            <line number="33" hits="17" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="34" hits="14" branch="false"/>
-            <line number="37" hits="14" branch="false"/>
-            <line number="41" hits="10" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="42" hits="2" branch="false"/>
-            <line number="44" hits="8" branch="false"/>
-            <line number="48" hits="8" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="49" hits="2" branch="false"/>
-            <line number="52" hits="8" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="53" hits="4" branch="false"/>
-            <line number="57" hits="4" branch="false"/>
-            <line number="58" hits="4" branch="false"/>
-            <line number="61" hits="12" branch="false"/>
-            <line number="67" hits="70" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="77" hits="70" branch="false"/>
-            <line number="113" hits="2" branch="false"/>
-          </lines>
-        </class>
-        <class name="AppointmentList.js" filename="src/components/appointments/AppointmentList.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="AppointmentList" hits="6" signature="()V">
-              <lines>
-                <line number="5" hits="6"/>
-              </lines>
-            </method>
-            <method name="(anonymous_1)" hits="8" signature="()V">
-              <lines>
-                <line number="18" hits="8"/>
-              </lines>
-            </method>
-            <method name="(anonymous_2)" hits="1" signature="()V">
-              <lines>
-                <line number="30" hits="1"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="6" hits="6" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="8" hits="6" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="9" hits="2" branch="false"/>
-            <line number="16" hits="4" branch="false"/>
-            <line number="19" hits="8" branch="false"/>
-          </lines>
-        </class>
-      </classes>
-    </package>
-    <package name="src.components.layout" line-rate="1" branch-rate="1">
-      <classes>
-        <class name="Layout.js" filename="src/components/layout/Layout.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="Layout" hits="6" signature="()V">
-              <lines>
-                <line number="4" hits="6"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="5" hits="6" branch="false"/>
-          </lines>
-        </class>
-        <class name="MainNavigation.js" filename="src/components/layout/MainNavigation.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="MainNavigation" hits="25" signature="()V">
-              <lines>
-                <line number="8" hits="25"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="9" hits="25" branch="false"/>
-            <line number="11" hits="24" branch="false"/>
-          </lines>
-        </class>
-      </classes>
-    </package>
-    <package name="src.components.ui" line-rate="1" branch-rate="1">
-      <classes>
-        <class name="Card.js" filename="src/components/ui/Card.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="Card" hits="44" signature="()V">
-              <lines>
-                <line number="3" hits="44"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="4" hits="44" branch="false"/>
-          </lines>
-        </class>
-      </classes>
-    </package>
-    <package name="src.pages" line-rate="1" branch-rate="1">
-      <classes>
-        <class name="AllAppointments.js" filename="src/pages/AllAppointments.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="AllAppointmentsPage" hits="28" signature="()V">
-              <lines>
-                <line number="5" hits="28"/>
-              </lines>
-            </method>
-            <method name="(anonymous_1)" hits="15" signature="()V">
-              <lines>
-                <line number="10" hits="15"/>
-              </lines>
-            </method>
-            <method name="(anonymous_2)" hits="10" signature="()V">
-              <lines>
-                <line number="16" hits="10"/>
-              </lines>
-            </method>
-            <method name="(anonymous_3)" hits="9" signature="()V">
-              <lines>
-                <line number="22" hits="9"/>
-              </lines>
-            </method>
-            <method name="(anonymous_4)" hits="8" signature="()V">
-              <lines>
-                <line number="24" hits="8"/>
-              </lines>
-            </method>
-            <method name="(anonymous_5)" hits="4" signature="()V">
-              <lines>
-                <line number="32" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_6)" hits="14" signature="()V">
-              <lines>
-                <line number="39" hits="14"/>
-              </lines>
-            </method>
-            <method name="(anonymous_7)" hits="1" signature="()V">
-              <lines>
-                <line number="43" hits="1"/>
-              </lines>
-            </method>
-            <method name="(anonymous_8)" hits="1" signature="()V">
-              <lines>
-                <line number="45" hits="1"/>
-              </lines>
-            </method>
-            <method name="(anonymous_9)" hits="2" signature="()V">
-              <lines>
-                <line number="46" hits="2"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="6" hits="28" branch="false"/>
-            <line number="7" hits="28" branch="false"/>
-            <line number="8" hits="28" branch="false"/>
-            <line number="10" hits="28" branch="false"/>
-            <line number="11" hits="15" branch="false"/>
-            <line number="12" hits="15" branch="false"/>
-            <line number="15" hits="15" branch="false"/>
-            <line number="17" hits="10" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="18" hits="1" branch="false"/>
-            <line number="20" hits="9" branch="false"/>
-            <line number="24" hits="9" branch="false"/>
-            <line number="29" hits="9" branch="false"/>
-            <line number="30" hits="9" branch="false"/>
-            <line number="33" hits="4" branch="false"/>
-            <line number="34" hits="4" branch="false"/>
-            <line number="35" hits="4" branch="false"/>
-            <line number="39" hits="28" branch="false"/>
-            <line number="40" hits="14" branch="false"/>
-            <line number="43" hits="28" branch="false"/>
-            <line number="45" hits="1" branch="false"/>
-            <line number="46" hits="2" branch="false"/>
-            <line number="50" hits="28" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="51" hits="15" branch="false"/>
-            <line number="58" hits="13" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="59" hits="4" branch="false"/>
-            <line number="67" hits="9" branch="false"/>
-          </lines>
-        </class>
-        <class name="NewAppointment.js" filename="src/pages/NewAppointment.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="NewAppointmentPage" hits="40" signature="()V">
-              <lines>
-                <line number="5" hits="40"/>
-              </lines>
-            </method>
-            <method name="onAddAppointmentHandler" hits="13" signature="()V">
-              <lines>
-                <line number="10" hits="13"/>
-              </lines>
-            </method>
-            <method name="(anonymous_2)" hits="7" signature="()V">
-              <lines>
-                <line number="22" hits="7"/>
-              </lines>
-            </method>
-            <method name="(anonymous_3)" hits="5" signature="()V">
-              <lines>
-                <line number="29" hits="5"/>
-              </lines>
-            </method>
-            <method name="(anonymous_4)" hits="7" signature="()V">
-              <lines>
-                <line number="32" hits="7"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="6" hits="40" branch="false"/>
-            <line number="7" hits="40" branch="false"/>
-            <line number="8" hits="40" branch="false"/>
-            <line number="11" hits="13" branch="false"/>
-            <line number="12" hits="13" branch="false"/>
-            <line number="15" hits="13" branch="false"/>
-            <line number="23" hits="7" branch="false"/>
-            <line number="24" hits="7" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="25" hits="2" branch="false"/>
-            <line number="27" hits="5" branch="false"/>
-            <line number="30" hits="5" branch="false"/>
-            <line number="33" hits="7" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="34" hits="7" branch="false"/>
-            <line number="38" hits="40" branch="false"/>
-          </lines>
-        </class>
-        <class name="SavedAppointments.js" filename="src/pages/SavedAppointments.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="SavedAppointmentsPage" hits="9" signature="()V">
-              <lines>
-                <line number="5" hits="9"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="7" hits="9" branch="false"/>
-            <line number="11" hits="9" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="12" hits="4" branch="false"/>
-            <line number="14" hits="5" branch="false"/>
-            <line number="17" hits="9" branch="false"/>
-          </lines>
-        </class>
-      </classes>
-    </package>
-    <package name="src.store" line-rate="1" branch-rate="1">
-      <classes>
-        <class name="saved-appointments-context.js" filename="src/store/saved-appointments-context.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="(anonymous_0)" hits="1" signature="()V">
-              <lines>
-                <line number="7" hits="1"/>
-              </lines>
-            </method>
-            <method name="(anonymous_1)" hits="1" signature="()V">
-              <lines>
-                <line number="8" hits="1"/>
-              </lines>
-            </method>
-            <method name="(anonymous_2)" hits="2" signature="()V">
-              <lines>
-                <line number="9" hits="2"/>
-              </lines>
-            </method>
-            <method name="SavedAppointmentsProvider" hits="63" signature="()V">
-              <lines>
-                <line number="12" hits="63"/>
-              </lines>
-            </method>
-            <method name="saveAppointmentHandler" hits="12" signature="()V">
-              <lines>
-                <line number="16" hits="12"/>
-              </lines>
-            </method>
-            <method name="(anonymous_5)" hits="12" signature="()V">
-              <lines>
-                <line number="17" hits="12"/>
-              </lines>
-            </method>
-            <method name="(anonymous_6)" hits="3" signature="()V">
-              <lines>
-                <line number="19" hits="3"/>
-              </lines>
-            </method>
-            <method name="removeAppointmentHandler" hits="4" signature="()V">
-              <lines>
-                <line number="28" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_8)" hits="4" signature="()V">
-              <lines>
-                <line number="29" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_9)" hits="3" signature="()V">
-              <lines>
-                <line number="30" hits="3"/>
-              </lines>
-            </method>
-            <method name="isAppointmentSavedHandler" hits="50" signature="()V">
-              <lines>
-                <line number="34" hits="50"/>
-              </lines>
-            </method>
-            <method name="(anonymous_11)" hits="9" signature="()V">
-              <lines>
-                <line number="35" hits="9"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="4" hits="13" branch="false"/>
-            <line number="14" hits="63" branch="false"/>
-            <line number="17" hits="12" branch="false"/>
-            <line number="19" hits="12" branch="false"/>
-            <line number="20" hits="12" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="22" hits="2" branch="false"/>
-            <line number="24" hits="10" branch="false"/>
-            <line number="29" hits="4" branch="false"/>
-            <line number="30" hits="4" branch="false"/>
-            <line number="35" hits="50" branch="false"/>
-            <line number="38" hits="63" branch="false"/>
-            <line number="46" hits="63" branch="false"/>
-          </lines>
-        </class>
-      </classes>
-    </package>
-    <package name="src.utils" line-rate="0.9361" branch-rate="1">
-      <classes>
-        <class name="clinicData.js" filename="src/utils/clinicData.js" line-rate="1" branch-rate="1">
-          <methods>
-            <method name="(anonymous_0)" hits="4" signature="()V">
-              <lines>
-                <line number="44" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_1)" hits="9" signature="()V">
-              <lines>
-                <line number="45" hits="9"/>
-              </lines>
-            </method>
-            <method name="(anonymous_2)" hits="4" signature="()V">
-              <lines>
-                <line number="49" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_3)" hits="16" signature="()V">
-              <lines>
-                <line number="51" hits="16"/>
-              </lines>
-            </method>
-            <method name="(anonymous_4)" hits="5" signature="()V">
-              <lines>
-                <line number="58" hits="5"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="3" hits="1" branch="false"/>
-            <line number="28" hits="1" branch="false"/>
-            <line number="44" hits="1" branch="false"/>
-            <line number="45" hits="9" branch="false"/>
-            <line number="49" hits="1" branch="false"/>
-            <line number="50" hits="4" branch="false"/>
-            <line number="51" hits="16" branch="false"/>
-            <line number="52" hits="9" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="54" hits="2" branch="false"/>
-            <line number="58" hits="1" branch="false"/>
-            <line number="59" hits="5" branch="false"/>
-            <line number="60" hits="5" branch="false"/>
-            <line number="61" hits="15" branch="false"/>
-            <line number="63" hits="5" branch="false"/>
-          </lines>
-        </class>
-        <class name="helpers.js" filename="src/utils/helpers.js" line-rate="0.909" branch-rate="1">
-          <methods>
-            <method name="(anonymous_0)" hits="4" signature="()V">
-              <lines>
-                <line number="2" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_1)" hits="5" signature="()V">
-              <lines>
-                <line number="20" hits="5"/>
-              </lines>
-            </method>
-            <method name="(anonymous_2)" hits="4" signature="()V">
-              <lines>
-                <line number="39" hits="4"/>
-              </lines>
-            </method>
-            <method name="(anonymous_3)" hits="8" signature="()V">
-              <lines>
-                <line number="59" hits="8"/>
-              </lines>
-            </method>
-            <method name="(anonymous_4)" hits="9" signature="()V">
-              <lines>
-                <line number="66" hits="9"/>
-              </lines>
-            </method>
-            <method name="(anonymous_5)" hits="4" signature="()V">
-              <lines>
-                <line number="76" hits="4"/>
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="2" hits="1" branch="false"/>
-            <line number="3" hits="4" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="5" hits="2" branch="false"/>
-            <line number="6" hits="2" branch="false"/>
-            <line number="7" hits="2" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="9" hits="1" branch="false"/>
-            <line number="16" hits="0" branch="false"/>
-            <line number="20" hits="1" branch="false"/>
-            <line number="21" hits="5" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="23" hits="3" branch="false"/>
-            <line number="24" hits="3" branch="false"/>
-            <line number="25" hits="3" branch="false"/>
-            <line number="26" hits="3" branch="false"/>
-            <line number="28" hits="3" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="30" hits="2" branch="false"/>
+            <line number="8" hits="0" branch="false"/>
+            <line number="9" hits="0" branch="false"/>
+            <line number="10" hits="0" branch="false"/>
+            <line number="12" hits="0" branch="false"/>
+            <line number="13" hits="0" branch="false"/>
+            <line number="14" hits="0" branch="false"/>
+            <line number="17" hits="0" branch="false"/>
+            <line number="18" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="19" hits="0" branch="true" condition-coverage="0% (0/4)"/>
+            <line number="20" hits="0" branch="false"/>
+            <line number="25" hits="0" branch="false"/>
+            <line number="27" hits="0" branch="false"/>
+            <line number="28" hits="0" branch="false"/>
+            <line number="29" hits="0" branch="false"/>
+            <line number="32" hits="0" branch="false"/>
+            <line number="33" hits="0" branch="false"/>
             <line number="35" hits="0" branch="false"/>
-            <line number="39" hits="1" branch="false"/>
-            <line number="40" hits="4" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="42" hits="2" branch="false"/>
-            <line number="43" hits="2" branch="false"/>
-            <line number="44" hits="2" branch="true" condition-coverage="100% (2/2)"/>
-            <line number="46" hits="1" branch="false"/>
+            <line number="47" hits="0" branch="false"/>
+            <line number="51" hits="0" branch="false"/>
             <line number="55" hits="0" branch="false"/>
-            <line number="59" hits="1" branch="false"/>
-            <line number="60" hits="8" branch="true" condition-coverage="100% (4/4)"/>
-            <line number="62" hits="5" branch="false"/>
-            <line number="63" hits="5" branch="false"/>
-            <line number="66" hits="1" branch="false"/>
-            <line number="67" hits="9" branch="true" condition-coverage="100% (4/4)"/>
-            <line number="70" hits="6" branch="false"/>
-            <line number="73" hits="6" branch="false"/>
-            <line number="76" hits="1" branch="false"/>
-            <line number="77" hits="4" branch="false"/>
+            <line number="58" hits="0" branch="false"/>
+            <line number="83" hits="0" branch="false"/>
+            <line number="100" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="AppointmentItem.js" filename="src/components/appointments/AppointmentItem.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="AppointmentItem" hits="0" signature="()V">
+              <lines>
+                <line number="8" hits="0"/>
+              </lines>
+            </method>
+            <method name="toggleSaveStatusHandler" hits="0" signature="()V">
+              <lines>
+                <line number="14" hits="0"/>
+              </lines>
+            </method>
+            <method name="deleteAppointmentHandler" hits="0" signature="()V">
+              <lines>
+                <line number="32" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_3)" hits="0" signature="()V">
+              <lines>
+                <line number="40" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_4)" hits="0" signature="()V">
+              <lines>
+                <line number="46" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_5)" hits="0" signature="()V">
+              <lines>
+                <line number="56" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_6)" hits="0" signature="()V">
+              <lines>
+                <line number="60" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="9" hits="0" branch="false"/>
+            <line number="10" hits="0" branch="false"/>
+            <line number="12" hits="0" branch="false"/>
+            <line number="15" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="16" hits="0" branch="false"/>
+            <line number="18" hits="0" branch="false"/>
+            <line number="33" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="34" hits="0" branch="false"/>
+            <line number="37" hits="0" branch="false"/>
+            <line number="41" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="42" hits="0" branch="false"/>
+            <line number="44" hits="0" branch="false"/>
+            <line number="48" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="49" hits="0" branch="false"/>
+            <line number="52" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="53" hits="0" branch="false"/>
+            <line number="57" hits="0" branch="false"/>
+            <line number="58" hits="0" branch="false"/>
+            <line number="61" hits="0" branch="false"/>
+            <line number="67" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="77" hits="0" branch="false"/>
+            <line number="113" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="AppointmentList.js" filename="src/components/appointments/AppointmentList.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="AppointmentList" hits="0" signature="()V">
+              <lines>
+                <line number="5" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_1)" hits="0" signature="()V">
+              <lines>
+                <line number="18" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_2)" hits="0" signature="()V">
+              <lines>
+                <line number="30" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="6" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="8" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="9" hits="0" branch="false"/>
+            <line number="16" hits="0" branch="false"/>
+            <line number="19" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.components.layout" line-rate="0" branch-rate="1">
+      <classes>
+        <class name="Layout.js" filename="src/components/layout/Layout.js" line-rate="0" branch-rate="1">
+          <methods>
+            <method name="Layout" hits="0" signature="()V">
+              <lines>
+                <line number="4" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="5" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="MainNavigation.js" filename="src/components/layout/MainNavigation.js" line-rate="0" branch-rate="1">
+          <methods>
+            <method name="MainNavigation" hits="0" signature="()V">
+              <lines>
+                <line number="8" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="9" hits="0" branch="false"/>
+            <line number="11" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.components.ui" line-rate="0" branch-rate="1">
+      <classes>
+        <class name="Card.js" filename="src/components/ui/Card.js" line-rate="0" branch-rate="1">
+          <methods>
+            <method name="Card" hits="0" signature="()V">
+              <lines>
+                <line number="3" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="4" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.pages" line-rate="0" branch-rate="0">
+      <classes>
+        <class name="AllAppointments.js" filename="src/pages/AllAppointments.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="AllAppointmentsPage" hits="0" signature="()V">
+              <lines>
+                <line number="5" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_1)" hits="0" signature="()V">
+              <lines>
+                <line number="10" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_2)" hits="0" signature="()V">
+              <lines>
+                <line number="16" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_3)" hits="0" signature="()V">
+              <lines>
+                <line number="22" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_4)" hits="0" signature="()V">
+              <lines>
+                <line number="24" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_5)" hits="0" signature="()V">
+              <lines>
+                <line number="32" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_6)" hits="0" signature="()V">
+              <lines>
+                <line number="39" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_7)" hits="0" signature="()V">
+              <lines>
+                <line number="43" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_8)" hits="0" signature="()V">
+              <lines>
+                <line number="45" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_9)" hits="0" signature="()V">
+              <lines>
+                <line number="46" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="6" hits="0" branch="false"/>
+            <line number="7" hits="0" branch="false"/>
+            <line number="8" hits="0" branch="false"/>
+            <line number="10" hits="0" branch="false"/>
+            <line number="11" hits="0" branch="false"/>
+            <line number="12" hits="0" branch="false"/>
+            <line number="15" hits="0" branch="false"/>
+            <line number="17" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="18" hits="0" branch="false"/>
+            <line number="20" hits="0" branch="false"/>
+            <line number="24" hits="0" branch="false"/>
+            <line number="29" hits="0" branch="false"/>
+            <line number="30" hits="0" branch="false"/>
+            <line number="33" hits="0" branch="false"/>
+            <line number="34" hits="0" branch="false"/>
+            <line number="35" hits="0" branch="false"/>
+            <line number="39" hits="0" branch="false"/>
+            <line number="40" hits="0" branch="false"/>
+            <line number="43" hits="0" branch="false"/>
+            <line number="45" hits="0" branch="false"/>
+            <line number="46" hits="0" branch="false"/>
+            <line number="50" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="51" hits="0" branch="false"/>
+            <line number="58" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="59" hits="0" branch="false"/>
+            <line number="67" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="NewAppointment.js" filename="src/pages/NewAppointment.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="NewAppointmentPage" hits="0" signature="()V">
+              <lines>
+                <line number="5" hits="0"/>
+              </lines>
+            </method>
+            <method name="onAddAppointmentHandler" hits="0" signature="()V">
+              <lines>
+                <line number="10" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_2)" hits="0" signature="()V">
+              <lines>
+                <line number="22" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_3)" hits="0" signature="()V">
+              <lines>
+                <line number="29" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_4)" hits="0" signature="()V">
+              <lines>
+                <line number="32" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="6" hits="0" branch="false"/>
+            <line number="7" hits="0" branch="false"/>
+            <line number="8" hits="0" branch="false"/>
+            <line number="11" hits="0" branch="false"/>
+            <line number="12" hits="0" branch="false"/>
+            <line number="15" hits="0" branch="false"/>
+            <line number="23" hits="0" branch="false"/>
+            <line number="24" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="25" hits="0" branch="false"/>
+            <line number="27" hits="0" branch="false"/>
+            <line number="30" hits="0" branch="false"/>
+            <line number="33" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="34" hits="0" branch="false"/>
+            <line number="38" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="SavedAppointments.js" filename="src/pages/SavedAppointments.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="SavedAppointmentsPage" hits="0" signature="()V">
+              <lines>
+                <line number="5" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="7" hits="0" branch="false"/>
+            <line number="11" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="12" hits="0" branch="false"/>
+            <line number="14" hits="0" branch="false"/>
+            <line number="17" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.store" line-rate="0.0833" branch-rate="0">
+      <classes>
+        <class name="saved-appointments-context.js" filename="src/store/saved-appointments-context.js" line-rate="0.0833" branch-rate="0">
+          <methods>
+            <method name="(anonymous_0)" hits="0" signature="()V">
+              <lines>
+                <line number="7" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_1)" hits="0" signature="()V">
+              <lines>
+                <line number="8" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_2)" hits="0" signature="()V">
+              <lines>
+                <line number="9" hits="0"/>
+              </lines>
+            </method>
+            <method name="SavedAppointmentsProvider" hits="0" signature="()V">
+              <lines>
+                <line number="12" hits="0"/>
+              </lines>
+            </method>
+            <method name="saveAppointmentHandler" hits="0" signature="()V">
+              <lines>
+                <line number="16" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_5)" hits="0" signature="()V">
+              <lines>
+                <line number="17" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_6)" hits="0" signature="()V">
+              <lines>
+                <line number="19" hits="0"/>
+              </lines>
+            </method>
+            <method name="removeAppointmentHandler" hits="0" signature="()V">
+              <lines>
+                <line number="28" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_8)" hits="0" signature="()V">
+              <lines>
+                <line number="29" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_9)" hits="0" signature="()V">
+              <lines>
+                <line number="30" hits="0"/>
+              </lines>
+            </method>
+            <method name="isAppointmentSavedHandler" hits="0" signature="()V">
+              <lines>
+                <line number="34" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_11)" hits="0" signature="()V">
+              <lines>
+                <line number="35" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="4" hits="1" branch="false"/>
+            <line number="14" hits="0" branch="false"/>
+            <line number="17" hits="0" branch="false"/>
+            <line number="19" hits="0" branch="false"/>
+            <line number="20" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="22" hits="0" branch="false"/>
+            <line number="24" hits="0" branch="false"/>
+            <line number="29" hits="0" branch="false"/>
+            <line number="30" hits="0" branch="false"/>
+            <line number="35" hits="0" branch="false"/>
+            <line number="38" hits="0" branch="false"/>
+            <line number="46" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="src.utils" line-rate="0" branch-rate="0">
+      <classes>
+        <class name="clinicData.js" filename="src/utils/clinicData.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="(anonymous_0)" hits="0" signature="()V">
+              <lines>
+                <line number="44" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_1)" hits="0" signature="()V">
+              <lines>
+                <line number="45" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_2)" hits="0" signature="()V">
+              <lines>
+                <line number="49" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_3)" hits="0" signature="()V">
+              <lines>
+                <line number="51" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_4)" hits="0" signature="()V">
+              <lines>
+                <line number="58" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="3" hits="0" branch="false"/>
+            <line number="28" hits="0" branch="false"/>
+            <line number="44" hits="0" branch="false"/>
+            <line number="45" hits="0" branch="false"/>
+            <line number="49" hits="0" branch="false"/>
+            <line number="50" hits="0" branch="false"/>
+            <line number="51" hits="0" branch="false"/>
+            <line number="52" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="54" hits="0" branch="false"/>
+            <line number="58" hits="0" branch="false"/>
+            <line number="59" hits="0" branch="false"/>
+            <line number="60" hits="0" branch="false"/>
+            <line number="61" hits="0" branch="false"/>
+            <line number="63" hits="0" branch="false"/>
+          </lines>
+        </class>
+        <class name="helpers.js" filename="src/utils/helpers.js" line-rate="0" branch-rate="0">
+          <methods>
+            <method name="(anonymous_0)" hits="0" signature="()V">
+              <lines>
+                <line number="2" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_1)" hits="0" signature="()V">
+              <lines>
+                <line number="20" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_2)" hits="0" signature="()V">
+              <lines>
+                <line number="39" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_3)" hits="0" signature="()V">
+              <lines>
+                <line number="59" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_4)" hits="0" signature="()V">
+              <lines>
+                <line number="66" hits="0"/>
+              </lines>
+            </method>
+            <method name="(anonymous_5)" hits="0" signature="()V">
+              <lines>
+                <line number="76" hits="0"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="2" hits="0" branch="false"/>
+            <line number="3" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="5" hits="0" branch="false"/>
+            <line number="6" hits="0" branch="false"/>
+            <line number="7" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="9" hits="0" branch="false"/>
+            <line number="16" hits="0" branch="false"/>
+            <line number="20" hits="0" branch="false"/>
+            <line number="21" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="23" hits="0" branch="false"/>
+            <line number="24" hits="0" branch="false"/>
+            <line number="25" hits="0" branch="false"/>
+            <line number="26" hits="0" branch="false"/>
+            <line number="28" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="30" hits="0" branch="false"/>
+            <line number="35" hits="0" branch="false"/>
+            <line number="39" hits="0" branch="false"/>
+            <line number="40" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="42" hits="0" branch="false"/>
+            <line number="43" hits="0" branch="false"/>
+            <line number="44" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="46" hits="0" branch="false"/>
+            <line number="55" hits="0" branch="false"/>
+            <line number="59" hits="0" branch="false"/>
+            <line number="60" hits="0" branch="true" condition-coverage="0% (0/4)"/>
+            <line number="62" hits="0" branch="false"/>
+            <line number="63" hits="0" branch="false"/>
+            <line number="66" hits="0" branch="false"/>
+            <line number="67" hits="0" branch="true" condition-coverage="0% (0/4)"/>
+            <line number="70" hits="0" branch="false"/>
+            <line number="73" hits="0" branch="false"/>
+            <line number="76" hits="0" branch="false"/>
+            <line number="77" hits="0" branch="false"/>
           </lines>
         </class>
       </classes>

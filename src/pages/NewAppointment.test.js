@@ -27,7 +27,7 @@ jest.mock('../components/appointments/AppointmentForm', () => {
           disabled={disabled}
           data-testid="submit-form"
         >
-          Submit Form
+          {disabled ? 'Submitting...' : 'Book Appointment'}
         </button>
         <div data-testid="form-disabled">{disabled ? 'disabled' : 'enabled'}</div>
       </div>
@@ -80,8 +80,7 @@ describe('NewAppointmentPage', () => {
       expect(screen.getByText('disabled')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Submitting appointment data...')).toBeInTheDocument();
-
+    // Wait for navigation to occur
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });

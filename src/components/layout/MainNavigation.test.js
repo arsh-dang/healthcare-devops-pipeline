@@ -3,28 +3,26 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import MainNavigation from './MainNavigation';
-import SavedAppointmentsContextProvider from '../../store/saved-appointments-context';
+import SavedAppointmentsContext, { SavedAppointmentsProvider } from '../../store/saved-appointments-context';
 
 // Mock the healthcare logo to avoid file import issues in tests
 jest.mock('../ui/logo/healthcare-logo.svg', () => 'healthcare-logo-mock.svg');
 
-const renderWithRouter = (component, { initialState = null } = {}) => {
-  if (initialState) {
-    // If we need to test with specific context state, we'd create a custom provider
-    return render(
-      <MemoryRouter>
-        <SavedAppointmentsContextProvider>
-          {component}
-        </SavedAppointmentsContextProvider>
-      </MemoryRouter>
-    );
-  }
-  
+// Mock context value
+const mockContextValue = {
+  savedAppointments: [],
+  totalSavedAppointments: 0,
+  saveAppointment: jest.fn(),
+  removeAppointment: jest.fn(),
+  isAppointmentSaved: jest.fn(() => false)
+};
+
+const renderWithRouter = (component, { contextValue = mockContextValue } = {}) => {
   return render(
     <MemoryRouter>
-      <SavedAppointmentsContextProvider>
+      <SavedAppointmentsContext.Provider value={contextValue}>
         {component}
-      </SavedAppointmentsContextProvider>
+      </SavedAppointmentsContext.Provider>
     </MemoryRouter>
   );
 };
@@ -69,11 +67,17 @@ describe('MainNavigation', () => {
   });
 
   test('displays saved appointments badge', () => {
-    renderWithRouter(<MainNavigation />);
+    const contextWithAppointments = {
+      ...mockContextValue,
+      totalSavedAppointments: 3
+    };
     
-    // The badge should be present (even if count is 0)
-    const badge = document.querySelector('.badge');
+    renderWithRouter(<MainNavigation />, { contextValue: contextWithAppointments });
+    
+    // The badge should be present and show the count
+    const badge = screen.getByText('3');
     expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('badge');
   });
 
   test('has proper header structure', () => {

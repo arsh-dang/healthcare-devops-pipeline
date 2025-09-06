@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>0/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>0/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>0/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>0/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -118,39 +118,39 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">40x</span>
-<span class="cline-any cline-yes">40x</span>
-<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">40x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -167,40 +167,40 @@
 import AppointmentForm from "../components/appointments/AppointmentForm";
 import { useNavigate } from "react-router-dom";
 &nbsp;
-function NewAppointmentPage() {
-    const navigate = useNavigate();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
+function <span class="fstat-no" title="function not covered" >NewAppointmentPage(</span>) {
+    const navigate = <span class="cstat-no" title="statement not covered" >useNavigate();</span>
+    const [isSubmitting, setIsSubmitting] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+    const [error, setError] = <span class="cstat-no" title="statement not covered" >useState(null);</span>
 &nbsp;
-    function onAddAppointmentHandler(appointmentData) {
-        setIsSubmitting(true);
-        setError(null);
+    function <span class="fstat-no" title="function not covered" >onAddAppointmentHandler(</span>appointmentData) {
+<span class="cstat-no" title="statement not covered" >        setIsSubmitting(true);</span>
+<span class="cstat-no" title="statement not covered" >        setError(null);</span>
 &nbsp;
         // Using relative URL that will be handled by Nginx proxy
-        fetch('/api/appointments', {
+<span class="cstat-no" title="statement not covered" >        fetch('/api/appointments', {</span>
             method: 'POST',
             body: JSON.stringify(appointmentData),
             headers: {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response =&gt; {
-            setIsSubmitting(false);
-            if (!response.ok) {
-                throw new Error('Failed to create appointment');
+        .then(<span class="fstat-no" title="function not covered" >re</span>sponse =&gt; {
+<span class="cstat-no" title="statement not covered" >            setIsSubmitting(false);</span>
+<span class="cstat-no" title="statement not covered" >            if (!response.ok) {</span>
+<span class="cstat-no" title="statement not covered" >                throw new Error('Failed to create appointment');</span>
             }
-            return response.json();
+<span class="cstat-no" title="statement not covered" >            return response.json();</span>
         })
-        .then(() =&gt; {
-            navigate('/');
+        .then(<span class="fstat-no" title="function not covered" >()</span> =&gt; {
+<span class="cstat-no" title="statement not covered" >            navigate('/');</span>
         })
-        .catch(error =&gt; {
-            setError(error.message || 'Something went wrong');
-            setIsSubmitting(false);
+        .catch(<span class="fstat-no" title="function not covered" >er</span>ror =&gt; {
+<span class="cstat-no" title="statement not covered" >            setError(error.message || 'Something went wrong');</span>
+<span class="cstat-no" title="statement not covered" >            setIsSubmitting(false);</span>
         });
     }
 &nbsp;
-    return (
+<span class="cstat-no" title="statement not covered" >    return (</span>
         &lt;section&gt;
             &lt;h1&gt;Book New Appointment&lt;/h1&gt;
             {error &amp;&amp; &lt;div className="error-message"&gt;{error}&lt;/div&gt;}
@@ -220,7 +220,7 @@ export default NewAppointmentPage;</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-06T16:18:45.475Z
+                at 2025-09-06T16:30:45.873Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
