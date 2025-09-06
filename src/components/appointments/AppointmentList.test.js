@@ -1,18 +1,25 @@
-import React from 'react';
+
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AppointmentList from './AppointmentList';
 
 // Mock AppointmentItem to capture function calls
 jest.mock('./AppointmentItem', () => {
-  return function MockAppointmentItem({ onDelete, id, title }) {
+  const mockPropTypes = require('prop-types');
+  function MockAppointmentItem({ onDelete, id, title }) {
     return (
       <div data-testid={`appointment-item-${id}`}>
         <span>{title}</span>
         <button onClick={() => onDelete && onDelete(id)}>Delete</button>
       </div>
     );
+  }
+  MockAppointmentItem.propTypes = {
+    onDelete: mockPropTypes.func,
+    id: mockPropTypes.string.isRequired,
+    title: mockPropTypes.string.isRequired
   };
+  return MockAppointmentItem;
 });
 
 describe('AppointmentList', () => {

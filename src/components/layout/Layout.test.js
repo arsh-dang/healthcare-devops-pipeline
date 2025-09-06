@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
@@ -28,7 +28,7 @@ describe('Layout', () => {
   });
 
   test('applies CSS class to main element', () => {
-    const { container } = render(
+    render(
       <BrowserRouter>
         <SavedAppointmentsProvider>
           <Layout>
@@ -38,7 +38,7 @@ describe('Layout', () => {
       </BrowserRouter>
     );
 
-    const mainElement = container.querySelector('main');
+    const mainElement = screen.getByRole('main');
     expect(mainElement).toHaveClass('main');
   });
 

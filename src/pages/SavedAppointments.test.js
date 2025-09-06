@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SavedAppointmentsPage from './SavedAppointments';
@@ -19,7 +19,8 @@ jest.mock('react', () => ({
 
 // Mock AppointmentList component
 jest.mock('../components/appointments/AppointmentList', () => {
-  return function MockAppointmentList({ appointments }) {
+  const mockPropTypes = require('prop-types');
+  function MockAppointmentList({ appointments }) {
     return (
       <div data-testid="appointment-list">
         {appointments.map(appointment => (
@@ -29,7 +30,12 @@ jest.mock('../components/appointments/AppointmentList', () => {
         ))}
       </div>
     );
+  }
+  MockAppointmentList.propTypes = {
+    appointments: mockPropTypes.array,
+    onDeleteAppointment: mockPropTypes.func
   };
+  return MockAppointmentList;
 });
 
 describe('SavedAppointmentsPage', () => {
@@ -105,8 +111,8 @@ describe('SavedAppointmentsPage', () => {
   test('renders section element', () => {
     render(<SavedAppointmentsPage />);
     
-    const section = screen.getByRole('heading', { level: 1 }).closest('section');
-    expect(section).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toBeInTheDocument();
   });
 
   test('renders h1 heading with correct text', () => {

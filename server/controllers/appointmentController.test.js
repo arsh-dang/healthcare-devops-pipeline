@@ -1,6 +1,5 @@
 const request = require('supertest');
 const express = require('express');
-const mongoose = require('mongoose');
 const Appointment = require('../models/appointment');
 const appointmentController = require('./appointmentController');
 

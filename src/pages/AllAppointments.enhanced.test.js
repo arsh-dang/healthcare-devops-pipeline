@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { SavedAppointmentsProvider } from '../store/saved-appointments-context';
 
 // Mock AppointmentList component
 jest.mock('../components/appointments/AppointmentList', () => {
-  return function MockAppointmentList({ appointments, onDeleteAppointment }) {
+  function MockAppointmentList({ appointments, onDeleteAppointment }) {
     return (
       <div data-testid="appointment-list">
         {appointments.map((appointment) => (
@@ -18,7 +18,7 @@ jest.mock('../components/appointments/AppointmentList', () => {
         ))}
       </div>
     );
-  };
+  }  return MockAppointmentList;
 });
 
 // Mock console.error to avoid error logs in tests

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
@@ -16,7 +16,7 @@ global.fetch = jest.fn();
 
 // Mock AppointmentForm component
 jest.mock('../components/appointments/AppointmentForm', () => {
-  return function MockAppointmentForm({ onAddAppointment, disabled }) {
+  function MockAppointmentForm({ onAddAppointment, disabled }) {
     return (
       <div data-testid="appointment-form">
         <button 
@@ -28,7 +28,7 @@ jest.mock('../components/appointments/AppointmentForm', () => {
         </button>
       </div>
     );
-  };
+  }  return MockAppointmentForm;
 });
 
 const renderWithRouter = () => {

@@ -1,6 +1,7 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import PropTypes from 'prop-types';
 
 // Create a mock layout component that doesn't import router dependencies
 const MockLayout = ({ children }) => (
@@ -9,6 +10,10 @@ const MockLayout = ({ children }) => (
     <main>{children}</main>
   </div>
 );
+
+MockLayout.propTypes = {
+  children: PropTypes.node
+};
 
 describe('Layout Component', () => {
   test('renders children content', () => {

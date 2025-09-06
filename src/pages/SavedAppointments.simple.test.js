@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SavedAppointmentsPage from './SavedAppointments';
@@ -6,7 +6,8 @@ import SavedAppointmentsContext from '../store/saved-appointments-context';
 
 // Mock AppointmentList component
 jest.mock('../components/appointments/AppointmentList', () => {
-  return function MockAppointmentList({ appointments }) {
+  const mockPropTypes = require('prop-types');
+  function MockAppointmentList({ appointments }) {
     return (
       <div data-testid="appointment-list">
         {appointments.map((app, index) => (
@@ -16,7 +17,12 @@ jest.mock('../components/appointments/AppointmentList', () => {
         ))}
       </div>
     );
+  }
+  MockAppointmentList.propTypes = {
+    appointments: mockPropTypes.array,
+    onDeleteAppointment: mockPropTypes.func
   };
+  return MockAppointmentList;
 });
 
 const renderWithContext = (contextValue) => {

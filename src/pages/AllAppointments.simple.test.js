@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
@@ -10,7 +10,7 @@ global.fetch = jest.fn();
 
 // Mock AppointmentList component
 jest.mock('../components/appointments/AppointmentList', () => {
-  return function MockAppointmentList({ appointments }) {
+  function MockAppointmentList({ appointments }) {
     return (
       <div data-testid="appointment-list">
         {appointments.map((appointment, index) => (
@@ -20,7 +20,7 @@ jest.mock('../components/appointments/AppointmentList', () => {
         ))}
       </div>
     );
-  };
+  }  return MockAppointmentList;
 });
 
 const renderWithProviders = () => {

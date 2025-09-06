@@ -1,9 +1,9 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import MainNavigation from './MainNavigation';
-import SavedAppointmentsContext, { SavedAppointmentsProvider } from '../../store/saved-appointments-context';
+import SavedAppointmentsContext from '../../store/saved-appointments-context';
 
 // Mock the healthcare logo to avoid file import issues in tests
 jest.mock('../ui/logo/healthcare-logo.svg', () => 'healthcare-logo-mock.svg');
@@ -87,19 +87,14 @@ describe('MainNavigation', () => {
     expect(header).toHaveClass('header');
     
     // Check logo container
-    const logoContainer = header.querySelector('.logoContainer');
-    expect(logoContainer).toBeInTheDocument();
+    expect(screen.getByAltText('Healthcare Logo')).toBeInTheDocument();
     
     // Check navigation
     const nav = screen.getByRole('navigation');
     expect(nav).toBeInTheDocument();
     
-    // Check navigation list
-    const navList = nav.querySelector('ul');
-    expect(navList).toBeInTheDocument();
-    
     // Check that all list items are present
-    const listItems = nav.querySelectorAll('li');
+    const listItems = screen.getAllByRole('listitem');
     expect(listItems).toHaveLength(3);
   });
 
@@ -116,8 +111,9 @@ describe('MainNavigation', () => {
   test('saved appointments badge has correct CSS class', () => {
     renderWithRouter(<MainNavigation />);
     
-    const badge = document.querySelector('.badge');
-    expect(badge).toHaveClass('badge');
+    const savedLink = screen.getByRole('link', { name: /Saved Appointments/ });
+    expect(savedLink).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   test('renders with context provider', () => {
@@ -128,7 +124,6 @@ describe('MainNavigation', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
     
     // And the badge should display some value (default should be 0 or empty)
-    const badge = document.querySelector('.badge');
-    expect(badge).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 });

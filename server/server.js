@@ -88,16 +88,20 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/health
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
+    // eslint-disable-next-line no-console
     console.log('Connected to MongoDB');
     app.listen(PORT, () => {
+      // eslint-disable-next-line no-console
       console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
+    // eslint-disable-next-line no-console
     console.error('Failed to connect to MongoDB', err);
   });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
+  // eslint-disable-next-line no-console
   console.error('Unhandled Promise Rejection:', err);
 });

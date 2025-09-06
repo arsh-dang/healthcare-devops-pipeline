@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AppointmentForm from './AppointmentForm';
@@ -137,8 +137,7 @@ describe('AppointmentForm', () => {
     const clinicSelect = screen.getByLabelText(/clinic/i);
     fireEvent.change(clinicSelect, { target: { value: 'c1' } });
     
-    const doctorSelect = screen.getByLabelText(/doctor/i);
-    expect(doctorSelect.children.length).toBeGreaterThan(0);
+    expect(screen.getByRole('option', { name: /Dr. Smith/ })).toBeInTheDocument();
   });
 
   test('handles clinic with no doctors', () => {

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
@@ -26,14 +26,14 @@ jest.mock('./pages/SavedAppointments', () => {
 
 // Mock Layout component
 jest.mock('./components/layout/Layout', () => {
-  return function MockLayout({ children }) {
+  function MockLayout({ children }) {
     return (
       <div data-testid="layout">
         <div>Layout Component</div>
         {children}
       </div>
     );
-  };
+  }  return MockLayout;
 });
 
 const renderWithRouter = (component, { route = '/' } = {}) => {

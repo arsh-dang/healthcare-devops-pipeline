@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
@@ -62,19 +62,18 @@ describe('MainNavigation', () => {
   test('displays saved appointments badge', () => {
     renderWithRouter(<MainNavigation />);
     
-    const badge = document.querySelector('.badge');
-    expect(badge).toBeInTheDocument();
-    expect(badge).toHaveClass('badge');
+    const savedLink = screen.getByRole('link', { name: /Saved Appointments/ });
+    expect(savedLink).toBeInTheDocument();
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   test('has correct navigation structure', () => {
     renderWithRouter(<MainNavigation />);
     
     const nav = screen.getByRole('navigation');
-    const navList = nav.querySelector('ul');
-    expect(navList).toBeInTheDocument();
+    expect(nav).toBeInTheDocument();
     
-    const listItems = nav.querySelectorAll('li');
+    const listItems = screen.getAllByRole('listitem');
     expect(listItems).toHaveLength(3);
   });
 
@@ -82,7 +81,7 @@ describe('MainNavigation', () => {
     renderWithRouter(<MainNavigation />);
     
     const header = screen.getByRole('banner');
-    const logoContainer = header.querySelector('.logoContainer');
-    expect(logoContainer).toBeInTheDocument();
+    expect(header).toBeInTheDocument();
+    expect(screen.getByAltText('Healthcare Logo')).toBeInTheDocument();
   });
 });

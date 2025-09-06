@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AppointmentItem from './AppointmentItem';
 import { SavedAppointmentsProvider } from '../../store/saved-appointments-context';
@@ -41,8 +41,8 @@ const renderAppointmentItem = (props = {}) => {
 describe('AppointmentItem Component', () => {
   beforeEach(() => {
     fetch.mockClear();
-    confirm.mockClear();
-    alert.mockClear();
+    global.confirm.mockClear();
+    global.alert.mockClear();
     consoleErrorSpy.mockClear();
   });
 
@@ -154,20 +154,20 @@ describe('AppointmentItem Component', () => {
 
   // Delete functionality tests
   test('handles delete confirmation cancellation', () => {
-    confirm.mockReturnValue(false);
+    global.global.confirm.mockReturnValue(false);
     
     renderAppointmentItem();
     
     const deleteButton = screen.getByText('Delete Appointment');
     fireEvent.click(deleteButton);
     
-    expect(confirm).toHaveBeenCalledWith("Are you sure you want to delete this appointment? This action cannot be undone.");
+    expect(global.confirm).toHaveBeenCalledWith("Are you sure you want to delete this appointment? This action cannot be undone.");
     expect(fetch).not.toHaveBeenCalled();
   });
 
   test('handles successful delete operation', async () => {
     const onDeleteMock = jest.fn();
-    confirm.mockReturnValue(true);
+    global.confirm.mockReturnValue(true);
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true })
@@ -178,7 +178,7 @@ describe('AppointmentItem Component', () => {
     const deleteButton = screen.getByText('Delete Appointment');
     fireEvent.click(deleteButton);
     
-    expect(confirm).toHaveBeenCalled();
+    expect(global.confirm).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledWith('/api/appointments/apt-1', {
       method: 'DELETE'
     });
@@ -189,7 +189,7 @@ describe('AppointmentItem Component', () => {
   });
 
   test('shows deleting state during delete operation', async () => {
-    confirm.mockReturnValue(true);
+    global.confirm.mockReturnValue(true);
     let resolvePromise;
     fetch.mockImplementationOnce(() => new Promise(resolve => {
       resolvePromise = resolve;
@@ -212,7 +212,7 @@ describe('AppointmentItem Component', () => {
   });
 
   test('handles delete operation failure', async () => {
-    confirm.mockReturnValue(true);
+    global.confirm.mockReturnValue(true);
     fetch.mockRejectedValueOnce(new Error('Network error'));
     
     renderAppointmentItem();
@@ -222,14 +222,17 @@ describe('AppointmentItem Component', () => {
     
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error deleting appointment:', expect.any(Error));
-      expect(alert).toHaveBeenCalledWith('Failed to delete appointment. Please try again.');
+    });
+    
+    await waitFor(() => {
+      expect(global.alert).toHaveBeenCalledWith('Failed to delete appointment. Please try again.');
     });
     
     expect(screen.getByText('Delete Appointment')).toBeInTheDocument();
   });
 
   test('handles delete operation with non-ok response', async () => {
-    confirm.mockReturnValue(true);
+    global.confirm.mockReturnValue(true);
     fetch.mockResolvedValueOnce({
       ok: false,
       status: 404
@@ -242,12 +245,15 @@ describe('AppointmentItem Component', () => {
     
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error deleting appointment:', expect.any(Error));
-      expect(alert).toHaveBeenCalledWith('Failed to delete appointment. Please try again.');
+    });
+    
+    await waitFor(() => {
+      expect(global.alert).toHaveBeenCalledWith('Failed to delete appointment. Please try again.');
     });
   });
 
   test('removes from saved appointments when deleting saved appointment', async () => {
-    confirm.mockReturnValue(true);
+    global.confirm.mockReturnValue(true);
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true })
@@ -271,7 +277,7 @@ describe('AppointmentItem Component', () => {
   });
 
   test('disables save button during delete operation', async () => {
-    confirm.mockReturnValue(true);
+    global.confirm.mockReturnValue(true);
     let resolvePromise;
     fetch.mockImplementationOnce(() => new Promise(resolve => {
       resolvePromise = resolve;
