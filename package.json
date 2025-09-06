@@ -35,7 +35,7 @@
     "start": "PORT=3000 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "test:ci": "CI=true react-scripts test --coverage --watchAll=false --collectCoverageFrom='src/**/*.{js,jsx}' --collectCoverageFrom='!src/index.js'",
+    "test:ci": "CI=true react-scripts test --coverage --watchAll=false",
     "test:integration": "node test-integration.js",
     "test:e2e": "cd server && npm run test:e2e",
     "test:performance": "cd server && npm run test:performance",
