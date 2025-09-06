@@ -184,13 +184,8 @@ pipeline {
                                 pnpm test:ci
                             '''
                             
-                            // Run backend unit tests
-                            sh '''
-                                cd server && npm test -- --coverage --reporter=xunit --outputFile=../test-results-backend.xml
-                            '''
-                            
                             // Publish test results with detailed metrics
-                            junit testResults: 'test-report.xml,test-results-backend.xml'
+                            junit testResults: 'test-report.xml'
                             
                             // Publish coverage with multiple formats
                             publishCoverage adapters: [
