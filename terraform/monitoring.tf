@@ -253,9 +253,13 @@ resource "kubernetes_deployment" "prometheus" {
             mount_path = "/etc/prometheus/rules"
           }
 
-          volume_mount {
-            name       = "prometheus-storage"
-            mount_path = "/prometheus"
+          # Conditional volume mount for persistent storage
+          dynamic "volume_mount" {
+            for_each = var.enable_persistent_storage ? [1] : []
+            content {
+              name       = "prometheus-storage"
+              mount_path = "/prometheus"
+            }
           }
 
           resources {
@@ -302,10 +306,14 @@ resource "kubernetes_deployment" "prometheus" {
           }
         }
 
-        volume {
-          name = "prometheus-storage"
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.prometheus_storage.metadata[0].name
+        # Conditional volume for persistent storage
+        dynamic "volume" {
+          for_each = var.enable_persistent_storage ? [1] : []
+          content {
+            name = "prometheus-storage"
+            persistent_volume_claim {
+              claim_name = kubernetes_persistent_volume_claim.prometheus_storage[0].metadata[0].name
+            }
           }
         }
       }
@@ -366,8 +374,10 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
   }
 }
 
-# Prometheus PVC
+# Prometheus PVC (conditional)
 resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
+  count = var.enable_persistent_storage ? 1 : 0
+  
   metadata {
     name      = "prometheus-storage"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
@@ -378,10 +388,15 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = var.environment == "production" ? "50Gi" : "10Gi"
+        storage = var.environment == "production" ? "50Gi" : "5Gi"
       }
     }
-    storage_class_name = "local-path"
+    # Use hostPath or local storage for better compatibility
+    storage_class_name = ""
+  }
+
+  timeouts {
+    create = "2m"
   }
 }
 
@@ -583,9 +598,13 @@ resource "kubernetes_deployment" "grafana" {
             mount_path = "/etc/grafana/provisioning/datasources"
           }
 
-          volume_mount {
-            name       = "grafana-storage"
-            mount_path = "/var/lib/grafana"
+          # Conditional volume mount for persistent storage
+          dynamic "volume_mount" {
+            for_each = var.enable_persistent_storage ? [1] : []
+            content {
+              name       = "grafana-storage"
+              mount_path = "/var/lib/grafana"
+            }
           }
 
           resources {
@@ -655,10 +674,14 @@ resource "kubernetes_deployment" "grafana" {
           }
         }
 
-        volume {
-          name = "grafana-storage"
-          persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.grafana_storage.metadata[0].name
+        # Conditional volume for persistent storage
+        dynamic "volume" {
+          for_each = var.enable_persistent_storage ? [1] : []
+          content {
+            name = "grafana-storage"
+            persistent_volume_claim {
+              claim_name = kubernetes_persistent_volume_claim.grafana_storage[0].metadata[0].name
+            }
           }
         }
       }
@@ -666,8 +689,10 @@ resource "kubernetes_deployment" "grafana" {
   }
 }
 
-# Grafana PVC
+# Grafana PVC (conditional)
 resource "kubernetes_persistent_volume_claim" "grafana_storage" {
+  count = var.enable_persistent_storage ? 1 : 0
+  
   metadata {
     name      = "grafana-storage"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
@@ -678,10 +703,15 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "5Gi"
+        storage = "2Gi"
       }
     }
-    storage_class_name = "local-path"
+    # Use hostPath or local storage for better compatibility
+    storage_class_name = ""
+  }
+
+  timeouts {
+    create = "2m"
   }
 }
 

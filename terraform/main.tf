@@ -89,6 +89,12 @@ variable "resource_limits" {
   }
 }
 
+variable "enable_persistent_storage" {
+  description = "Enable persistent storage for monitoring components"
+  type        = bool
+  default     = true
+}
+
 # Local values for computed configurations
 locals {
   common_labels = {
