@@ -83,7 +83,7 @@ pipeline {
                             // Install dependencies with cache optimization
                             sh '''
                                 npm install -g pnpm
-                                pnpm install --prefer-offline
+                                pnpm install --no-frozen-lockfile --prefer-offline
                                 cp -r node_modules node_modules_cache
                             '''
                             
