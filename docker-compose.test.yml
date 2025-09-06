@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # Test MongoDB instance
@@ -15,6 +14,12 @@ services:
       - mongodb-test-data:/data/db
     networks:
       - test-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Test Backend API
   backend-test:
@@ -29,13 +34,20 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-      - mongodb-test
+      mongodb-test:
+        condition: service_healthy
     networks:
       - test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     command: >
       sh -c "
         echo 'Waiting for MongoDB to be ready...' &&
-        sleep 10 &&
+        sleep 15 &&
         node server/server.js
       "
 
@@ -50,9 +62,16 @@ services:
     environment:
       REACT_APP_API_URL: http://backend-test:5001/api
     depends_on:
-      - backend-test
+      backend-test:
+        condition: service_healthy
     networks:
       - test-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 networks:
   test-network:
