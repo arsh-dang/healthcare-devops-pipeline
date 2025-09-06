@@ -44,3 +44,8 @@ lint-results.json
 # Generated reports
 reports/
 security-reports/
+
+# Temporary development scripts
+fix-*.js
+temp-*.js
+cleanup-*.js

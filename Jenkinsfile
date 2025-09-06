@@ -1238,11 +1238,10 @@ print('✅ No secrets detected')
                             '''
                         }
                     }
-                }
-            }
-        }
-                        script {
-                            def terraformOutputs = readJSON file: 'terraform/terraform-outputs-production.json'
+                
+                    // Get Terraform outputs and deploy to production using Terraform-managed infrastructure
+                    script {
+                        def terraformOutputs = readJSON file: 'terraform/terraform-outputs-production.json'
                             env.TERRAFORM_PROD_NAMESPACE = terraformOutputs.namespace.value
                             env.TERRAFORM_PROD_BACKEND_SERVICE = terraformOutputs.backend_service.value
                             env.TERRAFORM_PROD_FRONTEND_SERVICE = terraformOutputs.frontend_service.value
