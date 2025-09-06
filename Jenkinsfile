@@ -7,6 +7,9 @@ pipeline {
         DOCKER_REPO = 'yourusername/healthcare-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
         
+        // PATH Configuration for macOS
+        PATH = "${env.PATH}:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin"
+        
         // Application Configuration
         APP_NAME = 'healthcare-app'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
