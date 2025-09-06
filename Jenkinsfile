@@ -1309,6 +1309,7 @@ print('✅ No secrets detected')
                 }
             }
         }
+    }
 
     post {
         always {
