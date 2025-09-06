@@ -15,7 +15,7 @@ pipeline {
         // SonarQube Configuration
         SONAR_PROJECT_KEY = 'healthcare-app'
         SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_LOGIN = credentials('sonar-token')
+        SONAR_LOGIN = credentials('sonarqube-token')
         
         // Kubernetes Configuration
         KUBECONFIG = credentials('kubeconfig')
