@@ -2,16 +2,17 @@
 
 ## Required Credentials for Pipeline
 
-### 1. GitHub Token (ID: `github-token`)
-- Kind: Secret text
-- Secret: Your GitHub personal access token
+### 1. GitHub Credentials (ID: `github-token`)
+- Kind: Username with password
+- Username: arsh-dang (your GitHub username)
+- Password: Your GitHub personal access token
 - ID: `github-token`
 - Description: GitHub API Token
 
 **How to get GitHub token:**
 1. Go to GitHub.com → Settings → Developer settings → Personal access tokens
 2. Generate new token with repo permissions
-3. Copy the token
+3. Copy the token and use it as the password
 
 ### 2. Docker Hub Credentials (ID: `docker-hub-credentials`)
 - Kind: Username with password
