@@ -34,3 +34,13 @@ Thumbs.db
 # Test outputs
 test-results/
 *.log
+
+# Security scan artifacts
+dependency-check/
+dependency-check.zip
+lint-results.json
+*.json.bak
+
+# Generated reports
+reports/
+security-reports/
