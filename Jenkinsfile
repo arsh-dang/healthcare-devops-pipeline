@@ -187,12 +187,7 @@ pipeline {
                             // Publish test results with detailed metrics
                             junit testResults: 'test-report.xml'
                             
-                            // Publish coverage with multiple formats
-                            publishCoverage adapters: [
-                                istanbulCoberturaAdapter('coverage/cobertura-coverage.xml')
-                            ], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
-                            
-                            // Archive coverage reports
+                            // Archive coverage reports as HTML
                             publishHTML([
                                 allowMissing: false,
                                 alwaysLinkToLastBuild: true,
