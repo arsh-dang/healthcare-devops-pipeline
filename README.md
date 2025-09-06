@@ -1,16 +1,17 @@
 # Healthcare Appointments Microservices Application
 
-This application is configured as a microservices architecture using Kubernetes for orchestration. The application consists of three main services:
+This application is configured as a microservices architecture using **Terraform for Infrastructure as Code** and Kubernetes for orchestration. The application consists of three main services:
 
 1. **Frontend Service**: React application served through Nginx
 2. **Backend Service**: Express.js API
 3. **Database Service**: MongoDB
 
-## Kubernetes Deployment with Colima
+## Infrastructure as Code with Terraform
 
 ### Prerequisites
 
 - macOS (as Colima is designed for macOS)
+- [Terraform](https://terraform.io) installed
 - [Colima](https://github.com/abiosoft/colima) installed
 - kubectl CLI tool
 - Docker
@@ -25,10 +26,39 @@ If you don't have the prerequisites installed, you can install them using Homebr
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install prerequisites
-brew install colima docker kubectl jq
+brew install terraform colima docker kubectl jq
 ```
 
-### Deployment Steps
+## Deployment Options
+
+### Option 1: Full Terraform Deployment (Recommended)
+
+1. **Deploy Infrastructure with Terraform**:
+   ```bash
+   cd terraform
+   
+   # Initialize Terraform
+   terraform init
+   
+   # Plan the deployment
+   terraform plan -var="environment=staging"
+   
+   # Apply the infrastructure
+   terraform apply -var="environment=staging"
+   ```
+
+2. **Deploy Monitoring Stack**:
+   ```bash
+   # Get the namespace from Terraform
+   NAMESPACE=$(terraform output -raw namespace)
+   
+   # Deploy monitoring components
+   kubectl apply -f ../kubernetes/prometheus.yaml -n $NAMESPACE
+   kubectl apply -f ../kubernetes/grafana.yaml -n $NAMESPACE
+   kubectl apply -f ../kubernetes/prometheus-rules.yaml -n $NAMESPACE
+   ```
+
+### Option 2: Automated Deployment Script
 
 1. Make the deployment script executable:
    ```bash
@@ -43,62 +73,39 @@ brew install colima docker kubectl jq
 3. The script will:
    - Start Colima with Kubernetes if it's not already running
    - Build the necessary Docker images
-   - Deploy all services to your Kubernetes cluster
+   - Deploy infrastructure using Terraform
+   - Deploy monitoring components
    - Configure routing through an Ingress controller
-   - Set up monitoring with Prometheus and Grafana
-   - Configure horizontal pod autoscalers (HPA) for dynamic scaling
+   - Set up port forwarding for local access
 
-4. Access the application:
-   - Add the Colima IP to your hosts file pointing to `healthcare.local`
-   - Access the application at http://healthcare.local
-   - Alternatively, use port forwarding as suggested by the script
+### Infrastructure Components
 
-### Manual Deployment
+The Terraform configuration deploys:
 
-You can also deploy each component individually:
+- **Namespace**: Environment-specific namespace management
+- **StatefulSet**: MongoDB with persistent storage and auto-scaling
+- **Deployments**: Frontend and backend services with health checks
+- **Services**: ClusterIP services for internal communication
+- **ConfigMaps**: Application configuration management
+- **Secrets**: Secure credential management
+- **HPA**: Horizontal Pod Autoscalers for dynamic scaling
+- **Network Policies**: Security isolation between services
+
+### Manual Kubernetes Deployment (Legacy)
+
+For learning purposes, you can also deploy monitoring components individually:
 
 ```bash
 # Start Colima with Kubernetes
 colima start --kubernetes
 
-# Apply ConfigMap
-kubectl apply -f kubernetes/config-map.yaml
-
-# Deploy MongoDB
-kubectl apply -f kubernetes/mongodb-statefulset.yaml
-
-# Deploy Backend API
-kubectl apply -f kubernetes/backend-deployment.yaml
-
-# Deploy Frontend
-kubectl apply -f kubernetes/frontend-deployment.yaml
-
-# Configure Ingress
-kubectl apply -f kubernetes/ingress.yaml
-
-# Deploy Prometheus for monitoring
-kubectl apply -f kubernetes/prometheus.yaml
-
-# Deploy Grafana for visualization
-kubectl apply -f kubernetes/grafana.yaml
-
-# Deploy Node Exporter for host metrics
-kubectl apply -f kubernetes/node-exporter.yaml
-
-# Deploy Kube State Metrics for Kubernetes metrics
-kubectl apply -f kubernetes/kube-state-metrics.yaml
-
-# Apply Horizontal Pod Autoscalers
-kubectl apply -f kubernetes/backend-hpa.yaml
-kubectl apply -f kubernetes/frontend-hpa.yaml
+# Apply monitoring components to Terraform-managed namespace
+NAMESPACE="healthcare-staging"  # Or use terraform output
+kubectl apply -f kubernetes/prometheus.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/grafana.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/prometheus-rules.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/ingress.yaml -n $NAMESPACE
 ```
-
-### Kubernetes Architecture
-
-The application in Kubernetes consists of:
-
-- **Deployments** for each service with multiple replicas for high availability
-- **Services** for internal service discovery and load balancing
 - **PersistentVolumeClaim** for MongoDB data persistence
 - **Ingress** for external access and routing
 - **ConfigMap** for configuration management

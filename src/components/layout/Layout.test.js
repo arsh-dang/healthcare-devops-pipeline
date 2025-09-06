@@ -1,41 +1,57 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { BrowserRouter } from 'react-router-dom';
+import Layout from './Layout';
+import SavedAppointmentsProvider from '../../store/saved-appointments-context';
 
-// Simple mock for Layout to avoid complex dependencies
-const Layout = ({ children }) => (
-  <div data-testid="layout">
-    <nav data-testid="navigation">Navigation</nav>
-    <main>{children}</main>
-  </div>
-);
+jest.mock('./MainNavigation', () => {
+  return function MockMainNavigation() {
+    return <nav data-testid="main-navigation">Navigation</nav>;
+  };
+});
 
-describe('Layout Component', () => {
-  test('renders without crashing', () => {
+describe('Layout', () => {
+  test('renders navigation and children', () => {
     render(
-      <Layout>
-        <div>Test Content</div>
-      </Layout>
+      <BrowserRouter>
+        <SavedAppointmentsProvider>
+          <Layout>
+            <div data-testid="test-content">Test Content</div>
+          </Layout>
+        </SavedAppointmentsProvider>
+      </BrowserRouter>
     );
-    expect(document.body).toBeInTheDocument();
+
+    expect(screen.getByTestId('main-navigation')).toBeInTheDocument();
+    expect(screen.getByTestId('test-content')).toBeInTheDocument();
   });
 
-  test('renders children content', () => {
-    const { getByText, getByTestId } = render(
-      <Layout>
-        <div data-testid="test-content">Test Content</div>
-      </Layout>
+  test('applies CSS class to main element', () => {
+    const { container } = render(
+      <BrowserRouter>
+        <SavedAppointmentsProvider>
+          <Layout>
+            <div>Content</div>
+          </Layout>
+        </SavedAppointmentsProvider>
+      </BrowserRouter>
     );
-    expect(getByTestId('test-content')).toBeInTheDocument();
-    expect(getByTestId('layout')).toBeInTheDocument();
+
+    const mainElement = container.querySelector('main');
+    expect(mainElement).toHaveClass('main');
   });
 
-  test('contains navigation structure', () => {
-    const { getByTestId } = render(
-      <Layout>
-        <div>Test Content</div>
-      </Layout>
+  test('renders with empty children', () => {
+    render(
+      <BrowserRouter>
+        <SavedAppointmentsProvider>
+          <Layout />
+        </SavedAppointmentsProvider>
+      </BrowserRouter>
     );
-    expect(getByTestId('navigation')).toBeInTheDocument();
+
+    expect(screen.getByTestId('main-navigation')).toBeInTheDocument();
+    expect(screen.getByRole('main')).toBeInTheDocument();
   });
 });

@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import AppointmentItem from "./AppointmentItem";
 import classes from "./AppointmentList.module.css";
 
@@ -28,34 +27,12 @@ function AppointmentList(props) {
           doctorSpecialty={appointment.doctorSpecialty}
           clinicName={appointment.clinicName}
           dateTime={appointment.dateTime}
-          onDelete={props.onDeleteAppointment}
+          onDelete={props.onDeleteAppointment || (() => {})}
           data-testid={`appointment-item-${appointment.id}`}
         />
       ))}
     </ul>
   );
 }
-
-AppointmentList.propTypes = {
-  appointments: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      image: PropTypes.string,
-      title: PropTypes.string,
-      address: PropTypes.string,
-      description: PropTypes.string,
-      doctor: PropTypes.string,
-      doctorSpecialty: PropTypes.string,
-      clinicName: PropTypes.string,
-      dateTime: PropTypes.string,
-    })
-  ),
-  onDeleteAppointment: PropTypes.func,
-};
-
-AppointmentList.defaultProps = {
-  appointments: [],
-  onDeleteAppointment: () => {},
-};
 
 export default AppointmentList;

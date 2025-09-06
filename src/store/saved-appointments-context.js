@@ -15,6 +15,12 @@ export function SavedAppointmentsProvider(props) {
 
     function saveAppointmentHandler(appointment){
         setUserSavedAppointments((prevSavedAppointments) => {
+            // Check if appointment with same ID already exists
+            const existingAppointment = prevSavedAppointments.find(app => app.id === appointment.id);
+            if (existingAppointment) {
+                // Don't add duplicate, return existing array
+                return prevSavedAppointments;
+            }
             return prevSavedAppointments.concat(appointment);
         });
     }

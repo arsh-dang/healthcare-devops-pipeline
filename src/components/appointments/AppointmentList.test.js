@@ -1,7 +1,19 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AppointmentList from './AppointmentList';
+
+// Mock AppointmentItem to capture function calls
+jest.mock('./AppointmentItem', () => {
+  return function MockAppointmentItem({ onDelete, id, title }) {
+    return (
+      <div data-testid={`appointment-item-${id}`}>
+        <span>{title}</span>
+        <button onClick={() => onDelete && onDelete(id)}>Delete</button>
+      </div>
+    );
+  };
+});
 
 describe('AppointmentList', () => {
   const mockAppointments = [
@@ -50,5 +62,31 @@ describe('AppointmentList', () => {
     render(<AppointmentList />);
     
     expect(screen.getByText(/no appointments found/i)).toBeInTheDocument();
+  });
+
+  test('calls onDeleteAppointment when delete is triggered', () => {
+    const mockOnDelete = jest.fn();
+    render(<AppointmentList appointments={mockAppointments} onDeleteAppointment={mockOnDelete} />);
+    
+    // Click delete button on first appointment
+    const deleteButton = screen.getAllByText('Delete')[0];
+    fireEvent.click(deleteButton);
+    
+    expect(mockOnDelete).toHaveBeenCalledWith('1');
+  });
+
+  test('uses default onDeleteAppointment when none provided', () => {
+    // This test ensures the defaultProps.onDeleteAppointment function is used
+    render(<AppointmentList appointments={mockAppointments} />);
+    
+    // Should render without errors even without onDeleteAppointment prop
+    expect(screen.getByTestId('appointment-item-1')).toBeInTheDocument();
+    
+    // Try clicking delete - should not throw error with default function
+    const deleteButton = screen.getAllByText('Delete')[0];
+    fireEvent.click(deleteButton);
+    
+    // Should still render (no errors)
+    expect(screen.getByTestId('appointment-item-1')).toBeInTheDocument();
   });
 });

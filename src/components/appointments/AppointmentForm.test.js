@@ -15,7 +15,9 @@ jest.mock('../ui/Card', () => {
 jest.mock('../../utils/clinicData', () => ({
   CLINICS: [
     { id: 'c1', name: 'Downtown Health', address: '123 Main St', image: 'test.jpg' },
-    { id: 'c2', name: 'Westside Medical', address: '456 Oak Ave', image: 'test2.jpg' }
+    { id: 'c2', name: 'Westside Medical', address: '456 Oak Ave', image: 'test2.jpg' },
+    { id: 'c3', name: 'Northside Clinic', address: '789 Pine St', image: 'test3.jpg' },
+    { id: 'c4', name: 'Emergency Center', address: '999 Emergency Dr', image: 'test4.jpg' }
   ],
   DOCTORS: {
     'c1': [
@@ -24,7 +26,9 @@ jest.mock('../../utils/clinicData', () => ({
     ],
     'c2': [
       { id: 'd3', name: 'Dr. Brown', specialty: 'Pediatrics' }
-    ]
+    ],
+    'c3': [] // Empty doctors array to test the conditional logic
+    // c4 intentionally missing from DOCTORS object to test undefined case
   }
 }));
 
@@ -116,5 +120,46 @@ describe('AppointmentForm', () => {
       doctor: 'Dr. Smith',
       doctorSpecialty: 'General Medicine'
     });
+  });
+
+  test('handles doctor selection change', () => {
+    render(<AppointmentForm onAddAppointment={mockOnAddAppointment} />);
+    
+    const doctorSelect = screen.getByLabelText(/doctor/i);
+    fireEvent.change(doctorSelect, { target: { value: 'd2' } });
+    
+    expect(doctorSelect.value).toBe('d2');
+  });
+
+  test('updates doctors when clinic changes to one with doctors', () => {
+    render(<AppointmentForm onAddAppointment={mockOnAddAppointment} />);
+    
+    const clinicSelect = screen.getByLabelText(/clinic/i);
+    fireEvent.change(clinicSelect, { target: { value: 'c1' } });
+    
+    const doctorSelect = screen.getByLabelText(/doctor/i);
+    expect(doctorSelect.children.length).toBeGreaterThan(0);
+  });
+
+  test('handles clinic with no doctors', () => {
+    render(<AppointmentForm onAddAppointment={mockOnAddAppointment} />);
+    
+    const clinicSelect = screen.getByLabelText(/clinic/i);
+    fireEvent.change(clinicSelect, { target: { value: 'c3' } }); // Clinic with empty doctors array
+    
+    const doctorSelect = screen.getByLabelText(/doctor/i);
+    // Should not have any doctor options or should handle gracefully
+    expect(doctorSelect).toBeInTheDocument();
+  });
+
+  test('handles clinic with undefined doctors', () => {
+    render(<AppointmentForm onAddAppointment={mockOnAddAppointment} />);
+    
+    const clinicSelect = screen.getByLabelText(/clinic/i);
+    fireEvent.change(clinicSelect, { target: { value: 'c4' } }); // Clinic not in DOCTORS object
+    
+    const doctorSelect = screen.getByLabelText(/doctor/i);
+    // Should handle undefined DOCTORS[selectedClinic] gracefully
+    expect(doctorSelect).toBeInTheDocument();
   });
 });

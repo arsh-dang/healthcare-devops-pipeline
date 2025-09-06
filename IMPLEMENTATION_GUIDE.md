@@ -169,29 +169,35 @@ git push -u origin main
 ### Step 1: Deploy Application to Kubernetes
 
 ```bash
-# Apply Kubernetes configurations
-kubectl apply -f kubernetes/config-map.yaml
-kubectl apply -f kubernetes/mongodb-statefulset.yaml
-kubectl apply -f kubernetes/backend-deployment.yaml
-kubectl apply -f kubernetes/frontend-deployment.yaml
-kubectl apply -f kubernetes/ingress.yaml
+# Deploy infrastructure with Terraform
+cd terraform
+terraform init
+terraform apply -var="environment=staging"
+
+# Get the namespace
+NAMESPACE=$(terraform output -raw namespace)
+
+# Deploy monitoring components
+kubectl apply -f ../kubernetes/prometheus.yaml -n $NAMESPACE
+kubectl apply -f ../kubernetes/grafana.yaml -n $NAMESPACE
+kubectl apply -f ../kubernetes/ingress.yaml -n $NAMESPACE
 
 # Check deployment status
-kubectl get pods
-kubectl get services
+kubectl get pods -n $NAMESPACE
+kubectl get services -n $NAMESPACE
 ```
 
 ### Step 2: Setup Monitoring
 
 ```bash
-# Deploy Prometheus and Grafana
-kubectl apply -f kubernetes/prometheus.yaml
-kubectl apply -f kubernetes/grafana.yaml
-kubectl apply -f kubernetes/advanced-monitoring.yaml
+# Deploy Prometheus and Grafana (to Terraform-managed namespace)
+kubectl apply -f kubernetes/prometheus.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/grafana.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/prometheus-rules.yaml -n $NAMESPACE
 
 # Port forward to access services
-kubectl port-forward svc/prometheus-service 9090:9090 &
-kubectl port-forward svc/grafana 3000:3000 &
+kubectl port-forward svc/prometheus 9090:9090 -n $NAMESPACE &
+kubectl port-forward svc/grafana 3000:3000 -n $NAMESPACE &
 ```
 
 ## Phase 6: Testing and Validation (45 minutes)
@@ -205,14 +211,23 @@ kubectl port-forward svc/grafana 3000:3000 &
 ### Step 2: Validate Deployments
 
 ```bash
+# Check Terraform infrastructure
+cd terraform
+terraform show
+
 # Check application health
+NAMESPACE=$(terraform output -raw namespace)
+kubectl port-forward svc/backend 5000:5000 -n $NAMESPACE &
 curl http://localhost:5000/health
 
 # Check Kubernetes pods
-kubectl get pods -l app=healthcare-app
+kubectl get pods -n $NAMESPACE
 
 # Check HPA status
-kubectl get hpa
+kubectl get hpa -n $NAMESPACE
+
+# Verify Terraform-managed resources
+kubectl get all -l managed-by=terraform -n $NAMESPACE
 ```
 
 ### Step 3: Test Monitoring

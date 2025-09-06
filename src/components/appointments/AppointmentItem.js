@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import PropTypes from 'prop-types';
 
 import Card from "../ui/Card";
 import classes from "./AppointmentItem.module.css";
@@ -108,5 +109,18 @@ function AppointmentItem(props) {
     </li>
   );
 }
+
+AppointmentItem.propTypes = {
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  image: PropTypes.string.isRequired,
+  address: PropTypes.string.isRequired,
+  doctor: PropTypes.string.isRequired,
+  doctorSpecialty: PropTypes.string,
+  clinicName: PropTypes.string.isRequired,
+  dateTime: PropTypes.string,
+  onDelete: PropTypes.func
+};
 
 export default AppointmentItem;

@@ -3,8 +3,8 @@
 # Exit script on error
 set -e
 
-echo "Healthcare Application Kubernetes Deployment (Colima)"
-echo "---------------------------------------------------"
+echo "Healthcare Application Kubernetes Deployment (Terraform + Monitoring)"
+echo "--------------------------------------------------------------------"
 
 # Check if Colima is running
 if ! colima status &> /dev/null; then
@@ -59,49 +59,44 @@ echo "Building Docker images..."
 build_or_pull_image "healthcare-frontend:latest" "Dockerfile.frontend" "nginx:1.25.3-alpine"
 build_or_pull_image "healthcare-backend:latest" "Dockerfile.backend" "node:20-alpine"
 
-# Create namespace if it doesn't exist
-echo "Ensuring healthcare namespace exists..."
-kubectl create namespace healthcare --dry-run=client -o yaml | kubectl apply -f -
+# Deploy infrastructure using Terraform
+echo "Deploying infrastructure with Terraform..."
+cd terraform
 
-# Apply ConfigMaps first
-echo "Applying ConfigMaps..."
-kubectl apply -f kubernetes/config-map.yaml -n healthcare
-kubectl apply -f kubernetes/mongodb-init-config.yaml -n healthcare
+# Initialize Terraform
+echo "Initializing Terraform..."
+terraform init
 
-# Apply Secrets
-echo "Applying Secrets..."
-kubectl apply -f kubernetes/mongodb-secret.yaml -n healthcare
-kubectl apply -f kubernetes/backend-secret.yaml -n healthcare
+# Apply infrastructure
+echo "Applying Terraform configuration..."
+terraform apply -auto-approve \
+    -var="environment=staging" \
+    -var="namespace=healthcare" \
+    -var='replica_count={"frontend"=2,"backend"=3}'
 
-# Deploy MongoDB as StatefulSet
-echo "Deploying MongoDB StatefulSet..."
-kubectl apply -f kubernetes/mongodb-statefulset.yaml -n healthcare
+# Get the namespace from Terraform output
+NAMESPACE=$(terraform output -raw namespace)
+echo "Using Terraform-managed namespace: $NAMESPACE"
 
-# Wait for MongoDB to be ready with increased timeout
-echo "Waiting for MongoDB to be ready..."
-kubectl wait --for=condition=ready pod/mongodb-0 -n healthcare --timeout=360s || echo "Warning: MongoDB pod not ready within timeout, continuing anyway..."
+cd ..
 
-# Deploy backend and frontend services
-echo "Deploying backend and frontend services..."
-kubectl apply -f kubernetes/backend-deployment.yaml -n healthcare
-kubectl apply -f kubernetes/frontend-deployment.yaml -n healthcare
-
-# Deploy monitoring stack
+# Deploy monitoring stack (not managed by Terraform yet)
 echo "Deploying Prometheus and Grafana for monitoring..."
-kubectl apply -f kubernetes/prometheus.yaml -n healthcare
-kubectl apply -f kubernetes/grafana.yaml -n healthcare
+kubectl apply -f kubernetes/prometheus.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/grafana.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/prometheus-rules.yaml -n $NAMESPACE
 
 # Configure ingress
 echo "Configuring ingress..."
-kubectl apply -f kubernetes/ingress.yaml -n healthcare
+kubectl apply -f kubernetes/ingress.yaml -n $NAMESPACE
 
 # Wait for deployments to be ready with appropriate error handling
 echo "Waiting for all deployments to be ready..."
 wait_for_deployment() {
     local deployment_name=$1
-    if ! kubectl wait --for=condition=available --timeout=360s deployment/$deployment_name -n healthcare; then
+    if ! kubectl wait --for=condition=available --timeout=360s deployment/$deployment_name -n $NAMESPACE; then
         echo "Warning: $deployment_name not ready within timeout. You can check its status later with:"
-        echo "kubectl get pods -n healthcare | grep $deployment_name"
+        echo "kubectl get pods -n $NAMESPACE | grep $deployment_name"
     else
         echo "$deployment_name is ready!"
     fi
@@ -138,19 +133,19 @@ if ! kubectl get namespace ingress-nginx &> /dev/null; then
     kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=180s
 fi
 
-# Print information about secrets management
+# Print infrastructure information
 echo ""
-echo "Secrets Management Information:"
-echo "------------------------------"
-echo "The following secrets have been applied:"
-echo "- mongodb-secret: Contains MongoDB root credentials"
-echo "- backend-secret: Contains backend application secrets including JWT and API keys"
+echo "Infrastructure Information:"
+echo "--------------------------"
+echo "Core infrastructure (MongoDB, Backend, Frontend) deployed via Terraform"
+echo "Monitoring stack (Prometheus, Grafana) deployed via Kubernetes manifests"
+echo "Namespace: $NAMESPACE"
 echo ""
-echo "To rotate or update secrets, use the following commands:"
-echo "kubectl create secret generic mongodb-secret -n healthcare --from-literal=mongodb-root-username=newadmin --from-literal=mongodb-root-password=newpassword --dry-run=client -o yaml | kubectl apply -f -"
+echo "To view Terraform-managed resources:"
+echo "cd terraform && terraform show"
 echo ""
 echo "To view all resources in the healthcare namespace:"
-echo "kubectl get all -n healthcare"
+echo "kubectl get all -n $NAMESPACE"
 echo ""
 
 # Enable port forwarding for ingress controller
@@ -160,5 +155,5 @@ echo "Port forwarding enabled. Access the application at: http://localhost:8081"
 
 # Also setup direct port forwarding to frontend service
 echo "Setting up direct port forwarding to frontend service..."
-kubectl port-forward -n healthcare service/frontend-service 3000:3000 &> /dev/null &
+kubectl port-forward -n $NAMESPACE service/frontend 3000:3000 &> /dev/null &
 echo "Frontend service directly accessible at: http://localhost:3000"

@@ -26,7 +26,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.5.1",
+    "react-router-dom": "^7.8.2",
     "react-scripts": "5.0.1",
     "reactjs": "^1.0.0",
     "web-vitals": "^2.1.4"
@@ -104,10 +104,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 28,
-        "functions": 23,
-        "lines": 28,
-        "statements": 28
+        "branches": 50,
+        "functions": 50,
+        "lines": 58,
+        "statements": 60
       }
     },
     "testMatch": [
@@ -115,10 +115,13 @@
       "<rootDir>/src/**/*.{test,spec}.{js,jsx}"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(autocannon|hdr-histogram-js|@assemblyscript/loader|date-fns)/)"
+      "node_modules/(?!(autocannon|hdr-histogram-js|@assemblyscript/loader|date-fns|react-router|react-router-dom)/)"
     ],
     "moduleNameMapper": {
-      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js"
     }
   }
 }

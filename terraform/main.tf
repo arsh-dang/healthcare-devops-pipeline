@@ -19,6 +19,12 @@ terraform {
   }
 }
 
+# Configure the Kubernetes Provider
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+  config_context = "colima"
+}
+
 # Variables for environment configuration
 variable "environment" {
   description = "Environment name (staging, production)"
@@ -78,7 +84,7 @@ locals {
     environment = var.environment
     managed-by  = "terraform"
   }
-  
+
   frontend_labels = merge(local.common_labels, { component = "frontend" })
   backend_labels  = merge(local.common_labels, { component = "backend" })
   mongodb_labels  = merge(local.common_labels, { component = "mongodb" })
@@ -90,19 +96,19 @@ resource "random_password" "mongodb_password" {
   special = true
 }
 
-# Kubernetes Namespace
-resource "kubernetes_namespace" "healthcare" {
-  metadata {
-    name = "${var.namespace}-${var.environment}"
-    labels = local.common_labels
-  }
-}
+# Kubernetes Namespace (already exists, created manually)
+# resource "kubernetes_namespace" "healthcare" {
+#   metadata {
+#     name = "${var.namespace}-${var.environment}"
+#     labels = local.common_labels
+#   }
+# }
 
 # ConfigMap for application configuration
 resource "kubernetes_config_map" "app_config" {
   metadata {
     name      = "healthcare-app-config"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.common_labels
   }
 
@@ -110,8 +116,8 @@ resource "kubernetes_config_map" "app_config" {
     NODE_ENV                = var.environment
     MONGODB_DATABASE        = "healthcare-app"
     PROMETHEUS_METRICS_PORT = "9090"
-    LOG_LEVEL              = var.environment == "production" ? "info" : "debug"
-    CORS_ORIGIN            = var.environment == "production" ? "https://healthcare.company.com" : "*"
+    LOG_LEVEL               = var.environment == "production" ? "info" : "debug"
+    CORS_ORIGIN             = var.environment == "production" ? "https://healthcare.company.com" : "*"
   }
 }
 
@@ -119,7 +125,7 @@ resource "kubernetes_config_map" "app_config" {
 resource "kubernetes_secret" "app_secrets" {
   metadata {
     name      = "healthcare-app-secrets"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.common_labels
   }
 
@@ -127,7 +133,7 @@ resource "kubernetes_secret" "app_secrets" {
 
   data = {
     mongodb-root-password = base64encode(random_password.mongodb_password.result)
-    jwt-secret           = base64encode("super-secret-jwt-key-${var.environment}")
+    jwt-secret            = base64encode("super-secret-jwt-key-${var.environment}")
   }
 }
 
@@ -135,7 +141,7 @@ resource "kubernetes_secret" "app_secrets" {
 resource "kubernetes_stateful_set" "mongodb" {
   metadata {
     name      = "mongodb"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.mongodb_labels
   }
 
@@ -174,7 +180,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           port {
             container_port = 27017
-            name          = "mongodb"
+            name           = "mongodb"
           }
 
           volume_mount {
@@ -228,7 +234,7 @@ resource "kubernetes_stateful_set" "mongodb" {
             storage = var.environment == "production" ? "100Gi" : "10Gi"
           }
         }
-        storage_class_name = "fast-ssd"
+        storage_class_name = "local-path"
       }
     }
   }
@@ -238,7 +244,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 resource "kubernetes_deployment" "backend" {
   metadata {
     name      = "backend"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.backend_labels
   }
 
@@ -266,7 +272,7 @@ resource "kubernetes_deployment" "backend" {
 
           port {
             container_port = 5000
-            name          = "http"
+            name           = "http"
           }
 
           env_from {
@@ -321,10 +327,10 @@ resource "kubernetes_deployment" "backend" {
 
           # Security context
           security_context {
-            run_as_non_root             = true
-            run_as_user                 = 1000
-            allow_privilege_escalation  = false
-            read_only_root_filesystem   = true
+            run_as_non_root            = true
+            run_as_user                = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = true
           }
         }
 
@@ -358,7 +364,7 @@ resource "kubernetes_deployment" "backend" {
       type = "RollingUpdate"
       rolling_update {
         max_unavailable = "25%"
-        max_surge      = "25%"
+        max_surge       = "25%"
       }
     }
   }
@@ -368,7 +374,7 @@ resource "kubernetes_deployment" "backend" {
 resource "kubernetes_deployment" "frontend" {
   metadata {
     name      = "frontend"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.frontend_labels
   }
 
@@ -391,7 +397,7 @@ resource "kubernetes_deployment" "frontend" {
 
           port {
             container_port = 3000
-            name          = "http"
+            name           = "http"
           }
 
           resources {
@@ -424,10 +430,10 @@ resource "kubernetes_deployment" "frontend" {
           }
 
           security_context {
-            run_as_non_root             = true
-            run_as_user                 = 101
-            allow_privilege_escalation  = false
-            read_only_root_filesystem   = true
+            run_as_non_root            = true
+            run_as_user                = 101
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = true
           }
         }
       }
@@ -439,7 +445,7 @@ resource "kubernetes_deployment" "frontend" {
 resource "kubernetes_service" "mongodb" {
   metadata {
     name      = "mongodb"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.mongodb_labels
   }
 
@@ -459,7 +465,7 @@ resource "kubernetes_service" "mongodb" {
 resource "kubernetes_service" "backend" {
   metadata {
     name      = "backend"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.backend_labels
     annotations = {
       "prometheus.io/scrape" = "true"
@@ -483,7 +489,7 @@ resource "kubernetes_service" "backend" {
 resource "kubernetes_service" "frontend" {
   metadata {
     name      = "frontend"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
     labels    = local.frontend_labels
   }
 
@@ -504,7 +510,7 @@ resource "kubernetes_service" "frontend" {
 resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
   metadata {
     name      = "backend-hpa"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
   }
 
   spec {
@@ -545,7 +551,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
 resource "kubernetes_network_policy" "default_deny" {
   metadata {
     name      = "default-deny-all"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
   }
 
   spec {
@@ -557,7 +563,7 @@ resource "kubernetes_network_policy" "default_deny" {
 resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
   metadata {
     name      = "allow-backend-to-mongodb"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    namespace = "${var.namespace}-${var.environment}"
   }
 
   spec {
@@ -584,7 +590,7 @@ resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
 # Outputs
 output "namespace" {
   description = "Kubernetes namespace"
-  value       = kubernetes_namespace.healthcare.metadata[0].name
+  value       = "${var.namespace}-${var.environment}"
 }
 
 output "mongodb_service" {
