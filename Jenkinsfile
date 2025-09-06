@@ -44,8 +44,7 @@ pipeline {
     }
     
     tools {
-        nodejs '20.x'
-        terraform 'terraform-latest'
+        nodejs 'NodeJS-20'
     }
     
     stages {
