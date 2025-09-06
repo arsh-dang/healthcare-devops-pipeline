@@ -18,8 +18,8 @@ pipeline {
         // SonarQube Configuration
         SONAR_PROJECT_KEY = 'healthcare-app'
         SONAR_HOST_URL = 'http://localhost:9000'
-        // Use default credentials for demo purposes
-        SONAR_TOKEN = 'admin'
+        // Use SonarQube token authentication (recommended)
+        SONAR_TOKEN = credentials('sonarqube-token')
         
         // Kubernetes Configuration
         KUBECONFIG = credentials('kubeconfig')
@@ -341,7 +341,6 @@ pipeline {
                         ./sonar-scanner/bin/sonar-scanner \
                           -Dsonar.host.url=${SONAR_HOST_URL} \
                           -Dsonar.login=${SONAR_TOKEN} \
-                          -Dsonar.password=admin \
                           || echo "SonarQube analysis completed with warnings"
                     '''
                 }
