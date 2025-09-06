@@ -8,7 +8,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
         
         // PATH Configuration for macOS
-        PATH = "${env.PATH}:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin"
+        PATH = "${env.PATH}:/usr/local/bin:/Applications/Docker.app/Contents/Resources/bin:/opt/homebrew/bin"
         
         // Application Configuration
         APP_NAME = 'healthcare-app'

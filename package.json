@@ -109,7 +109,6 @@
         "lines": 70,
         "statements": 70
       }
-    },
-    "testResultsProcessor": "jest-sonar-reporter"
+    }
   }
 }
