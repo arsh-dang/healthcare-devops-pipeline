@@ -707,7 +707,7 @@ resource "kubernetes_service" "grafana" {
 }
 
 # Node Exporter DaemonSet for node metrics
-resource "kubernetes_daemon_set" "node_exporter" {
+resource "kubernetes_daemonset" "node_exporter" {
   metadata {
     name      = "node-exporter"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
