@@ -954,34 +954,35 @@ print('✅ No secrets detected')
                         }
                     }
                 }
-            }
-        }
-                    }
+                
+                // Run smoke tests using Terraform outputs
+                sh '''
+                    # Wait for services to be ready
+                    sleep 60
                     
-                    // Run smoke tests using Terraform outputs
-                    sh '''
-                        # Wait for services to be ready
-                        sleep 60
-                        
-                        # Use Terraform-managed services
-                        NAMESPACE="${TERRAFORM_NAMESPACE:-healthcare-staging}"
-                        BACKEND_SERVICE="${TERRAFORM_BACKEND_SERVICE:-backend}"
-                        
-                        echo "Testing Terraform-deployed services..."
-                        
-                        # Port forward for testing (since we're using ClusterIP from Terraform)
-                        kubectl port-forward svc/$BACKEND_SERVICE 8080:5000 -n $NAMESPACE &
-                        PORT_FORWARD_PID=$!
-                        
-                        sleep 10
-                        
-                        # Run smoke tests
-                        curl -f http://localhost:8080/health || echo "Health check failed"
-                        curl -f http://localhost:8080/api/appointments || echo "API check failed"
-                        
-                        # Cleanup port forward
-                        kill $PORT_FORWARD_PID || true
-                    '''
+                    # Use Terraform-managed services
+                    NAMESPACE="${TERRAFORM_NAMESPACE:-healthcare-staging}"
+                    BACKEND_SERVICE="${TERRAFORM_BACKEND_SERVICE:-backend}"
+                    
+                    echo "Testing Terraform-deployed services..."
+                    
+                    # Port forward for testing (since we're using ClusterIP from Terraform)
+                    kubectl port-forward svc/$BACKEND_SERVICE 8080:5000 -n $NAMESPACE &
+                    PORT_FORWARD_PID=$!
+                    
+                    sleep 10
+                    
+                    # Run smoke tests
+                    curl -f http://localhost:8080/health || echo "Health check failed"
+                    curl -f http://localhost:8080/api/appointments || echo "API check failed"
+                    
+                    # Cleanup port forward
+                    kill $PORT_FORWARD_PID || true
+                '''
+            }
+            
+            post {
+                '''
                 }
             }
             
