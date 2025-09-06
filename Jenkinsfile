@@ -190,7 +190,7 @@ pipeline {
                             '''
                             
                             // Publish test results with detailed metrics
-                            junit testResultsPattern: 'test-report.xml,test-results-backend.xml'
+                            junit testResults: 'test-report.xml,test-results-backend.xml'
                             
                             // Publish coverage with multiple formats
                             publishCoverage adapters: [
