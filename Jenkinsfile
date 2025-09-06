@@ -1028,7 +1028,6 @@ print('✅ No secrets detected')
                         sh '''
                             echo "=== Deploying Production Infrastructure with Terraform ==="
                             
-                            # Switch to production workspace
                             ./init-workspace.sh production
                             
                             # Plan production infrastructure (including monitoring)
