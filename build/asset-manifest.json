@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.cc11a1de.css",
+    "main.js": "/static/js/main.871870ef.js",
+    "static/media/healthcare-logo.svg": "/static/media/healthcare-logo.f6765a9412b8f0dbc7c5b69fbafbe64d.svg",
+    "index.html": "/index.html",
+    "main.cc11a1de.css.map": "/static/css/main.cc11a1de.css.map",
+    "main.871870ef.js.map": "/static/js/main.871870ef.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.cc11a1de.css",
+    "static/js/main.871870ef.js"
+  ]
+}

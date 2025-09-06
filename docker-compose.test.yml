@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Test MongoDB instance
+  mongodb-test:
+    image: mongo:7.0
+    container_name: mongodb-test
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: testuser
+      MONGO_INITDB_ROOT_PASSWORD: testpassword
+      MONGO_INITDB_DATABASE: healthcare-app-test
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-test-data:/data/db
+    networks:
+      - test-network
+
+  # Test Backend API
+  backend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: backend-test
+    environment:
+      NODE_ENV: test
+      PORT: 5001
+      MONGODB_URI: mongodb://testuser:testpassword@mongodb-test:27017/healthcare-app-test?authSource=admin
+    ports:
+      - "5001:5001"
+    depends_on:
+      - mongodb-test
+    networks:
+      - test-network
+    command: >
+      sh -c "
+        echo 'Waiting for MongoDB to be ready...' &&
+        sleep 10 &&
+        node server/server.js
+      "
+
+  # Test Frontend (for integration tests)
+  frontend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: frontend-test
+    ports:
+      - "3001:3000"
+    environment:
+      REACT_APP_API_URL: http://backend-test:5001/api
+    depends_on:
+      - backend-test
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  mongodb-test-data:
