@@ -1,3 +1,14 @@
+// Initialize Datadog APM if available and enabled
+try {
+  if (process.env.DD_TRACE_ENABLED === 'true') {
+    // eslint-disable-next-line global-require
+    require('dd-trace').init({ service: 'healthcare-backend', env: process.env.NODE_ENV || 'staging' });
+  }
+} catch (e) {
+  // eslint-disable-next-line no-console
+  console.warn('Datadog APM not initialized:', e.message);
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

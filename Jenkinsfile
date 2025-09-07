@@ -15,7 +15,7 @@ node {
         timestamps {
             
             stage('Checkout') {
-                echo '🔄 Checking out source code...'
+                echo 'Checking out source code...'
                 checkout scm
                 
                 // Get commit information
@@ -40,7 +40,7 @@ node {
             stage('Build') {
                 parallel(
                     'Build Frontend': {
-                        echo 'Building Frontend Application with Optimized Caching...'
+                        echo 'Building frontend application with optimized caching'
                         sh '''
                             cd ${WORKSPACE}
                             echo "Current directory: $(pwd)"
@@ -127,7 +127,7 @@ node {
             stage('Test') {
                 parallel(
                     'Unit Tests': {
-                        echo 'Running Unit Tests with Coverage...'
+                        echo 'Running unit tests with coverage'
                         sh '''
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Running frontend unit tests..."
@@ -149,7 +149,7 @@ node {
                         '''
                     },
                     'Integration Tests': {
-                        echo 'Running Integration Tests...'
+                        echo 'Running integration tests'
                         sh '''
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Setting up test database..."
@@ -171,7 +171,7 @@ node {
                         '''
                     },
                     'API Testing': {
-                        echo 'Running API Tests with Postman/Newman...'
+                        echo 'Running API tests with Newman'
                         sh '''
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Installing Newman for API testing..."
@@ -190,7 +190,7 @@ node {
             }
             
             stage('Code Quality') {
-                echo 'Running Code Quality Analysis with SonarQube...'
+                echo 'Running code quality analysis'
                 sh '''
                     if command -v npm >/dev/null 2>&1; then
                         echo "Running ESLint for code quality..."
@@ -207,7 +207,7 @@ node {
             stage('Security') {
                 parallel(
                     'Dependency Scan': {
-                        echo 'Running Dependency Security Scan...'
+                        echo 'Running dependency security scan'
                         sh '''
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Running npm audit for dependency vulnerabilities..."
@@ -222,14 +222,14 @@ node {
                         '''
                     },
                     'SAST Analysis': {
-                        echo 'Running Static Application Security Testing...'
+                        echo 'Running static application security testing'
                         sh '''
                             echo "Running static security analysis..."
                             echo "SAST analysis completed"
                         '''
                     },
                     'Container Security': {
-                        echo 'Running Container Security Scan...'
+                        echo 'Running container security scan'
                         sh '''
                             if command -v docker >/dev/null 2>&1; then
                                 echo "Scanning Docker images for vulnerabilities..."
@@ -252,7 +252,7 @@ node {
                         '''
                     },
                     'Secrets Scanning': {
-                        echo 'Scanning for Exposed Secrets...'
+                        echo 'Scanning for exposed secrets'
                         sh '''
                             echo "Scanning for exposed secrets in code..."
                             echo "Secrets scan completed"
@@ -262,7 +262,7 @@ node {
             }
             
             stage('Infrastructure as Code') {
-                echo 'Deploying Infrastructure with Terraform...'
+                echo 'Deploying infrastructure with Terraform'
                 
                 script {
                     try {
@@ -320,7 +320,7 @@ node {
             }
             
             stage('Deploy to Staging') {
-                echo '🚀 Deploying to Staging Environment...'
+                echo 'Deploying to staging environment'
                 sh '''
                     if command -v docker >/dev/null 2>&1; then
                         echo "Building Docker images for staging deployment..."
@@ -425,7 +425,7 @@ node {
             }
             
             stage('Release to Production') {
-                echo '🚀 Deploying to Production Environment...'
+                echo 'Deploying to production environment'
                 sh '''
                     echo "Preparing production deployment..."
                     echo "Production deployment completed successfully"

@@ -71,6 +71,19 @@ variable "enable_monitoring" {
   default     = true
 }
 
+variable "enable_datadog" {
+  description = "Enable Datadog agent deployment"
+  type        = bool
+  default     = false
+}
+
+variable "datadog_api_key" {
+  description = "Datadog API key"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "monitoring_retention_days" {
   description = "Prometheus data retention in days"
   type        = number
@@ -124,6 +137,7 @@ locals {
   frontend_labels = merge(local.common_labels, { component = "frontend" })
   backend_labels  = merge(local.common_labels, { component = "backend" })
   mongodb_labels  = merge(local.common_labels, { component = "mongodb" })
+  monitoring_labels = merge(local.common_labels, { component = "monitoring" })
 }
 
 # Random password for MongoDB
@@ -543,6 +557,46 @@ resource "kubernetes_service" "mongodb" {
     }
 
     cluster_ip = "None"
+  }
+}
+
+# Optional Datadog Agent via Helm (when enabled)
+resource "helm_release" "datadog" {
+  count      = var.enable_datadog ? 1 : 0
+  name       = "datadog"
+  repository = "https://helm.datadoghq.com"
+  chart      = "datadog"
+  version    = "3.43.12"
+  namespace  = kubernetes_namespace.healthcare.metadata[0].name
+
+  set {
+    name  = "datadog.apiKey"
+    value = var.datadog_api_key
+  }
+
+  set {
+    name  = "datadog.site"
+    value = "datadoghq.com"
+  }
+
+  set {
+    name  = "datadog.env"
+    value = var.environment
+  }
+
+  set {
+    name  = "agents.containerLogs.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "datadog.apm.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "clusterAgent.enabled"
+    value = "true"
   }
 }
 
