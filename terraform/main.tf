@@ -126,19 +126,19 @@ resource "random_password" "mongodb_password" {
   special = true
 }
 
-# Kubernetes Namespace (already exists, created manually)
-# resource "kubernetes_namespace" "healthcare" {
-#   metadata {
-#     name = "${var.namespace}-${var.environment}"
-#     labels = local.common_labels
-#   }
-# }
+# Kubernetes Namespace for application
+resource "kubernetes_namespace" "healthcare" {
+  metadata {
+    name = "${var.namespace}-${var.environment}"
+    labels = local.common_labels
+  }
+}
 
 # ConfigMap for application configuration
 resource "kubernetes_config_map" "app_config" {
   metadata {
     name      = "healthcare-app-config"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.common_labels
   }
 
@@ -155,7 +155,7 @@ resource "kubernetes_config_map" "app_config" {
 resource "kubernetes_secret" "app_secrets" {
   metadata {
     name      = "healthcare-app-secrets"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.common_labels
   }
 
@@ -171,7 +171,7 @@ resource "kubernetes_secret" "app_secrets" {
 resource "kubernetes_stateful_set" "mongodb" {
   metadata {
     name      = "mongodb"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.mongodb_labels
   }
 
@@ -274,7 +274,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 resource "kubernetes_deployment" "backend" {
   metadata {
     name      = "backend"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.backend_labels
   }
 
@@ -404,7 +404,7 @@ resource "kubernetes_deployment" "backend" {
 resource "kubernetes_deployment" "frontend" {
   metadata {
     name      = "frontend"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.frontend_labels
   }
 
@@ -475,7 +475,7 @@ resource "kubernetes_deployment" "frontend" {
 resource "kubernetes_service" "mongodb" {
   metadata {
     name      = "mongodb"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.mongodb_labels
   }
 
@@ -495,7 +495,7 @@ resource "kubernetes_service" "mongodb" {
 resource "kubernetes_service" "backend" {
   metadata {
     name      = "backend"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.backend_labels
     annotations = {
       "prometheus.io/scrape" = "true"
@@ -519,7 +519,7 @@ resource "kubernetes_service" "backend" {
 resource "kubernetes_service" "frontend" {
   metadata {
     name      = "frontend"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.frontend_labels
   }
 
@@ -540,7 +540,7 @@ resource "kubernetes_service" "frontend" {
 resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
   metadata {
     name      = "backend-hpa"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
   }
 
   spec {
@@ -581,7 +581,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
 resource "kubernetes_network_policy" "default_deny" {
   metadata {
     name      = "default-deny-all"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
   }
 
   spec {
@@ -593,7 +593,7 @@ resource "kubernetes_network_policy" "default_deny" {
 resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
   metadata {
     name      = "allow-backend-to-mongodb"
-    namespace = "${var.namespace}-${var.environment}"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
   }
 
   spec {
