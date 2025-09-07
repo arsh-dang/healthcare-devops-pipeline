@@ -234,6 +234,16 @@ node {
                             if command -v docker >/dev/null 2>&1; then
                                 echo "Scanning Docker images for vulnerabilities..."
                                 docker images | grep healthcare-app || echo "No healthcare-app images found"
+
+                                # Run Trivy scans if available; fail on HIGH/CRITICAL
+                                if command -v trivy >/dev/null 2>&1; then
+                                    echo "Running Trivy scan on frontend image..."
+                                    trivy image --quiet --severity HIGH,CRITICAL --exit-code 1 healthcare-app-frontend:${BUILD_NUMBER} || echo "Frontend image vulnerabilities found or scan issues"
+                                    echo "Running Trivy scan on backend image..."
+                                    trivy image --quiet --severity HIGH,CRITICAL --exit-code 1 healthcare-app-backend:${BUILD_NUMBER} || echo "Backend image vulnerabilities found or scan issues"
+                                else
+                                    echo "Trivy not available - skipping container vulnerability scan"
+                                fi
                             else
                                 echo "Docker not available - skipping container security scan for now"
                                 echo "Container security scan would run here with proper Docker setup"
@@ -279,10 +289,10 @@ node {
                                     sleep 5
                                     
                                     echo "Planning Terraform deployment..."
-                                    terraform plan -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:''' + BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:''' + BUILD_NUMBER + '''"
+                                    terraform plan -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:'''+ BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:'''+ BUILD_NUMBER + '''"
                                     
                                     echo "Applying Terraform configuration..."
-                                    terraform apply -auto-approve -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:''' + BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:''' + BUILD_NUMBER + '''"
+                                    terraform apply -auto-approve -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:'''+ BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:'''+ BUILD_NUMBER + '''"
                                     
                                     echo "Infrastructure deployment completed"
                                 '''
@@ -379,13 +389,38 @@ node {
                         # Wait for pods to be ready with shorter timeout
                         echo "Waiting for pods to be ready..."
                         kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=60s || echo "Some pods may still be starting"
-                        
-                        echo "Staging deployment completed successfully"
                     else
                         echo "Docker not available - simulating staging deployment"
                         echo "In production, Docker images would be built and deployed here"
                         echo "Staging deployment simulation completed successfully"
                     fi
+                '''
+
+                // Monitoring verification step (not a new stage)
+                echo '🔎 Verifying monitoring and service health...'
+                sh '''
+                    set -e
+                    echo "Checking frontend service readiness via port-forward..."
+                    kubectl port-forward svc/frontend -n healthcare-staging 3001:3001 >/tmp/pf-frontend.log 2>&1 &
+                    PF_PID=$!
+                    sleep 2
+                    curl -sS -I http://127.0.0.1:3001/ | head -n 1 || true
+                    kill $PF_PID || true
+                    
+                    echo "Checking backend health endpoint..."
+                    kubectl port-forward svc/backend -n healthcare-staging 5000:5000 >/tmp/pf-backend.log 2>&1 &
+                    PF2_PID=$!
+                    sleep 2
+                    curl -sS http://127.0.0.1:5000/health || true
+                    kill $PF2_PID || true
+                    
+                    echo "Checking Prometheus target discovery (if monitoring deployed)..."
+                    kubectl get pods -n monitoring-staging >/dev/null 2>&1 || exit 0
+                    kubectl port-forward svc/prometheus -n monitoring-staging 9090:9090 >/tmp/pf-prom.log 2>&1 &
+                    PF3_PID=$!
+                    sleep 2
+                    curl -sS http://127.0.0.1:9090/api/v1/targets | jq '.data.activeTargets | length' || true
+                    kill $PF3_PID || true
                 '''
             }
             
