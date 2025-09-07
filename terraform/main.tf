@@ -371,6 +371,22 @@ resource "kubernetes_deployment" "backend" {
             }
           }
 
+          # Datadog APM environment variables
+          env {
+            name  = "DD_TRACE_ENABLED"
+            value = var.enable_datadog ? "true" : "false"
+          }
+
+          env {
+            name  = "DD_ENV"
+            value = var.environment
+          }
+
+          env {
+            name  = "DD_SERVICE"
+            value = "healthcare-backend"
+          }
+
           resources {
             requests = {
               cpu    = var.resource_limits.backend.cpu_request

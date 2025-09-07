@@ -269,33 +269,39 @@ node {
                         dir('terraform') {
                             if (fileExists('./deploy.sh')) {
                                 // Use the deployment script with clean strategy for reliability
-                                sh '''
-                                    echo "Using Terraform deployment script..."
-                                    export TERRAFORM_STRATEGY=clean
-                                    export BUILD_NUMBER=''' + BUILD_NUMBER + '''
-                                    ./deploy.sh deploy staging ''' + BUILD_NUMBER + ''' healthcare-app-frontend:''' + BUILD_NUMBER + ''' healthcare-app-backend:''' + BUILD_NUMBER + '''
-                                '''
+                                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DD_API_KEY', required: false)]) {
+                                    sh '''
+                                        echo "Using Terraform deployment script..."
+                                        export TERRAFORM_STRATEGY=clean
+                                        export BUILD_NUMBER=''' + BUILD_NUMBER + '''
+                                        export TF_VAR_enable_datadog=''' + (env.DD_API_KEY ? 'true' : 'false') + '''
+                                        export TF_VAR_datadog_api_key=''' + (env.DD_API_KEY ? env.DD_API_KEY : '') + '''
+                                        ./deploy.sh deploy staging ''' + BUILD_NUMBER + ''' healthcare-app-frontend:''' + BUILD_NUMBER + ''' healthcare-app-backend:''' + BUILD_NUMBER + '''
+                                    '''
+                                }
                             } else {
-                                // Fallback to direct terraform commands
-                                sh '''
-                                    echo "Initializing Terraform for infrastructure deployment..."
-                                    terraform init
-                                    
-                                    echo "Cleaning up any conflicting resources..."
-                                    kubectl delete namespace healthcare-staging --ignore-not-found=true || true
-                                    kubectl delete namespace monitoring-staging --ignore-not-found=true || true
-                                    kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
-                                    kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
-                                    sleep 5
-                                    
-                                    echo "Planning Terraform deployment..."
-                                    terraform plan -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:'''+ BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:'''+ BUILD_NUMBER + '''"
-                                    
-                                    echo "Applying Terraform configuration..."
-                                    terraform apply -auto-approve -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:'''+ BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:'''+ BUILD_NUMBER + '''"
-                                    
-                                    echo "Infrastructure deployment completed"
-                                '''
+                                // Fallback to direct terraform commands with Datadog support
+                                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DD_API_KEY', required: false)]) {
+                                    sh '''
+                                        echo "Initializing Terraform for infrastructure deployment..."
+                                        terraform init
+                                        
+                                        echo "Cleaning up any conflicting resources..."
+                                        kubectl delete namespace healthcare-staging --ignore-not-found=true || true
+                                        kubectl delete namespace monitoring-staging --ignore-not-found=true || true
+                                        kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
+                                        kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
+                                        sleep 5
+                                        
+                                        echo "Planning Terraform deployment..."
+                                        terraform plan -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:'''+ BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:'''+ BUILD_NUMBER + '''" -var="enable_datadog=''' + (env.DD_API_KEY ? 'true' : 'false') + '''" -var="datadog_api_key=''' + (env.DD_API_KEY ? env.DD_API_KEY : '') + '''"
+                                        
+                                        echo "Applying Terraform configuration..."
+                                        terraform apply -auto-approve -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:'''+ BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:'''+ BUILD_NUMBER + '''" -var="enable_datadog=''' + (env.DD_API_KEY ? 'true' : 'false') + '''" -var="datadog_api_key=''' + (env.DD_API_KEY ? env.DD_API_KEY : '') + '''"
+                                        
+                                        echo "Infrastructure deployment completed"
+                                    '''
+                                }
                             }
                         }
                         
