@@ -48,7 +48,18 @@ node {
                             # Check if npm is available
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Installing frontend dependencies..."
-                                npm ci --cache .npm --prefer-offline
+                                
+                                # Check if we have pnpm-lock.yaml (pnpm project) or package-lock.json (npm project)
+                                if [ -f "pnpm-lock.yaml" ]; then
+                                    echo "Found pnpm-lock.yaml - using npm install instead of npm ci"
+                                    npm install --prefer-offline
+                                elif [ -f "package-lock.json" ]; then
+                                    echo "Found package-lock.json - using npm ci"
+                                    npm ci --cache .npm --prefer-offline
+                                else
+                                    echo "No lock file found - using npm install"
+                                    npm install --prefer-offline
+                                fi
                                 
                                 echo "Building production frontend..."
                                 npm run build
@@ -98,6 +109,15 @@ node {
                         sh '''
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Running frontend unit tests..."
+                                # Make sure dependencies are installed first
+                                if [ -f "pnpm-lock.yaml" ]; then
+                                    npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                elif [ -f "package-lock.json" ]; then
+                                    npm ci --cache .npm --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                else
+                                    npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                fi
+                                
                                 npm test -- --coverage --watchAll=false --testResultsProcessor="jest-junit" || echo "Tests completed with warnings"
                                 echo "Unit tests completed"
                             else
@@ -112,6 +132,15 @@ node {
                             if command -v npm >/dev/null 2>&1; then
                                 echo "Setting up test database..."
                                 echo "Running integration tests..."
+                                # Make sure dependencies are installed first
+                                if [ -f "pnpm-lock.yaml" ]; then
+                                    npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                elif [ -f "package-lock.json" ]; then
+                                    npm ci --cache .npm --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"  
+                                else
+                                    npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                fi
+                                
                                 npm run test:integration || echo "Integration tests completed with warnings"
                             else
                                 echo "npm not available - skipping integration tests for now"
