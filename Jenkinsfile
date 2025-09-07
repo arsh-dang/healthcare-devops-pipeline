@@ -1072,7 +1072,6 @@ EOF
                     echo '❌ Staging deployment failed'
                     echo "❌ ${APP_NAME} v${BUILD_NUMBER} staging deployment failed"
                 }
-                }
             }
         }
         
