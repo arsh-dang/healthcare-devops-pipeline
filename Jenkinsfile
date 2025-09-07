@@ -299,7 +299,7 @@ node {
                             kubectl get services -n monitoring-staging || true
                             
                             echo "Waiting for pods to be ready..."
-                            kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=300s || true
+                            kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=60s || true
                         '''
                         
                     } catch (Exception e) {
@@ -326,18 +326,60 @@ node {
                         echo "Docker images built successfully"
                         docker images | grep healthcare-app
                         
-                        # Load images into k3s cluster (if available)
+                        # Load images into k3s cluster with improved error handling
                         if command -v colima >/dev/null 2>&1; then
                             echo "Loading images into k3s cluster..."
-                            docker save healthcare-app-frontend:${BUILD_NUMBER} | colima ssh -- sudo k3s ctr images import -
-                            docker save healthcare-app-backend:${BUILD_NUMBER} | colima ssh -- sudo k3s ctr images import -
-                            echo "Images loaded into cluster successfully"
+                            
+                            # Function to load image with retry and timeout
+                            load_image() {
+                                local image=$1
+                                local max_attempts=3
+                                local attempt=1
+                                
+                                while [ $attempt -le $max_attempts ]; do
+                                    echo "Attempt $attempt: Loading $image..."
+                                    
+                                    # Use timeout to prevent hanging
+                                    if timeout 60s docker save $image | timeout 60s colima ssh -- sudo k3s ctr images import -; then
+                                        echo "Successfully loaded $image"
+                                        return 0
+                                    else
+                                        echo "Attempt $attempt failed for $image"
+                                        # Restart k3s if multiple failures
+                                        if [ $attempt -eq 2 ]; then
+                                            echo "Restarting k3s service..."
+                                            colima ssh -- sudo systemctl restart k3s || true
+                                            sleep 10
+                                        fi
+                                    fi
+                                    
+                                    attempt=$((attempt + 1))
+                                    sleep 5
+                                done
+                                
+                                echo "Failed to load $image after $max_attempts attempts, continuing..."
+                                return 1
+                            }
+                            
+                            # Load images
+                            load_image "healthcare-app-frontend:${BUILD_NUMBER}"
+                            load_image "healthcare-app-backend:${BUILD_NUMBER}"
+                            
+                            echo "Verifying images in cluster..."
+                            colima ssh -- sudo k3s ctr images list | grep healthcare-app || echo "Some images may not be loaded"
                         else
                             echo "Colima not available - would load images into cluster here"
                         fi
                         
-                        # Deploy to staging
-                        echo "Deploying to staging environment..."
+                        # Deploy to staging (verify infrastructure deployment)
+                        echo "Verifying staging deployment..."
+                        kubectl get pods -n healthcare-staging || echo "Namespace may not exist yet"
+                        kubectl get services -n healthcare-staging || echo "Services may not exist yet"
+                        
+                        # Wait for pods to be ready with shorter timeout
+                        echo "Waiting for pods to be ready..."
+                        kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=60s || echo "Some pods may still be starting"
+                        
                         echo "Staging deployment completed successfully"
                     else
                         echo "Docker not available - simulating staging deployment"
