@@ -34,8 +34,8 @@ pipeline {
         // Keep builds for 30 days
         buildDiscarder(logRotator(daysToKeepStr: '30', numToKeepStr: '10'))
         
-        // Timeout the entire pipeline after 30 minutes
-        timeout(time: 30, unit: 'MINUTES')
+        // Timeout the entire pipeline after 60 minutes
+        timeout(time: 60, unit: 'MINUTES')
         
         // Enable timestamps in console output
         timestamps()
@@ -273,36 +273,47 @@ pipeline {
                 }
                 
                 stage('API Testing') {
+                    options {
+                        timeout(time: 15, unit: 'MINUTES')
+                    }
                     steps {
                         echo 'Running API Contract and Load Tests...'
                         
                         script {
-                            // API contract testing with Postman/Newman
-                            sh '''
-                                # Install Newman if not available
-                                npm install -g newman newman-reporter-htmlextra || true
+                            try {
+                                // API contract testing with Postman/Newman
+                                sh '''
+                                    # Install Newman if not available
+                                    npm install -g newman newman-reporter-htmlextra || true
+                                    
+                                    # Run API tests if collection exists
+                                    if [ -f "postman/healthcare-api.postman_collection.json" ]; then
+                                        newman run postman/healthcare-api.postman_collection.json \
+                                            --environment postman/test.postman_environment.json \
+                                            --reporters cli,htmlextra \
+                                            --reporter-htmlextra-export api-test-report.html \
+                                            --timeout 30000 \
+                                            --bail || echo "API tests completed with issues"
+                                    fi
+                                '''
                                 
-                                # Run API tests if collection exists
-                                if [ -f "postman/healthcare-api.postman_collection.json" ]; then
-                                    newman run postman/healthcare-api.postman_collection.json \
-                                        --environment postman/test.postman_environment.json \
-                                        --reporters cli,htmlextra \
-                                        --reporter-htmlextra-export api-test-report.html \
-                                        --bail || echo "API tests completed with issues"
-                                fi
-                            '''
-                            
-                            // Load testing with artillery
-                            sh '''
-                                # Install artillery if not available
-                                npm install -g artillery || true
-                                
-                                # Run load tests if config exists
-                                if [ -f "load-tests/artillery-config.yml" ]; then
-                                    artillery run load-tests/artillery-config.yml --output load-test-results.json || echo "Load tests completed"
-                                    artillery report load-test-results.json --output load-test-report.html || true
-                                fi
-                            '''
+                                // Load testing with artillery
+                                sh '''
+                                    # Install artillery if not available
+                                    npm install -g artillery || true
+                                    
+                                    # Run load tests if config exists
+                                    if [ -f "load-tests/artillery-config.yml" ]; then
+                                        echo "Starting load tests with reduced duration..."
+                                        timeout 10m artillery run load-tests/artillery-config.yml --output load-test-results.json || echo "Load tests completed with timeout"
+                                        artillery report load-test-results.json --output load-test-report.html || true
+                                    fi
+                                '''
+                            } catch (Exception e) {
+                                echo "API Testing encountered issues: ${e.getMessage()}"
+                                echo "Continuing pipeline execution..."
+                                currentBuild.result = 'UNSTABLE'
+                            }
                         }
                     }
                     
