@@ -2,7 +2,7 @@
 
 This guide covers the deployment process, environments, and operational procedures for the Healthcare DevOps Pipeline.
 
-## 🏗️ Deployment Architecture
+##    Deployment Architecture
 
 ### Infrastructure Overview
 ```
@@ -54,7 +54,7 @@ This guide covers the deployment process, environments, and operational procedur
 - **Access**: Restricted to operations team
 - **Data**: Real healthcare data (HIPAA compliant)
 
-## 🚀 Deployment Process
+##   Deployment Process
 
 ### 1. Automated Deployment Flow
 
@@ -179,7 +179,7 @@ kubectl rollout undo deployment/healthcare-frontend -n healthcare-production
 kubectl rollout undo deployment/healthcare-backend -n healthcare-production
 ```
 
-## 🔧 Infrastructure as Code
+##   Infrastructure as Code
 
 ### Terraform Configuration
 
@@ -354,7 +354,7 @@ kubectl get services -n healthcare-production
 kubectl exec -it deployment/healthcare-frontend -n healthcare-production -- curl http://localhost/health
 ```
 
-## 📊 Monitoring and Observability
+##   Monitoring and Observability
 
 ### Prometheus Configuration
 ```yaml
@@ -442,7 +442,7 @@ groups:
           description: "Backend response time is above 2 seconds for 5 minutes"
 ```
 
-## 🔒 Security Considerations
+##   Security Considerations
 
 ### Deployment Security
 ```bash
@@ -529,7 +529,7 @@ kubectl rollout undo deployment/healthcare-frontend -n healthcare-production --t
 kubectl rollout status deployment/healthcare-frontend -n healthcare-production
 ```
 
-## 📈 Performance Optimization
+##   Performance Optimization
 
 ### Resource Optimization
 ```yaml

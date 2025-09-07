@@ -1,4 +1,4 @@
-# Healthcare DevOps Pipeline 🏥
+# Healthcare DevOps Pipeline
 
 A comprehensive **7-stage CI/CD pipeline** for healthcare web application deployment using Jenkins, Docker, Kubernetes, and Terraform. This enterprise-grade DevOps solution implements industry best practices for secure, scalable, and reliable healthcare application deployment.
 
@@ -10,7 +10,7 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 [![Infrastructure](https://img.shields.io/badge/Infrastructure-Terraform-blue)](./terraform)
 [![Monitoring](https://img.shields.io/badge/Monitoring-Prometheus%2BGrafana-orange)](./docs/MONITORING_GUIDE.md)
 
-## � Project Overview
+##   Project Overview
 
 ### Healthcare Application Features
 - **Patient Management**: Secure patient registration and profile management
@@ -27,28 +27,28 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 - **Complete Monitoring**: Prometheus + Grafana observability stack
 - **Production Ready**: Enterprise-grade deployment with auto-scaling
 
-## � Latest Pipeline Achievements
+##   Latest Pipeline Achievements
 
-### **✅ Major Code Quality Improvements (Latest Update)**
+### **  Major Code Quality Improvements (Latest Update)**
 - **ESLint Issues**: Reduced from 83 problems to 12 warnings (85.5% improvement)
 - **Zero Critical Errors**: All 36 ESLint errors completely resolved
 - **PropTypes Validation**: Added to all React components for type safety
 - **Testing Library Best Practices**: Resolved all anti-pattern warnings
 - **Production Ready**: Code quality now meets enterprise standards
 
-### **🧪 Testing Excellence Achieved**
+### **  Testing Excellence Achieved**
 - **Unit Test Coverage**: **98.35%** with 197/197 tests passing
 - **Integration Tests**: **100% success rate** (4/4 tests passing)
 - **Test Reliability**: All test suites stable and comprehensive
 - **Quality Assurance**: Zero failing tests across all environments
 
-### **🚀 DevOps Pipeline Validation**
+### **  DevOps Pipeline Validation**
 - **Docker Environment**: All containers healthy and communicating
 - **API Endpoints**: Health, database, and appointment APIs validated
 - **Infrastructure**: Core pipeline components operational
 - **Monitoring Ready**: Prometheus + Grafana configuration validated
 
-## �🏗️ Architecture Overview
+##     Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -90,7 +90,7 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
       └─────────────┘                 └─────────────┘
 ```
 
-## 🚀 7-Stage Pipeline Implementation
+##   7-Stage Pipeline Implementation
 
 ### **Stage 1: Build & Package** 🔨
 - **Frontend Build**: React application with production optimizations
@@ -98,45 +98,45 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 - **Docker Images**: Multi-stage containerization for optimal image sizes
 - **Artifact Management**: Versioned builds with Git commit tracking
 
-### **Stage 2: Comprehensive Testing** 🧪
+### **Stage 2: Comprehensive Testing**  
 - **Unit Tests**: Jest framework with **98.35% code coverage** (197/197 tests)
 - **Integration Tests**: API endpoint and database connectivity validation
 - **Performance Tests**: Response time and load testing baselines
 - **Test Reports**: Comprehensive coverage reports published to Jenkins
 
-### **Stage 3: Code Quality Analysis** 📊
+### **Stage 3: Code Quality Analysis**  
 - **SonarQube Integration**: Complete code quality metrics and quality gates
 - **Static Analysis**: Code maintainability, complexity, and technical debt
 - **Quality Thresholds**: Configurable quality gates for deployment approval
 - **Trend Analysis**: Code quality tracking over time
 
-### **Stage 4: Security Analysis** 🔒
+### **Stage 4: Security Analysis**  
 - **SAST (Static Application Security Testing)**: Source code vulnerability scanning
 - **Dependency Scanning**: NPM package vulnerability analysis
 - **Container Security**: Docker image scanning with Trivy
 - **Secrets Detection**: TruffleHog scanning for exposed credentials
 - **HIPAA Compliance**: Healthcare data protection validation
 
-### **Stage 5: Infrastructure as Code + Monitoring** 🏗️
+### **Stage 5: Infrastructure as Code + Monitoring**   
 - **Terraform Deployment**: Complete infrastructure provisioning
 - **Kubernetes Orchestration**: Container orchestration with auto-scaling
 - **Monitoring Stack**: Integrated Prometheus + Grafana deployment
 - **Infrastructure Validation**: Automated infrastructure health checks
 - **Environment Management**: Staging and production environment setup
 
-### **Stage 6: Staging Deployment** 🎭
+### **Stage 6: Staging Deployment**  
 - **Automated Deployment**: Kubernetes staging environment deployment
 - **Health Validation**: Application readiness and connectivity tests
 - **Performance Baseline**: Load testing and performance validation
 - **Integration Testing**: End-to-end testing in staging environment
 
-### **Stage 7: Production Release** 🚀
+### **Stage 7: Production Release**  
 - **Manual Approval Gate**: Production deployment approval process
 - **Blue-Green Deployment**: Zero-downtime deployment strategy
 - **Production Validation**: Comprehensive health checks and monitoring
 - **Automatic Rollback**: Failure detection and automatic recovery
 
-## 🛠️ Technology Stack
+## 🛠  Technology Stack
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
@@ -151,7 +151,7 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 | **Security** | Trivy, TruffleHog, SonarQube | Multi-layer security analysis |
 | **Quality** | Jest, ESLint, SonarQube | Code quality and testing |
 
-## � Quick Start Guide
+##   Quick Start Guide
 
 ### Prerequisites
 ```bash
@@ -205,32 +205,32 @@ terraform apply
 kubectl get all -n healthcare-staging
 ```
 
-## 📊 Current Pipeline Status
+##   Current Pipeline Status
 
-### ✅ **Completed Stages**
+###   **Completed Stages**
 | Stage | Status | Achievement |
 |-------|--------|-------------|
-| **Code Quality** | ✅ **COMPLETE** | 85.5% improvement, 0 ESLint errors |
-| **Unit Testing** | ✅ **COMPLETE** | 98.35% coverage, 197/197 tests passing |
-| **Integration Testing** | ✅ **COMPLETE** | 100% success rate, all APIs validated |
-| **Docker Containerization** | ✅ **COMPLETE** | All services healthy and communicating |
-| **Infrastructure Foundation** | ✅ **COMPLETE** | Core pipeline components operational |
+| **Code Quality** |   **COMPLETE** | 85.5% improvement, 0 ESLint errors |
+| **Unit Testing** |   **COMPLETE** | 98.35% coverage, 197/197 tests passing |
+| **Integration Testing** |   **COMPLETE** | 100% success rate, all APIs validated |
+| **Docker Containerization** |   **COMPLETE** | All services healthy and communicating |
+| **Infrastructure Foundation** |   **COMPLETE** | Core pipeline components operational |
 
-### 🔄 **In Progress**
+###   **In Progress**
 - **Monitoring Stack**: Prometheus + Grafana deployment
 - **Security Scanning**: Tool integration and configuration
 - **Kubernetes Deployment**: Full cluster deployment
 - **Performance Testing**: Baseline establishment
 
-### 🎯 **Next Steps**
+###   **Next Steps**
 1. **Complete Monitoring Setup**: Deploy Prometheus + Grafana stack
 2. **Security Integration**: Finalize Trivy, Semgrep, TruffleHog setup
 3. **K8s Production Deployment**: Full Kubernetes cluster deployment
 4. **Performance Benchmarks**: Establish baseline metrics
 
-### 📈 **Pipeline Readiness**: **85% Complete**
+###   **Pipeline Readiness**: **85% Complete**
 
-## 📊 Monitoring and Observability
+##   Monitoring and Observability
 
 ### Prometheus Metrics
 - **Application Health**: HTTP response codes, response times
@@ -255,7 +255,7 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 # Open: http://localhost:3000 (admin/admin)
 ```
 
-## 🔒 Security and Compliance
+##   Security and Compliance
 
 ### HIPAA Compliance Features
 - **Data Encryption**: At-rest and in-transit encryption
@@ -269,16 +269,16 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 - **Compliance Monitoring**: Continuous compliance validation
 - **Incident Response**: Automated alerting and response procedures
 
-## 📈 Performance and Quality Metrics
+##   Performance and Quality Metrics
 
 ### Quality Achievements
-- ✅ **Test Coverage**: 98.35% (197/197 tests passing)
-- ✅ **ESLint Errors**: 0 (reduced from 36 - 100% error elimination)
-- ✅ **Integration Tests**: 100% pass rate (4/4 tests passing)
-- ✅ **Code Quality**: Production-ready with enterprise standards
-- ✅ **Container Health**: All Docker services operational
-- ✅ **Performance**: < 200ms average response time
-- ✅ **Availability**: 99.9% uptime target
+-   **Test Coverage**: 98.35% (197/197 tests passing)
+-   **ESLint Errors**: 0 (reduced from 36 - 100% error elimination)
+-   **Integration Tests**: 100% pass rate (4/4 tests passing)
+-   **Code Quality**: Production-ready with enterprise standards
+-   **Container Health**: All Docker services operational
+-   **Performance**: < 200ms average response time
+-   **Availability**: 99.9% uptime target
 
 ### Pipeline Performance
 - **Build Time**: ~8 minutes average
@@ -286,7 +286,7 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 - **Test Execution**: ~3 minutes comprehensive testing
 - **Security Scanning**: ~5 minutes multi-layer analysis
 
-## 📚 Documentation
+##   Documentation
 
 ### Comprehensive Guides
 - **[Setup Guide](./docs/SETUP_GUIDE.md)**: Complete installation and configuration
@@ -300,13 +300,13 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 - **Metrics API**: Custom metrics and health check endpoints
 - **Authentication**: JWT-based security with role management
 
-## � Academic Excellence
+##   Academic Excellence
 
 ### Task Requirements Compliance
-- ✅ **All 10 Required Steps**: Complete implementation
-- ✅ **7 Pipeline Stages**: Exceeds minimum 4 stages for High HD
-- ✅ **Advanced Features**: Infrastructure as Code, monitoring, security
-- ✅ **Production Quality**: Enterprise-grade deployment practices
+-   **All 10 Required Steps**: Complete implementation
+-   **7 Pipeline Stages**: Exceeds minimum 4 stages for High HD
+-   **Advanced Features**: Infrastructure as Code, monitoring, security
+-   **Production Quality**: Enterprise-grade deployment practices
 
 ### Expected Grade: **High HD (95-100%)**
 
@@ -317,7 +317,7 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 4. **Best Practices**: Industry-standard DevOps practices
 5. **Production Ready**: Zero-downtime deployments and monitoring
 
-## 🚀 Getting Started
+##   Getting Started
 
 ### For Developers
 ```bash
@@ -348,7 +348,7 @@ kubectl get pods -n healthcare-production
 - **Grafana Dashboards**: Real-time application and infrastructure metrics
 - **SonarQube**: Code quality and technical debt analysis
 
-## 🤝 Contributing
+##   Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/amazing-feature`)
@@ -356,11 +356,11 @@ kubectl get pods -n healthcare-production
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📄 License
+##   License
 
 This project is part of an academic submission for SIT223 - Professional Practice in IT.
 
-## 📞 Support
+##   Support
 
 - **Documentation**: Check the `/docs` directory for comprehensive guides
 - **Issues**: Create GitHub issues for bugs or feature requests
@@ -369,4 +369,4 @@ This project is part of an academic submission for SIT223 - Professional Practic
 
 ---
 
-**This Healthcare DevOps Pipeline demonstrates mastery of modern DevOps practices with enterprise-grade implementation suitable for production healthcare environments.** 🏥✨
+**This Healthcare DevOps Pipeline demonstrates mastery of modern DevOps practices with enterprise-grade implementation suitable for production healthcare environments.**   

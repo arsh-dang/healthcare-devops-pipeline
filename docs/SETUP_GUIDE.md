@@ -2,7 +2,7 @@
 
 This guide provides step-by-step instructions for setting up and running the Healthcare DevOps Pipeline.
 
-## 📋 Prerequisites
+##   Prerequisites
 
 ### System Requirements
 - **Jenkins** 2.400+ with Blue Ocean plugin
@@ -30,7 +30,7 @@ This guide provides step-by-step instructions for setting up and running the Hea
 - Email Extension
 ```
 
-## 🔧 Environment Setup
+##   Environment Setup
 
 ### 1. Jenkins Configuration
 
@@ -109,7 +109,7 @@ environment {
 }
 ```
 
-## 🚀 Running the Pipeline
+##   Running the Pipeline
 
 ### 1. Create Jenkins Pipeline Job
 
@@ -185,7 +185,7 @@ git push origin main
 - **Validation**: Production health checks
 - **Rollback**: Automatic rollback on failure
 
-## 🔍 Monitoring and Observability
+##   Monitoring and Observability
 
 ### Prometheus Setup
 ```bash
@@ -210,7 +210,7 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 - **Business Metrics**: User registrations, appointment bookings
 - **Security**: Failed login attempts, vulnerability counts
 
-## 🛠️ Troubleshooting
+## 🛠  Troubleshooting
 
 ### Common Issues
 
@@ -280,7 +280,7 @@ kubectl get all -n monitoring
 kubectl describe pod prometheus-pod-name -n monitoring
 ```
 
-## 📚 Additional Resources
+##   Additional Resources
 
 ### Documentation
 - [Jenkins Pipeline Documentation](https://www.jenkins.io/doc/book/pipeline/)

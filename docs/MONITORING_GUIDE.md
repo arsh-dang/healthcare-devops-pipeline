@@ -2,7 +2,7 @@
 
 This guide provides comprehensive monitoring and observability setup for the Healthcare DevOps Pipeline using Prometheus, Grafana, and other monitoring tools.
 
-## 🎯 Monitoring Strategy
+##   Monitoring Strategy
 
 ### Observability Pillars
 ```
@@ -50,7 +50,7 @@ This guide provides comprehensive monitoring and observability setup for the Hea
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## 📊 Prometheus Configuration
+##   Prometheus Configuration
 
 ### 1. Prometheus Setup
 
@@ -494,7 +494,7 @@ const createAppointment = async (req, res) => {
 };
 ```
 
-## 📈 Grafana Dashboard Configuration
+##   Grafana Dashboard Configuration
 
 ### 1. Healthcare Application Dashboard
 
