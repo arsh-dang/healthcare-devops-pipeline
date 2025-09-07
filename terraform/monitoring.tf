@@ -391,12 +391,12 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
         storage = var.environment == "production" ? "50Gi" : "5Gi"
       }
     }
-    # Use hostPath or local storage for better compatibility
-    storage_class_name = ""
+    # Use local storage class for better compatibility with local clusters
+    storage_class_name = "hostpath"
   }
 
   timeouts {
-    create = "2m"
+    create = "30s"
   }
 }
 
@@ -706,12 +706,12 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
         storage = "2Gi"
       }
     }
-    # Use hostPath or local storage for better compatibility
-    storage_class_name = ""
+    # Use local storage class for better compatibility with local clusters
+    storage_class_name = "hostpath"
   }
 
   timeouts {
-    create = "2m"
+    create = "30s"
   }
 }
 
