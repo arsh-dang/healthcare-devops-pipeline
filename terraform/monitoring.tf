@@ -316,6 +316,15 @@ resource "kubernetes_deployment" "prometheus" {
             }
           }
         }
+
+        # Fallback volume for non-persistent storage
+        dynamic "volume" {
+          for_each = var.enable_persistent_storage ? [] : [1]
+          content {
+            name = "prometheus-storage"
+            empty_dir {}
+          }
+        }
       }
     }
   }
@@ -682,6 +691,15 @@ resource "kubernetes_deployment" "grafana" {
             persistent_volume_claim {
               claim_name = kubernetes_persistent_volume_claim.grafana_storage[0].metadata[0].name
             }
+          }
+        }
+
+        # EmptyDir fallback volume when persistent storage is disabled
+        dynamic "volume" {
+          for_each = var.enable_persistent_storage ? [] : [1]
+          content {
+            name = "grafana-storage"
+            empty_dir {}
           }
         }
       }
