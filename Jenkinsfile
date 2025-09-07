@@ -940,9 +940,6 @@ EOF
                 echo '🚀 Deploying to Staging Environment...'
                 
                 script {
-                    // Load Terraform environment variables
-                    sh 'source terraform/terraform-env.sh'
-                    
                     // Build and tag Docker images for staging
                     sh '''
                         echo "Building Docker images for staging deployment..."
@@ -986,26 +983,24 @@ EOF
                             '''
                         }
                     }
-                    '''
                     
-                    // Staging-specific tests
+                    // Staging-specific verification
                     sh '''
-                        source terraform/terraform-env.sh
-                        
                         echo "=== Running Staging Environment Tests ==="
                         
-                        # Test database connectivity
+                        # Test database connectivity (using kubectl for verification only)
                         echo "Testing MongoDB connectivity..."
-                        kubectl run mongodb-test --rm -i --restart=Never --image=mongo:7.0 --env="MONGO_INITDB_ROOT_PASSWORD=test" -- \
-                          mongo --host mongodb.$TERRAFORM_NAMESPACE.svc.cluster.local --eval "db.adminCommand(\'ping\')" || echo "MongoDB connectivity test failed"
+                        kubectl run mongodb-test --rm -i --restart=Never --image=mongo:7.0 --env="MONGO_INITDB_ROOT_PASSWORD=test" -- \\
+                          mongo --host mongodb.healthcare-staging.svc.cluster.local --eval "db.adminCommand('ping')" || echo "MongoDB connectivity test failed"
                         
                         # Test monitoring integration
                         echo "Testing monitoring integration..."
-                        kubectl run prometheus-test --rm -i --restart=Never --image=curlimages/curl -- \
-                          curl -f "http://prometheus.$MONITORING_NAMESPACE.svc.cluster.local:9090/-/ready" || echo "Prometheus readiness check failed"
+                        kubectl run prometheus-test --rm -i --restart=Never --image=curlimages/curl -- \\
+                          curl -f "http://prometheus.monitoring-staging.svc.cluster.local:9090/-/ready" || echo "Prometheus readiness check failed"
                         
-                        kubectl run grafana-test --rm -i --restart=Never --image=curlimages/curl -- \
-                          curl -f "http://grafana.$MONITORING_NAMESPACE.svc.cluster.local:3000/api/health" || echo "Grafana health check failed"
+                        kubectl run grafana-test --rm -i --restart=Never --image=curlimages/curl -- \\
+                          curl -f "http://grafana.monitoring-staging.svc.cluster.local:3000/api/health" || echo "Grafana health check failed"
+                    '''
                         
                         # Performance baseline test
                         echo "Running performance baseline test..."
@@ -1020,12 +1015,11 @@ EOF
                         script {
                             // Archive staging deployment info
                             sh '''
-                                source terraform/terraform-env.sh
                                 echo "Staging deployment completed at $(date)" > staging-deployment.log
-                                echo "Namespace: $TERRAFORM_NAMESPACE" >> staging-deployment.log
+                                echo "Environment: staging" >> staging-deployment.log
                                 echo "Frontend image: healthcare-app-frontend:${BUILD_NUMBER}" >> staging-deployment.log
                                 echo "Backend image: healthcare-app-backend:${BUILD_NUMBER}" >> staging-deployment.log
-                                kubectl get pods -n $TERRAFORM_NAMESPACE >> staging-deployment.log
+                                echo "Deployment method: Pure Terraform IaC" >> staging-deployment.log
                             '''
                             archiveArtifacts artifacts: 'staging-deployment.log', allowEmptyArchive: true
                         }
@@ -1034,10 +1028,9 @@ EOF
                         echo '❌ Staging deployment failed!'
                         script {
                             sh '''
-                                source terraform/terraform-env.sh
                                 echo "Staging deployment failed at $(date)" > staging-failure.log
-                                echo "Debug information:" >> staging-failure.log
-                                kubectl describe pods -n $TERRAFORM_NAMESPACE >> staging-failure.log 2>&1 || echo "Failed to get pod descriptions" >> staging-failure.log
+                                echo "Deployment method: Pure Terraform IaC" >> staging-failure.log
+                                echo "Check Terraform logs for details" >> staging-failure.log
                                 kubectl logs -l app=healthcare-app -n $TERRAFORM_NAMESPACE --tail=100 >> staging-failure.log 2>&1 || echo "Failed to get application logs" >> staging-failure.log
                             '''
                             archiveArtifacts artifacts: 'staging-failure.log', allowEmptyArchive: true
@@ -1203,35 +1196,37 @@ EOF
                         docker images | grep healthcare-app
                     '''
                     
-                    // Deploy to production
-                    sh '''
-                        source terraform/terraform-prod-env.sh
-                        
-                        echo "=== Executing Production Deployment ==="
-                        echo "Production namespace: $TERRAFORM_PROD_NAMESPACE"
-                        
-                        # Deploy new version
-                        kubectl patch deployment frontend -n $TERRAFORM_PROD_NAMESPACE \
-                            -p '{"spec":{"template":{"spec":{"containers":[{"name":"frontend","image":"healthcare-app-frontend:'${BUILD_NUMBER}'-prod"}]}}}}' || echo "Frontend deployment not found, skipping update"
-                        
-                        kubectl patch deployment backend -n $TERRAFORM_PROD_NAMESPACE \
-                            -p '{"spec":{"template":{"spec":{"containers":[{"name":"backend","image":"healthcare-app-backend:'${BUILD_NUMBER}'-prod"}]}}}}' || echo "Backend deployment not found, skipping update"
-                        
-                        # Wait for deployment
-                        echo "Waiting for production deployment rollout..."
-                        kubectl rollout status deployment/frontend -n $TERRAFORM_PROD_NAMESPACE --timeout=600s || echo "Frontend rollout timeout"
-                        kubectl rollout status deployment/backend -n $TERRAFORM_PROD_NAMESPACE --timeout=600s || echo "Backend rollout timeout"
-                        
-                        echo "=== Production Deployment Summary ==="
-                        echo "✅ Production infrastructure deployed via Terraform"
-                        echo "✅ Application deployed successfully"
-                        echo "🌐 Application URL: $PROD_APP_URL"
-                        echo "📊 Monitoring namespace: $PROD_MONITORING_NAMESPACE"
-                        
-                        # Final verification
-                        kubectl get pods -n $TERRAFORM_PROD_NAMESPACE || echo "Production pods verification failed"
-                        kubectl get services -n $TERRAFORM_PROD_NAMESPACE || echo "Production services verification failed"
-                    '''
+                    // Deploy to production using pure Terraform IaC
+                    script {
+                        dir('terraform') {
+                            sh '''
+                                echo "🚀 Deploying to Production via Pure Terraform IaC..."
+                                
+                                # Switch to production workspace
+                                terraform workspace select production || terraform workspace new production
+                                
+                                # Deploy to production with new image tags
+                                terraform apply -auto-approve \\
+                                    -var="environment=production" \\
+                                    -var="namespace=healthcare" \\
+                                    -var='replica_count={"frontend"=3,"backend"=5}' \\
+                                    -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \\
+                                    -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}"
+                                
+                                echo "✅ Production deployment completed via Terraform"
+                                
+                                # Verify deployment through Terraform outputs only
+                                echo "=== Production Infrastructure Status ==="
+                                terraform output
+                                
+                                echo "🎯 Production Deployment Details:"
+                                echo "Frontend Image: healthcare-app-frontend:${BUILD_NUMBER}"
+                                echo "Backend Image: healthcare-app-backend:${BUILD_NUMBER}"
+                                echo "Environment: production"
+                                echo "Namespace: \$(terraform output -raw namespace)"
+                            '''
+                        }
+                    }
                     
                     // Tag the release
                     sh '''
