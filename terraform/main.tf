@@ -414,7 +414,7 @@ resource "kubernetes_deployment" "frontend" {
           image = "healthcare-app-frontend:latest"
 
           port {
-            container_port = 3000
+            container_port = 3001
             name           = "http"
           }
 
@@ -515,7 +515,7 @@ resource "kubernetes_service" "frontend" {
     selector = local.frontend_labels
 
     port {
-      port        = 3000
+      port        = 3001
       target_port = "http"
       protocol    = "TCP"
     }
