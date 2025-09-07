@@ -829,8 +829,6 @@ EOF
                             echo "export MONITORING_NAMESPACE=\$(terraform output -raw monitoring_namespace)" >> terraform-env.sh
                             echo "export PROMETHEUS_URL=\$(terraform output -raw prometheus_url)" >> terraform-env.sh
                             echo "export GRAFANA_URL=\$(terraform output -raw grafana_url)" >> terraform-env.sh
-                            echo "export PORTAINER_URL=\$(terraform output -raw portainer_url)" >> terraform-env.sh
-                            echo "export SONARQUBE_URL=\$(terraform output -raw sonarqube_url)" >> terraform-env.sh
                             
                             # Verify Terraform state integrity
                             echo "=== Terraform State Verification ==="
@@ -841,9 +839,8 @@ EOF
                             echo "🎯 Service Access URLs:"
                             echo "📊 Prometheus (Port 9090): \$(terraform output -raw prometheus_url)"
                             echo "📈 Grafana (Port 3000): \$(terraform output -raw grafana_url)" 
-                            echo "🐳 Portainer (Port 9000): \$(terraform output -raw portainer_url)"
-                            echo "🔍 SonarQube (Port 9001): \$(terraform output -raw sonarqube_url)"
                             echo ""
+                            echo "� Note: SonarQube (Port 9001) and Portainer (Port 9000) running locally"
                             echo "✅ All services deployed with correct port configurations" \
                         '''
                         
