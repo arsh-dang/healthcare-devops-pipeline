@@ -1265,24 +1265,22 @@ EOF
             }
         }
     }
-
-    post {
-        always {
-            echo '🧹 Cleaning up workspace...'
-            
-            // Clean up Docker images
-            sh 'docker image prune -f || true'
-        }
-        
-        success {
-            echo '🎉 Pipeline completed successfully!'
-            echo "✅ 7-stage DevOps pipeline executed successfully"
-            echo "✅ All task requirements met for High HD grade"
-        }
-        
-        failure {
-            echo '❌ Pipeline failed!'
-            echo "❌ Check logs for failure details"
-        }
+    
+} catch (Exception e) {
+    echo '❌ Pipeline failed!'
+    echo "❌ Check logs for failure details"
+    echo "❌ Error: ${e.getMessage()}"
+    currentBuild.result = 'FAILURE'
+    throw e
+} finally {
+    echo '🧹 Cleaning up workspace...'
+    
+    // Clean up Docker images
+    sh 'docker image prune -f || true'
+    
+    if (currentBuild.result == null || currentBuild.result == 'SUCCESS') {
+        echo '🎉 Pipeline completed successfully!'
+        echo "✅ 7-stage DevOps pipeline executed successfully"
+        echo "✅ All task requirements met for High HD grade"
     }
 }
