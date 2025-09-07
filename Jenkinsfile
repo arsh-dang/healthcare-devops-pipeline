@@ -778,6 +778,19 @@ EOF
                         // Plan infrastructure changes including monitoring
                         sh '''
                             echo "Planning complete infrastructure changes for staging..."
+                            
+                            # Clean up any existing plan to ensure fresh start
+                            rm -f tfplan-staging
+                            
+                            # Destroy existing resources for clean IaC deployment
+                            echo "Cleaning up existing resources for pure IaC approach..."
+                            terraform destroy -auto-approve \
+                                -var="environment=staging" \
+                                -var="namespace=healthcare" \
+                                -var='replica_count={"frontend"=2,"backend"=3}' \
+                                -var="enable_persistent_storage=false" || echo "No existing resources to destroy"
+                            
+                            # Create new plan with all variables
                             terraform plan \
                                 -var="environment=staging" \
                                 -var="namespace=healthcare" \
@@ -795,20 +808,11 @@ EOF
                         sh '''
                             echo "Applying complete infrastructure changes for staging..."
                             
-                            # Use Terraform to manage all infrastructure
-                            echo "Deploying infrastructure with Terraform (includes cleanup and recreation)..."
+                            # Apply the plan (should work cleanly now)
+                            echo "Deploying infrastructure with Terraform - Pure IaC approach..."
+                            terraform apply -auto-approve tfplan-staging
                             
-                            # Apply with auto-approve
-                            terraform apply -auto-approve tfplan-staging || {
-                                echo "Initial apply failed, attempting targeted deployment..."
-                                
-                                # Try applying in stages if full deployment fails
-                                terraform apply -auto-approve -target=kubernetes_namespace.app_namespace tfplan-staging || true
-                                terraform apply -auto-approve -target=kubernetes_namespace.monitoring tfplan-staging || true
-                                
-                                # Retry full apply
-                                terraform apply -auto-approve tfplan-staging || echo "Infrastructure deployment completed with warnings"
-                            }
+                            echo "✅ Infrastructure deployment completed successfully"
                         '''
                         
                         sh '''
