@@ -339,8 +339,8 @@ node {
                                 while [ $attempt -le $max_attempts ]; do
                                     echo "Attempt $attempt: Loading $image..."
                                     
-                                    # Use timeout to prevent hanging
-                                    if timeout 60s docker save $image | timeout 60s colima ssh -- sudo k3s ctr images import -; then
+                                    # Use timeout to prevent hanging and correct ctr command
+                                    if timeout 60s docker save $image | timeout 60s colima ssh -- sudo /usr/bin/ctr -n k8s.io images import -; then
                                         echo "Successfully loaded $image"
                                         return 0
                                     else
@@ -366,7 +366,7 @@ node {
                             load_image "healthcare-app-backend:${BUILD_NUMBER}"
                             
                             echo "Verifying images in cluster..."
-                            colima ssh -- sudo k3s ctr images list | grep healthcare-app || echo "Some images may not be loaded"
+                            colima ssh -- sudo /usr/bin/ctr -n k8s.io images list | grep healthcare-app || echo "Some images may not be loaded"
                         else
                             echo "Colima not available - would load images into cluster here"
                         fi

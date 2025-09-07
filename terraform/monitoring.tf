@@ -413,7 +413,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   }
 
   timeouts {
-    create = "300s"  # Increased timeout for PVC binding
+    create = "120s"  # Reduced timeout for staging PVC binding
   }
 }
 
@@ -737,7 +737,7 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   }
 
   timeouts {
-    create = "300s"  # Increased timeout for PVC binding
+    create = "120s"  # Reduced timeout for staging PVC binding
   }
 }
 
