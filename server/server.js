@@ -93,7 +93,9 @@ const MONGODB_DATABASE = process.env.MONGODB_DATABASE || 'healthcare-app';
 
 let MONGODB_URI;
 if (MONGODB_USERNAME && MONGODB_PASSWORD) {
-  MONGODB_URI = `mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=admin`;
+  // URL encode the password to handle special characters
+  const encodedPassword = encodeURIComponent(MONGODB_PASSWORD);
+  MONGODB_URI = `mongodb://${MONGODB_USERNAME}:${encodedPassword}@${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}?authSource=admin`;
 } else {
   MONGODB_URI = process.env.MONGODB_URI || `mongodb://${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
 }
