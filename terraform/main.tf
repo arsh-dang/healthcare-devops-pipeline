@@ -273,6 +273,8 @@ resource "kubernetes_stateful_set" "mongodb" {
 
 # Backend Deployment with advanced features
 resource "kubernetes_deployment" "backend" {
+  wait_for_rollout = false
+  
   metadata {
     name      = "backend"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -344,8 +346,10 @@ resource "kubernetes_deployment" "backend" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
+            initial_delay_seconds = 60
+            period_seconds        = 15
+            timeout_seconds       = 5
+            failure_threshold     = 3
           }
 
           readiness_probe {
@@ -353,8 +357,10 @@ resource "kubernetes_deployment" "backend" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 5
-            period_seconds        = 5
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 6
           }
 
           # Security context
@@ -404,6 +410,8 @@ resource "kubernetes_deployment" "backend" {
 
 # Frontend Deployment
 resource "kubernetes_deployment" "frontend" {
+  wait_for_rollout = false
+  
   metadata {
     name      = "frontend"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -449,8 +457,10 @@ resource "kubernetes_deployment" "frontend" {
               path = "/"
               port = "http"
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
+            initial_delay_seconds = 60
+            period_seconds        = 15
+            timeout_seconds       = 5
+            failure_threshold     = 3
           }
 
           readiness_probe {
@@ -458,8 +468,10 @@ resource "kubernetes_deployment" "frontend" {
               path = "/"
               port = "http"
             }
-            initial_delay_seconds = 5
-            period_seconds        = 5
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 6
           }
 
           security_context {
