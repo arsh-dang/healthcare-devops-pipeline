@@ -68,24 +68,30 @@ pipeline {
         }
         
         stage('Build') {
+            options {
+                timeout(time: 15, unit: 'MINUTES')
+            }
             parallel {
                 stage('Build Frontend') {
                     steps {
-                        echo 'Building Frontend Application with Advanced Optimizations...'
+                        echo 'Building Frontend Application with Optimized Caching...'
                         
                         script {
-                            // Cache node_modules for faster builds
+                            // Fast dependency installation with optimized caching
                             sh '''
-                                if [ -d "node_modules_cache" ]; then
-                                    cp -r node_modules_cache node_modules
-                                fi
-                            '''
-                            
-                            // Install dependencies with cache optimization
-                            sh '''
-                                npm install -g pnpm
+                                echo "=== Installing Dependencies with Optimized Caching ==="
+                                
+                                # Install pnpm if not available
+                                npm install -g pnpm || echo "pnpm already installed"
+                                
+                                # Use pnpm store for better caching (much faster than copying node_modules)
+                                pnpm config set store-dir ~/.pnpm-store
+                                
+                                # Install with aggressive caching and parallel processing
+                                pnpm install --frozen-lockfile --prefer-offline --ignore-scripts || \
                                 pnpm install --no-frozen-lockfile --prefer-offline
-                                cp -r node_modules node_modules_cache
+                                
+                                echo "Dependencies installed successfully"
                             '''
                             
                             // Generate build metadata
@@ -93,28 +99,21 @@ pipeline {
                                 echo "{\\"buildNumber\\": \\"${BUILD_NUMBER}\\", \\"gitCommit\\": \\"${GIT_COMMIT}\\", \\"buildTime\\": \\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\"}" > src/build-info.json
                             '''
                             
-                            // Run build with performance analysis
+                            // Run optimized build
                             sh '''
-                                ANALYZE=true pnpm build
+                                echo "=== Building Frontend Application ==="
+                                pnpm build
                                 
-                                # Generate build size report
-                                npx webpack-bundle-analyzer build/static/js/*.js --mode static --report build-report.html --no-open || true
+                                # Quick build size check
+                                if [ -d "build" ]; then
+                                    BUILD_SIZE=$(du -sh build | cut -f1)
+                                    echo "Build size: $BUILD_SIZE"
+                                    echo "Build completed successfully"
+                                fi
                             '''
                             
-                            // Archive the build artifacts with detailed fingerprinting
-                            archiveArtifacts artifacts: 'build/**/*,build-report.html,src/build-info.json', fingerprint: true, allowEmptyArchive: true
-                            
-                            // Store build metrics
-                            sh '''
-                                BUILD_SIZE=$(du -sh build/ | cut -f1)
-                                echo "Build size: $BUILD_SIZE" > build-metrics.txt
-                                JS_SIZE=$(find build/static/js -name "*.js" -exec du -ch {} + | grep total | cut -f1)
-                                echo "JavaScript size: $JS_SIZE" >> build-metrics.txt
-                                CSS_SIZE=$(find build/static/css -name "*.css" -exec du -ch {} + | grep total | cut -f1)
-                                echo "CSS size: $CSS_SIZE" >> build-metrics.txt
-                            '''
-                            
-                            archiveArtifacts artifacts: 'build-metrics.txt', fingerprint: true
+                            // Archive build artifacts
+                            archiveArtifacts artifacts: 'build/**/*,src/build-info.json', fingerprint: true, allowEmptyArchive: true
                             
                             echo 'Frontend build completed with advanced optimizations'
                         }
@@ -131,29 +130,38 @@ pipeline {
                 }
                 
                 stage('Build Docker Images') {
+                    options {
+                        timeout(time: 10, unit: 'MINUTES')
+                    }
                     steps {
-                        echo '🐳 Building Docker Images...'
+                        echo '🐳 Building Docker Images with Optimizations...'
                         
                         script {
-                            // Build frontend Docker image
-                            def frontendImage = docker.build(
-                                "${DOCKER_REPO}-frontend:${BUILD_NUMBER}", 
-                                "-f Dockerfile.frontend ."
-                            )
-                            
-                            // Build backend Docker image
-                            def backendImage = docker.build(
-                                "${DOCKER_REPO}-backend:${BUILD_NUMBER}", 
-                                "-f Dockerfile.backend ."
-                            )
-                            
-                            // Tag images with latest
-                            frontendImage.tag("latest")
-                            backendImage.tag("latest")
+                            // Build images with better caching
+                            sh '''
+                                echo "Building Docker images with cache optimization..."
+                                
+                                # Build frontend image with cache
+                                docker build --cache-from healthcare-app-frontend:latest \
+                                    -t healthcare-app-frontend:${BUILD_NUMBER} \
+                                    -t healthcare-app-frontend:latest \
+                                    -f Dockerfile.frontend . || \
+                                docker build -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
+                                
+                                # Build backend image with cache  
+                                docker build --cache-from healthcare-app-backend:latest \
+                                    -t healthcare-app-backend:${BUILD_NUMBER} \
+                                    -t healthcare-app-backend:latest \
+                                    -f Dockerfile.backend . || \
+                                docker build -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
+                                
+                                echo "Docker images built successfully"
+                                docker images | grep healthcare-app
+                            '''
                             
                             // Store image info for later use
-                            env.FRONTEND_IMAGE = "${DOCKER_REPO}-frontend:${BUILD_NUMBER}"
-                            env.BACKEND_IMAGE = "${DOCKER_REPO}-backend:${BUILD_NUMBER}"
+                            env.FRONTEND_IMAGE = "healthcare-app-frontend:${BUILD_NUMBER}"
+                            env.BACKEND_IMAGE = "healthcare-app-backend:${BUILD_NUMBER}"
                             
                             echo "✅ Docker images built: ${env.FRONTEND_IMAGE}, ${env.BACKEND_IMAGE}"
                         }
