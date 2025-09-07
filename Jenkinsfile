@@ -954,6 +954,7 @@ EOF
                         
                         echo "Docker images built successfully"
                         docker images | grep healthcare-app
+                    '''
                     
                     // Deploy to staging using pure Terraform Infrastructure as Code
                     script {
