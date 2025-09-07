@@ -32,6 +32,12 @@ variable "environment" {
   default     = "staging"
 }
 
+variable "app_version" {
+  description = "Application version/build number for deployment"
+  type        = string
+  default     = "latest"
+}
+
 variable "namespace" {
   description = "Kubernetes namespace"
   type        = string

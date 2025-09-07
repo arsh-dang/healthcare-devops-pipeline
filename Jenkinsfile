@@ -258,8 +258,8 @@ node {
                     cd terraform
                     
                     terraform init
-                    terraform plan -var="environment=staging" -var="app_version=${BUILD_NUMBER}"
-                    terraform apply -auto-approve -var="environment=staging" -var="app_version=${BUILD_NUMBER}"
+                    terraform plan -var="environment=staging" -var="app_version=${BUILD_NUMBER}" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}"
+                    terraform apply -auto-approve -var="environment=staging" -var="app_version=${BUILD_NUMBER}" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}"
                     
                     echo "Infrastructure deployment completed"
                 '''
