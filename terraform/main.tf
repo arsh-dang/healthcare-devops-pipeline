@@ -327,7 +327,7 @@ resource "kubernetes_deployment" "backend" {
 
           env {
             name  = "MONGODB_HOST"
-            value = "mongodb.healthcare-staging.svc.cluster.local"
+            value = "mongodb-0.mongodb.healthcare-staging.svc.cluster.local"
           }
 
           env {
