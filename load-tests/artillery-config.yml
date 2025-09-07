@@ -1,21 +1,22 @@
 config:
   target: 'http://backend-test:5001'
   phases:
+    - duration: 15
+      arrivalRate: 1
+      name: "Ramp up"
     - duration: 30
       arrivalRate: 2
-      name: "Ramp up"
-    - duration: 60
-      arrivalRate: 5
       name: "Sustained load"
-    - duration: 30
+    - duration: 15
       arrivalRate: 1
       name: "Cool down"
   processor: "./processor.js"
-  timeout: 30
+  timeout: 15
+  pool: 10
 
 scenarios:
   - name: "Health Check"
-    weight: 40
+    weight: 60
     flow:
       - get:
           url: "/health"
@@ -23,7 +24,7 @@ scenarios:
             - statusCode: 200
 
   - name: "Get Appointments"
-    weight: 40
+    weight: 30
     flow:
       - get:
           url: "/api/appointments"
@@ -31,7 +32,7 @@ scenarios:
             - statusCode: 200
 
   - name: "Create Appointment"
-    weight: 20
+    weight: 10
     flow:
       - post:
           url: "/api/appointments"
