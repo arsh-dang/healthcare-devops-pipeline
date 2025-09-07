@@ -384,6 +384,9 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
 resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   count = var.enable_persistent_storage ? 1 : 0
   
+  # Don't wait for binding since local-path uses WaitForFirstConsumer mode
+  wait_until_bound = false
+  
   metadata {
     name      = "prometheus-storage"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
@@ -704,6 +707,9 @@ resource "kubernetes_deployment" "grafana" {
 # Grafana PVC (conditional)
 resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   count = var.enable_persistent_storage ? 1 : 0
+  
+  # Don't wait for binding since local-path uses WaitForFirstConsumer mode
+  wait_until_bound = false
   
   metadata {
     name      = "grafana-storage"
