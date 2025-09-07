@@ -197,18 +197,11 @@ pipeline {
                                 pnpm test:ci
                             '''
                             
-                            // Publish test results with detailed metrics
-                            junit testResults: 'test-report.xml'
+                            // Archive test results 
+                            echo "Test results would be published here (junit plugin not available)"
                             
-                            // Archive coverage reports as HTML
-                            publishHTML([
-                                allowMissing: false,
-                                alwaysLinkToLastBuild: true,
-                                keepAll: true,
-                                reportDir: 'coverage/lcov-report',
-                                reportFiles: 'index.html',
-                                reportName: 'Coverage Report'
-                            ])
+                            // Archive coverage reports
+                            echo "Coverage reports would be published here (publishHTML plugin not available)"
                         }
                     }
                     
@@ -562,14 +555,7 @@ pipeline {
                     post {
                         always {
                             archiveArtifacts artifacts: 'npm-audit-detailed.json,snyk-results.json,dependency-check-report/**', allowEmptyArchive: true
-                            publishHTML([
-                                allowMissing: true,
-                                alwaysLinkToLastBuild: true,
-                                keepAll: true,
-                                reportDir: 'dependency-check-report',
-                                reportFiles: 'dependency-check-report.html',
-                                reportName: 'Dependency Security Report'
-                            ])
+                            echo "Dependency security report would be published here (publishHTML plugin not available)"
                         }
                     }
                 }
@@ -1080,19 +1066,12 @@ EOF
                 success {
                     echo '✅ Staging deployment successful'
                     // Send notification
-                    slackSend(
-                        channel: '#deployments',
-                        color: 'good',
-                        message: "✅ ${APP_NAME} v${BUILD_NUMBER} deployed to staging successfully"
-                    )
+                    echo "✅ ${APP_NAME} v${BUILD_NUMBER} deployed to staging successfully"
                 }
                 failure {
                     echo '❌ Staging deployment failed'
-                    slackSend(
-                        channel: '#deployments',
-                        color: 'danger',
-                        message: "❌ ${APP_NAME} v${BUILD_NUMBER} staging deployment failed"
-                    )
+                    echo "❌ ${APP_NAME} v${BUILD_NUMBER} staging deployment failed"
+                }
                 }
             }
         }
