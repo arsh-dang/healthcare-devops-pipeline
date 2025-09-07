@@ -1001,12 +1001,11 @@ EOF
                         
                         kubectl run grafana-test --rm -i --restart=Never --image=curlimages/curl -- \\
                           curl -f "http://grafana.monitoring-staging.svc.cluster.local:3000/api/health" || echo "Grafana health check failed"
-                    '''
                         
                         # Performance baseline test
                         echo "Running performance baseline test..."
-                        kubectl run performance-test --rm -i --restart=Never --image=curlimages/curl -- \
-                          sh -c "for i in \$(seq 1 10); do curl -w \'%{time_total}\\n\' -o /dev/null -s http://$BACKEND_SERVICE:5000/health; done" || echo "Performance test failed"
+                        kubectl run performance-test --rm -i --restart=Never --image=curlimages/curl -- \\
+                          sh -c "for i in \\$(seq 1 10); do curl -w '%{time_total}\\n' -o /dev/null -s http://\\$BACKEND_SERVICE:5000/health; done" || echo "Performance test failed"
                     '''
                 }
                 
