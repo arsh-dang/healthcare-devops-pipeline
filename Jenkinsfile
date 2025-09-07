@@ -808,7 +808,6 @@ EOF
                                 # Retry full apply
                                 terraform apply -auto-approve tfplan-staging || echo "Infrastructure deployment completed with warnings"
                             }
-                            }
                         '''
                         
                         sh '''
