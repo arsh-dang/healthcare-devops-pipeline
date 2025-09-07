@@ -507,6 +507,18 @@ resource "kubernetes_deployment" "frontend" {
             allow_privilege_escalation = false
             read_only_root_filesystem  = true
           }
+
+          # Writable /tmp for nginx temp dirs when root FS is read-only
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
+          }
+        }
+
+        # Pod-level volumes
+        volume {
+          name = "tmp"
+          empty_dir {}
         }
       }
     }
