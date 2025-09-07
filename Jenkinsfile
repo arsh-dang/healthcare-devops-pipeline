@@ -899,35 +899,19 @@ EOF
                     // Enhanced cleanup on failure
                     dir('terraform') {
                         sh '''
-                            echo "Performing comprehensive cleanup of failed infrastructure..."
+                            echo "Performing comprehensive cleanup using Terraform..."
                             
                             # Ensure we're in the right workspace
                             terraform workspace select staging || echo "Workspace staging not found"
                             
-                            # Manual cleanup of stuck resources
-                            echo "Cleaning up Kubernetes resources manually..."
-                            kubectl delete deployment --all -n healthcare --ignore-not-found=true
-                            kubectl delete service --all -n healthcare --ignore-not-found=true
-                            kubectl delete configmap --all -n healthcare --ignore-not-found=true
-                            kubectl delete secret --all -n healthcare --ignore-not-found=true
-                            kubectl delete networkpolicy --all -n healthcare --ignore-not-found=true
-                            kubectl delete pvc --all -n healthcare --ignore-not-found=true
+                            # Use Terraform to destroy all managed resources
+                            echo "Destroying infrastructure with Terraform..."
+                            terraform destroy -auto-approve \\
+                                -var="environment=staging" \\
+                                -var="namespace=healthcare" \\
+                                -var='replica_count={"frontend"=2,"backend"=3}' || echo "Terraform destroy completed with warnings"
                             
-                            # Clean up monitoring namespace resources
-                            kubectl delete pvc --all -n monitoring-staging --ignore-not-found=true
-                            kubectl delete deployment --all -n monitoring-staging --ignore-not-found=true
-                            kubectl delete service --all -n monitoring-staging --ignore-not-found=true
-                            kubectl delete configmap --all -n monitoring-staging --ignore-not-found=true
-                            kubectl delete daemonset --all -n monitoring-staging --ignore-not-found=true
-                            
-                            # Clean up namespaces (this will clean up everything in them)
-                            kubectl delete namespace healthcare --ignore-not-found=true
-                            kubectl delete namespace monitoring-staging --ignore-not-found=true
-                            
-                            # Try terraform destroy as final cleanup
-                            terraform destroy -auto-approve \
-                                -var="environment=staging" \
-                                -var="namespace=healthcare" \
+                            echo "✅ Infrastructure cleanup completed via Terraform"
                                 -var='replica_count={"frontend"=2,"backend"=3}' || echo "Terraform destroy completed with warnings"
                             
                             # Clear terraform state if needed
@@ -973,54 +957,35 @@ EOF
                         
                         echo "Docker images built successfully"
                         docker images | grep healthcare-app
-                    '''
                     
-                    // Deploy to staging using Terraform-managed infrastructure
-                    sh '''
-                        # Source Terraform environment variables
-                        source terraform/terraform-env.sh
-                        
-                        echo "Deploying to Terraform-managed staging environment..."
-                        echo "Using namespace: $TERRAFORM_NAMESPACE"
-                        
-                        # Update deployment images using kubectl patch (leveraging Terraform-created resources)
-                        kubectl patch deployment frontend -n $TERRAFORM_NAMESPACE \
-                          -p \'{"spec":{"template":{"spec":{"containers":[{"name":"frontend","image":"healthcare-app-frontend:'${BUILD_NUMBER}'"}]}}}}\'
-                        
-                        kubectl patch deployment backend -n $TERRAFORM_NAMESPACE \
-                          -p \'{"spec":{"template":{"spec":{"containers":[{"name":"backend","image":"healthcare-app-backend:'${BUILD_NUMBER}'"}]}}}}\'
-                        
-                        # Wait for rollout to complete with proper timeout
-                        echo "Waiting for deployments to roll out..."
-                        kubectl rollout status deployment/frontend -n $TERRAFORM_NAMESPACE --timeout=600s
-                        kubectl rollout status deployment/backend -n $TERRAFORM_NAMESPACE --timeout=600s
-                        
-                        # Verify deployment health
-                        echo "=== Deployment Verification ==="
-                        kubectl get pods -n $TERRAFORM_NAMESPACE -o wide
-                        kubectl get services -n $TERRAFORM_NAMESPACE
-                        kubectl get ingress -n $TERRAFORM_NAMESPACE
-                        
-                        # Check if HPA is working
-                        kubectl get hpa -n $TERRAFORM_NAMESPACE || echo "HPA not found - using Terraform defaults"
-                        
-                        # Test application endpoints
-                        echo "=== Testing Application Health ==="
-                        
-                        # Get service endpoints
-                        FRONTEND_SERVICE=$(kubectl get service frontend -n $TERRAFORM_NAMESPACE -o jsonpath=\'{.spec.clusterIP}\')
-                        BACKEND_SERVICE=$(kubectl get service backend -n $TERRAFORM_NAMESPACE -o jsonpath=\'{.spec.clusterIP}\')
-                        
-                        echo "Frontend service IP: $FRONTEND_SERVICE"
-                        echo "Backend service IP: $BACKEND_SERVICE"
-                        
-                        # Test backend health endpoint
-                        kubectl run test-pod --rm -i --restart=Never --image=curlimages/curl -- \
-                          curl -f "http://$BACKEND_SERVICE:5000/health" || echo "Backend health check failed"
-                        
-                        # Test frontend accessibility
-                        kubectl run test-pod --rm -i --restart=Never --image=curlimages/curl -- \
-                          curl -f "http://$FRONTEND_SERVICE:3000" || echo "Frontend accessibility check failed"
+                    // Deploy to staging using pure Terraform Infrastructure as Code
+                    script {
+                        dir('terraform') {
+                            sh '''
+                                echo "🚀 Deploying to Staging via Pure Terraform IaC..."
+                                
+                                # Update infrastructure with new image tags
+                                terraform apply -auto-approve \\
+                                    -var="environment=staging" \\
+                                    -var="namespace=healthcare" \\
+                                    -var='replica_count={"frontend"=2,"backend"=3}' \\
+                                    -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \\
+                                    -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}"
+                                
+                                echo "✅ Staging deployment completed via Terraform"
+                                
+                                # Verify deployment through Terraform outputs only
+                                echo "=== Terraform-Managed Infrastructure Status ==="
+                                terraform output
+                                
+                                echo "🎯 Deployment Details:"
+                                echo "Frontend Image: healthcare-app-frontend:${BUILD_NUMBER}"
+                                echo "Backend Image: healthcare-app-backend:${BUILD_NUMBER}"
+                                echo "Environment: staging"
+                                echo "Namespace: \$(terraform output -raw namespace)"
+                            '''
+                        }
+                    }
                     '''
                     
                     // Staging-specific tests

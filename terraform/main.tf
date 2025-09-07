@@ -38,6 +38,18 @@ variable "namespace" {
   default     = "healthcare"
 }
 
+variable "frontend_image" {
+  description = "Frontend Docker image with tag"
+  type        = string
+  default     = "healthcare-app-frontend:latest"
+}
+
+variable "backend_image" {
+  description = "Backend Docker image with tag"
+  type        = string
+  default     = "healthcare-app-backend:latest"
+}
+
 variable "replica_count" {
   description = "Number of replicas for each service"
   type        = map(number)
@@ -286,7 +298,7 @@ resource "kubernetes_deployment" "backend" {
       spec {
         container {
           name  = "backend"
-          image = "healthcare-app-backend:latest"
+          image = var.backend_image
 
           port {
             container_port = 5000
@@ -411,7 +423,7 @@ resource "kubernetes_deployment" "frontend" {
       spec {
         container {
           name  = "frontend"
-          image = "healthcare-app-frontend:latest"
+          image = var.frontend_image
 
           port {
             container_port = 3001
