@@ -129,7 +129,10 @@ locals {
 # Random password for MongoDB
 resource "random_password" "mongodb_password" {
   length  = 32
-  special = true
+  special = false
+  upper   = true
+  lower   = true
+  numeric = true
 }
 
 # Kubernetes Namespace for application
@@ -172,8 +175,8 @@ resource "kubernetes_secret" "app_secrets" {
   type = "Opaque"
 
   data = {
-    mongodb-root-password = base64encode(random_password.mongodb_password.result)
-    jwt-secret            = base64encode("super-secret-jwt-key-${var.environment}")
+    mongodb-root-password = random_password.mongodb_password.result
+    jwt-secret            = "super-secret-jwt-key-${var.environment}"
   }
 }
 
@@ -203,6 +206,10 @@ resource "kubernetes_stateful_set" "mongodb" {
           name  = "mongodb"
           image = "mongo:7.0"
           image_pull_policy = "IfNotPresent"
+          
+          # Command to bind MongoDB to all interfaces
+          command = ["mongod"]
+          args    = ["--bind_ip_all", "--auth"]
 
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
@@ -562,7 +569,7 @@ resource "kubernetes_service" "frontend" {
     selector = local.frontend_labels
 
     port {
-      port        = 3000
+      port        = 3001
       target_port = "http"
       protocol    = "TCP"
     }
@@ -638,6 +645,36 @@ resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
 
     policy_types = ["Egress"]
 
+    # Allow DNS resolution
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "53"
+        protocol = "UDP"
+      }
+    }
+
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "53"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow MongoDB connection
     egress {
       to {
         pod_selector {

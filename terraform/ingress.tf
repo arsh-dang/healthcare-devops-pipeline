@@ -49,7 +49,7 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
             service {
               name = kubernetes_service.frontend.metadata[0].name
               port {
-                number = 3000
+                number = 3001
               }
             }
           }
