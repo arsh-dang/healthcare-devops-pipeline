@@ -326,8 +326,18 @@ resource "kubernetes_deployment" "backend" {
           }
 
           env {
-            name  = "MONGODB_URI"
-            value = "mongodb://admin:$(MONGODB_PASSWORD)@mongodb.healthcare-staging.svc.cluster.local:27017/healthcare-app?authSource=admin"
+            name  = "MONGODB_HOST"
+            value = "mongodb.healthcare-staging.svc.cluster.local"
+          }
+
+          env {
+            name  = "MONGODB_PORT"
+            value = "27017"
+          }
+
+          env {
+            name  = "MONGODB_USERNAME"
+            value = "admin"
           }
 
           env {
