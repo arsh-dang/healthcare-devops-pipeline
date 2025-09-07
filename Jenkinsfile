@@ -836,17 +836,42 @@ print('✅ No secrets detected')
                             kubectl get all -n $(terraform output -raw namespace) || echo "Resources verification failed"
                         '''
                         
-                        // Store outputs for later stages
+                        // Store outputs for later stages using direct terraform commands
                         script {
-                            def terraformOutputs = readJSON file: 'terraform/terraform-outputs-staging.json'
-                            env.TERRAFORM_NAMESPACE = terraformOutputs.namespace.value
-                            env.TERRAFORM_BACKEND_SERVICE = terraformOutputs.backend_service.value
-                            env.TERRAFORM_FRONTEND_SERVICE = terraformOutputs.frontend_service.value
+                            dir('terraform') {
+                                env.TERRAFORM_NAMESPACE = sh(
+                                    script: 'terraform output -raw namespace',
+                                    returnStdout: true
+                                ).trim()
+                                env.TERRAFORM_BACKEND_SERVICE = sh(
+                                    script: 'terraform output -raw backend_service',
+                                    returnStdout: true
+                                ).trim()
+                                env.TERRAFORM_FRONTEND_SERVICE = sh(
+                                    script: 'terraform output -raw frontend_service',
+                                    returnStdout: true
+                                ).trim()
+                                env.MONITORING_NAMESPACE = sh(
+                                    script: 'terraform output -raw monitoring_namespace',
+                                    returnStdout: true
+                                ).trim()
+                                env.PROMETHEUS_URL = sh(
+                                    script: 'terraform output -raw prometheus_url',
+                                    returnStdout: true
+                                ).trim()
+                                env.GRAFANA_URL = sh(
+                                    script: 'terraform output -raw grafana_url',
+                                    returnStdout: true
+                                ).trim()
+                            }
                             
                             echo "Terraform outputs stored:"
                             echo "  Namespace: ${env.TERRAFORM_NAMESPACE}"
                             echo "  Backend Service: ${env.TERRAFORM_BACKEND_SERVICE}"
                             echo "  Frontend Service: ${env.TERRAFORM_FRONTEND_SERVICE}"
+                            echo "  Monitoring Namespace: ${env.MONITORING_NAMESPACE}"
+                            echo "  Prometheus URL: ${env.PROMETHEUS_URL}"
+                            echo "  Grafana URL: ${env.GRAFANA_URL}"
                         }
                     }
                 }
@@ -1336,13 +1361,27 @@ print('✅ No secrets detected')
                 
                     // Get Terraform outputs and deploy to production using Terraform-managed infrastructure
                     script {
-                        def terraformOutputs = readJSON file: 'terraform/terraform-outputs-production.json'
-                            env.TERRAFORM_PROD_NAMESPACE = terraformOutputs.namespace.value
-                            env.TERRAFORM_PROD_BACKEND_SERVICE = terraformOutputs.backend_service.value
-                            env.TERRAFORM_PROD_FRONTEND_SERVICE = terraformOutputs.frontend_service.value
-                            
-                            echo "Production Terraform outputs stored:"
-                            echo "  Namespace: ${env.TERRAFORM_PROD_NAMESPACE}"
+                        dir('terraform') {
+                            env.TERRAFORM_PROD_NAMESPACE = sh(
+                                script: 'terraform output -raw namespace',
+                                returnStdout: true
+                            ).trim()
+                            env.TERRAFORM_PROD_BACKEND_SERVICE = sh(
+                                script: 'terraform output -raw backend_service',
+                                returnStdout: true
+                            ).trim()
+                            env.TERRAFORM_PROD_FRONTEND_SERVICE = sh(
+                                script: 'terraform output -raw frontend_service',
+                                returnStdout: true
+                            ).trim()
+                            env.TERRAFORM_PROD_MONITORING_NAMESPACE = sh(
+                                script: 'terraform output -raw monitoring_namespace',
+                                returnStdout: true
+                            ).trim()
+                        }
+                        
+                        echo "Production Terraform outputs stored:"
+                        echo "  Namespace: ${env.TERRAFORM_PROD_NAMESPACE}"
                             echo "  Backend Service: ${env.TERRAFORM_PROD_BACKEND_SERVICE}"
                             echo "  Frontend Service: ${env.TERRAFORM_PROD_FRONTEND_SERVICE}"
                         }
