@@ -192,6 +192,7 @@ resource "kubernetes_stateful_set" "mongodb" {
         container {
           name  = "mongodb"
           image = "mongo:7.0"
+          image_pull_policy = "IfNotPresent"
 
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
@@ -299,6 +300,7 @@ resource "kubernetes_deployment" "backend" {
         container {
           name  = "backend"
           image = var.backend_image
+          image_pull_policy = "IfNotPresent"
 
           port {
             container_port = 5000
@@ -424,6 +426,7 @@ resource "kubernetes_deployment" "frontend" {
         container {
           name  = "frontend"
           image = var.frontend_image
+          image_pull_policy = "IfNotPresent"
 
           port {
             container_port = 3001
