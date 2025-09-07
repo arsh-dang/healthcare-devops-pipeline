@@ -788,14 +788,14 @@ EOF
                                 -var="environment=staging" \
                                 -var="namespace=healthcare" \
                                 -var='replica_count={"frontend"=2,"backend"=3}' \
-                                -var="enable_persistent_storage=false" || echo "No existing resources to destroy"
+                                -var="enable_persistent_storage=true" || echo "No existing resources to destroy"
                             
                             # Create new plan with all variables
                             terraform plan \
                                 -var="environment=staging" \
                                 -var="namespace=healthcare" \
                                 -var='replica_count={"frontend"=2,"backend"=3}' \
-                                -var="enable_persistent_storage=false" \
+                                -var="enable_persistent_storage=true" \
                                 -out=tfplan-staging \
                                 -detailed-exitcode || true
                                 

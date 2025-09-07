@@ -388,15 +388,15 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = var.environment == "production" ? "50Gi" : "5Gi"
+        storage = var.environment == "production" ? "50Gi" : "2Gi"  # Smaller for staging
       }
     }
-    # Use local storage class for better compatibility with local clusters
-    storage_class_name = "hostpath"
+    # Try multiple storage classes for compatibility
+    storage_class_name = var.environment == "production" ? "standard" : null  # Use default for staging
   }
 
   timeouts {
-    create = "30s"
+    create = "60s"  # Reasonable timeout
   }
 }
 
@@ -703,15 +703,15 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "2Gi"
+        storage = "1Gi"
       }
     }
-    # Use local storage class for better compatibility with local clusters
-    storage_class_name = "hostpath"
+    # Use default storage class for better compatibility
+    storage_class_name = var.environment == "production" ? "standard" : null
   }
 
   timeouts {
-    create = "30s"
+    create = "60s"
   }
 }
 
