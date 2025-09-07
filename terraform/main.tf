@@ -176,7 +176,7 @@ resource "kubernetes_stateful_set" "mongodb" {
   }
 
   spec {
-    service_name = "mongodb-headless"
+    service_name = "mongodb"
     replicas     = var.environment == "production" ? 3 : 1
 
     selector {
@@ -232,7 +232,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           liveness_probe {
             exec {
-              command = ["mongo", "--eval", "db.adminCommand('ping')"]
+              command = ["mongosh", "--eval", "db.adminCommand('ping')"]
             }
             initial_delay_seconds = 30
             period_seconds        = 10
@@ -240,7 +240,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           readiness_probe {
             exec {
-              command = ["mongo", "--eval", "db.adminCommand('ping')"]
+              command = ["mongosh", "--eval", "db.adminCommand('ping')"]
             }
             initial_delay_seconds = 5
             period_seconds        = 5
@@ -315,7 +315,7 @@ resource "kubernetes_deployment" "backend" {
 
           env {
             name  = "MONGODB_URI"
-            value = "mongodb://admin:$(MONGODB_PASSWORD)@mongodb:27017/healthcare-app?authSource=admin"
+            value = "mongodb://admin:$(MONGODB_PASSWORD)@mongodb.healthcare-staging.svc.cluster.local:27017/healthcare-app?authSource=admin"
           }
 
           env {
