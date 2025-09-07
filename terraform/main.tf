@@ -138,6 +138,10 @@ resource "kubernetes_namespace" "healthcare" {
     name = "${var.namespace}-${var.environment}"
     labels = local.common_labels
   }
+  
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
 }
 
 # ConfigMap for application configuration
@@ -548,7 +552,7 @@ resource "kubernetes_service" "frontend" {
     selector = local.frontend_labels
 
     port {
-      port        = 3001
+      port        = 3000
       target_port = "http"
       protocol    = "TCP"
     }

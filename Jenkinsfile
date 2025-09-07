@@ -253,16 +253,60 @@ node {
             
             stage('Infrastructure as Code') {
                 echo 'Deploying Infrastructure with Terraform...'
-                sh '''
-                    echo "Initializing Terraform for infrastructure deployment..."
-                    cd terraform
-                    
-                    terraform init
-                    terraform plan -var="environment=staging" -var="app_version=${BUILD_NUMBER}" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}"
-                    terraform apply -auto-approve -var="environment=staging" -var="app_version=${BUILD_NUMBER}" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}"
-                    
-                    echo "Infrastructure deployment completed"
-                '''
+                
+                script {
+                    try {
+                        dir('terraform') {
+                            if (fileExists('./deploy.sh')) {
+                                // Use the deployment script with clean strategy for reliability
+                                sh '''
+                                    echo "Using Terraform deployment script..."
+                                    export TERRAFORM_STRATEGY=clean
+                                    export BUILD_NUMBER=''' + BUILD_NUMBER + '''
+                                    ./deploy.sh deploy staging ''' + BUILD_NUMBER + ''' healthcare-app-frontend:''' + BUILD_NUMBER + ''' healthcare-app-backend:''' + BUILD_NUMBER + '''
+                                '''
+                            } else {
+                                // Fallback to direct terraform commands
+                                sh '''
+                                    echo "Initializing Terraform for infrastructure deployment..."
+                                    terraform init
+                                    
+                                    echo "Cleaning up any conflicting resources..."
+                                    kubectl delete namespace healthcare-staging --ignore-not-found=true || true
+                                    kubectl delete namespace monitoring-staging --ignore-not-found=true || true
+                                    kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
+                                    kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
+                                    sleep 5
+                                    
+                                    echo "Planning Terraform deployment..."
+                                    terraform plan -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:''' + BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:''' + BUILD_NUMBER + '''"
+                                    
+                                    echo "Applying Terraform configuration..."
+                                    terraform apply -auto-approve -var="environment=staging" -var="app_version=''' + BUILD_NUMBER + '''" -var="frontend_image=healthcare-app-frontend:''' + BUILD_NUMBER + '''" -var="backend_image=healthcare-app-backend:''' + BUILD_NUMBER + '''"
+                                    
+                                    echo "Infrastructure deployment completed"
+                                '''
+                            }
+                        }
+                        
+                        // Verify deployment
+                        echo "Verifying infrastructure deployment..."
+                        sh '''
+                            echo "Checking deployed resources..."
+                            kubectl get pods -n healthcare-staging || true
+                            kubectl get services -n healthcare-staging || true
+                            kubectl get pods -n monitoring-staging || true
+                            kubectl get services -n monitoring-staging || true
+                            
+                            echo "Waiting for pods to be ready..."
+                            kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=300s || true
+                        '''
+                        
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Infrastructure deployment failed: ${e.getMessage()}")
+                    }
+                }
             }
             
             stage('Deploy to Staging') {

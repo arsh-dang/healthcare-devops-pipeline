@@ -10,6 +10,10 @@ resource "kubernetes_namespace" "monitoring" {
       purpose   = "observability"
     })
   }
+  
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
 }
 
 # Prometheus ConfigMap
@@ -358,6 +362,10 @@ resource "kubernetes_cluster_role" "prometheus" {
   rule {
     non_resource_urls = ["/metrics"]
     verbs             = ["get"]
+  }
+  
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
   }
 }
 
