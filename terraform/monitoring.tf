@@ -253,13 +253,10 @@ resource "kubernetes_deployment" "prometheus" {
             mount_path = "/etc/prometheus/rules"
           }
 
-          # Conditional volume mount for persistent storage
-          dynamic "volume_mount" {
-            for_each = var.enable_persistent_storage ? [1] : []
-            content {
-              name       = "prometheus-storage"
-              mount_path = "/prometheus"
-            }
+          # Storage volume mount (always present - either PVC or emptyDir)
+          volume_mount {
+            name       = "prometheus-storage"
+            mount_path = "/prometheus"
           }
 
           resources {
@@ -400,12 +397,12 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
         storage = var.environment == "production" ? "50Gi" : "2Gi"  # Smaller for staging
       }
     }
-    # Try multiple storage classes for compatibility
-    storage_class_name = var.environment == "production" ? "standard" : null  # Use default for staging
+    # Use local-path storage class which is available in the cluster
+    storage_class_name = "local-path"
   }
 
   timeouts {
-    create = "60s"  # Reasonable timeout
+    create = "300s"  # Increased timeout for PVC binding
   }
 }
 
@@ -607,13 +604,10 @@ resource "kubernetes_deployment" "grafana" {
             mount_path = "/etc/grafana/provisioning/datasources"
           }
 
-          # Conditional volume mount for persistent storage
-          dynamic "volume_mount" {
-            for_each = var.enable_persistent_storage ? [1] : []
-            content {
-              name       = "grafana-storage"
-              mount_path = "/var/lib/grafana"
-            }
+          # Storage volume mount (always present - either PVC or emptyDir)
+          volume_mount {
+            name       = "grafana-storage"
+            mount_path = "/var/lib/grafana"
           }
 
           resources {
@@ -724,12 +718,12 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
         storage = "1Gi"
       }
     }
-    # Use default storage class for better compatibility
-    storage_class_name = var.environment == "production" ? "standard" : null
+    # Use local-path storage class which is available in the cluster
+    storage_class_name = "local-path"
   }
 
   timeouts {
-    create = "60s"
+    create = "300s"  # Increased timeout for PVC binding
   }
 }
 

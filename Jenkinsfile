@@ -23,7 +23,11 @@ pipeline {
         
         // Kubernetes Configuration
         KUBECONFIG = credentials('kubeconfig')
-        NAMESPACE = 'healthcare-production'
+        NAMESPACE = 'healthcare-staging'
+        
+        // Infrastructure Configuration for HD-level deployment
+        TF_ENVIRONMENT = 'staging'
+        ENABLE_PERSISTENT_STORAGE = 'true'
         
         // Monitoring URLs
         PROMETHEUS_URL = 'http://localhost:9090'
@@ -794,12 +798,12 @@ EOF
                             rm -rf .terraform.tfstate.lock.info
                             terraform state list | xargs -r terraform state rm || true
                             
-                            # Create new plan with all variables (no persistent storage for staging)
+                            # Create new plan with all variables (enable persistent storage for HD requirements)
                             terraform plan \
-                                -var="environment=staging" \
+                                -var="environment=${TF_ENVIRONMENT}" \
                                 -var="namespace=healthcare" \
                                 -var='replica_count={"frontend"=2,"backend"=3}' \
-                                -var="enable_persistent_storage=false" \
+                                -var="enable_persistent_storage=${ENABLE_PERSISTENT_STORAGE}" \
                                 -out=tfplan-staging \
                                 -detailed-exitcode || true
                                 
