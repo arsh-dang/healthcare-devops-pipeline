@@ -782,20 +782,24 @@ EOF
                             # Clean up any existing plan to ensure fresh start
                             rm -f tfplan-staging
                             
-                            # Destroy existing resources for clean IaC deployment
-                            echo "Cleaning up existing resources for pure IaC approach..."
-                            terraform destroy -auto-approve \
-                                -var="environment=staging" \
-                                -var="namespace=healthcare" \
-                                -var='replica_count={"frontend"=2,"backend"=3}' \
-                                -var="enable_persistent_storage=true" || echo "No existing resources to destroy"
+                            # Force clean state for true IaC - remove all Kubernetes resources manually
+                            echo "Force cleaning Kubernetes resources for clean IaC deployment..."
+                            kubectl delete namespace healthcare-staging --ignore-not-found=true || true
+                            kubectl delete namespace monitoring-staging --ignore-not-found=true || true
+                            kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
+                            kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
                             
-                            # Create new plan with all variables
+                            # Clean Terraform state
+                            echo "Cleaning Terraform state..."
+                            rm -rf .terraform.tfstate.lock.info
+                            terraform state list | xargs -r terraform state rm || true
+                            
+                            # Create new plan with all variables (no persistent storage for staging)
                             terraform plan \
                                 -var="environment=staging" \
                                 -var="namespace=healthcare" \
                                 -var='replica_count={"frontend"=2,"backend"=3}' \
-                                -var="enable_persistent_storage=true" \
+                                -var="enable_persistent_storage=false" \
                                 -out=tfplan-staging \
                                 -detailed-exitcode || true
                                 
