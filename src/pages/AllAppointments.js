@@ -11,8 +11,8 @@ function AllAppointmentsPage() {
     setIsLoading(true);
     setError(null);
     
-    // Using relative URL that will be handled by Nginx proxy
-    fetch("/api/appointments")
+        // Using 127.0.0.1 for API calls
+    fetch("http://127.0.0.1:5001/api/appointments")
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

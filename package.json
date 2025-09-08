@@ -50,6 +50,7 @@
     "docker:test": "docker-compose -f docker-compose.test.yml up --abort-on-container-exit",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js"
   },
+  "proxy": "http://localhost:5001",
   "eslintConfig": {
     "extends": [
       "react-app",

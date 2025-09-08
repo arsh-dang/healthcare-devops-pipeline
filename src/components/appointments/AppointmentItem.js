@@ -33,8 +33,8 @@ function AppointmentItem(props) {
     if (window.confirm("Are you sure you want to delete this appointment? This action cannot be undone.")) {
       setIsDeleting(true);
       
-      // Using relative URL that will be handled by Nginx proxy
-      fetch(`/api/appointments/${props.id}`, {
+            // Using 127.0.0.1 for API calls
+      fetch(`http://127.0.0.1:5001/api/appointments/${props.id}`, {
         method: 'DELETE',
       })
       .then(response => {

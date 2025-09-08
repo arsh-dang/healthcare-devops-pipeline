@@ -11,8 +11,8 @@ function NewAppointmentPage() {
         setIsSubmitting(true);
         setError(null);
 
-        // Using relative URL that will be handled by Nginx proxy
-        fetch('/api/appointments', {
+                // Using 127.0.0.1 for API calls
+        fetch('http://127.0.0.1:5001/api/appointments', {
             method: 'POST',
             body: JSON.stringify(appointmentData),
             headers: {

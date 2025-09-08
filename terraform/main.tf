@@ -155,7 +155,7 @@ resource "kubernetes_namespace" "healthcare" {
     name = "${var.namespace}-${var.environment}"
     labels = local.common_labels
   }
-  
+
   lifecycle {
     ignore_changes = [metadata[0].labels]
   }
@@ -175,6 +175,10 @@ resource "kubernetes_config_map" "app_config" {
     PROMETHEUS_METRICS_PORT = "9090"
     LOG_LEVEL               = var.environment == "production" ? "info" : "debug"
     CORS_ORIGIN             = var.environment == "production" ? "https://healthcare.company.com" : "*"
+    API_RATE_LIMIT          = "100"
+    API_TIMEOUT             = "30000"
+    HEALTH_CHECK_INTERVAL   = "30"
+    MAX_CONNECTIONS         = "10"
   }
 }
 
@@ -218,12 +222,12 @@ resource "kubernetes_stateful_set" "mongodb" {
       spec {
         container {
           name  = "mongodb"
-          image = "mongo:7.0"
+          image = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
-          
+
           # Command to bind MongoDB to all interfaces
           command = ["mongod"]
-          args    = ["--bind_ip_all", "--auth"]
+          args    = ["--bind_ip", "127.0.0.1", "--auth"]
 
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
@@ -278,58 +282,6 @@ resource "kubernetes_stateful_set" "mongodb" {
           }
         }
 
-        # Security context
-        security_context {
-          fs_group = 999
-        }
-      }
-    }
-
-    volume_claim_template {
-      metadata {
-        name = "mongodb-data"
-      }
-      spec {
-        access_modes = ["ReadWriteOnce"]
-        resources {
-          requests = {
-            storage = var.environment == "production" ? "100Gi" : "10Gi"
-          }
-        }
-        storage_class_name = "local-path"
-      }
-    }
-  }
-}
-
-# Backend Deployment with advanced features
-resource "kubernetes_deployment" "backend" {
-  wait_for_rollout = false
-  
-  metadata {
-    name      = "backend"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = local.backend_labels
-  }
-
-  spec {
-    replicas = var.replica_count.backend
-
-    selector {
-      match_labels = local.backend_labels
-    }
-
-    template {
-      metadata {
-        labels = local.backend_labels
-        annotations = {
-          "prometheus.io/scrape" = "true"
-          "prometheus.io/port"   = "5000"
-          "prometheus.io/path"   = "/metrics"
-        }
-      }
-
-      spec {
         container {
           name  = "backend"
           image = var.backend_image
@@ -348,7 +300,7 @@ resource "kubernetes_deployment" "backend" {
 
           env {
             name  = "MONGODB_HOST"
-            value = "mongodb-0.mongodb.healthcare-staging.svc.cluster.local"
+            value = "127.0.0.1"
           }
 
           env {
@@ -427,48 +379,34 @@ resource "kubernetes_deployment" "backend" {
             allow_privilege_escalation = false
             read_only_root_filesystem  = true
           }
-        }
-
-        # Pod security context
-        security_context {
-          fs_group = 1000
-        }
-
-        # Pod anti-affinity for high availability
-        affinity {
-          pod_anti_affinity {
-            preferred_during_scheduling_ignored_during_execution {
-              weight = 100
-              pod_affinity_term {
-                label_selector {
-                  match_expressions {
-                    key      = "component"
-                    operator = "In"
-                    values   = ["backend"]
-                  }
-                }
-                topology_key = "kubernetes.io/hostname"
-              }
-            }
-          }
-        }
       }
     }
 
-    strategy {
-      type = "RollingUpdate"
-      rolling_update {
-        max_unavailable = "25%"
-        max_surge       = "25%"
+    }
+
+    volume_claim_template {
+      metadata {
+        name = "mongodb-data"
+        labels = local.mongodb_labels
+      }
+      spec {
+        access_modes = ["ReadWriteOnce"]
+        resources {
+          requests = {
+            storage = var.environment == "production" ? "100Gi" : "10Gi"
+          }
+        }
+        storage_class_name = "local-path"
       }
     }
   }
 }
+# REMOVED: Backend now runs as sidecar in MongoDB pod
 
 # Frontend Deployment
 resource "kubernetes_deployment" "frontend" {
   wait_for_rollout = false
-  
+
   metadata {
     name      = "frontend"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -572,7 +510,7 @@ resource "kubernetes_service" "mongodb" {
       protocol    = "TCP"
     }
 
-    cluster_ip = "None"
+    type = "ClusterIP"
   }
 }
 
@@ -628,7 +566,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.backend_labels
+    selector = local.mongodb_labels  # Point to MongoDB pod which contains backend
 
     port {
       port        = 5000
@@ -661,21 +599,21 @@ resource "kubernetes_service" "frontend" {
 }
 
 # Horizontal Pod Autoscalers
-resource "kubernetes_horizontal_pod_autoscaler_v2" "backend_hpa" {
+resource "kubernetes_horizontal_pod_autoscaler_v2" "mongodb_hpa" {
   metadata {
-    name      = "backend-hpa"
+    name      = "mongodb-hpa"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
   }
 
   spec {
     scale_target_ref {
       api_version = "apps/v1"
-      kind        = "Deployment"
-      name        = kubernetes_deployment.backend.metadata[0].name
+      kind        = "StatefulSet"
+      name        = kubernetes_stateful_set.mongodb.metadata[0].name
     }
 
-    min_replicas = var.replica_count.backend
-    max_replicas = var.replica_count.backend * 3
+    min_replicas = 1
+    max_replicas = 3
 
     metric {
       type = "Resource"
@@ -722,7 +660,7 @@ resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
 
   spec {
     pod_selector {
-      match_labels = local.backend_labels
+      match_labels = local.mongodb_labels  # Backend now runs in MongoDB pod
     }
 
     policy_types = ["Egress"]
@@ -756,7 +694,7 @@ resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
       }
     }
 
-    # Allow MongoDB connection
+    # Allow MongoDB connection (backend to MongoDB within same pod)
     egress {
       to {
         pod_selector {
@@ -771,7 +709,187 @@ resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
   }
 }
 
-# Outputs
+# Allow external access to frontend
+resource "kubernetes_network_policy" "allow_frontend_ingress" {
+  metadata {
+    name      = "allow-frontend-ingress"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.frontend_labels
+    }
+
+    policy_types = ["Ingress"]
+
+    ingress {
+      ports {
+        port     = "3001"
+        protocol = "TCP"
+      }
+      from {
+        ip_block {
+          cidr = "0.0.0.0/0"
+        }
+      }
+    }
+  }
+}
+
+# Allow external access to backend
+resource "kubernetes_network_policy" "allow_backend_ingress" {
+  metadata {
+    name      = "allow-backend-ingress"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.mongodb_labels  # Backend runs in MongoDB pod
+    }
+
+    policy_types = ["Ingress"]
+
+    ingress {
+      ports {
+        port     = "5000"
+        protocol = "TCP"
+      }
+      from {
+        ip_block {
+          cidr = "0.0.0.0/0"
+        }
+      }
+    }
+  }
+}
+
+# Allow frontend to backend communication
+resource "kubernetes_network_policy" "allow_frontend_to_backend" {
+  metadata {
+    name      = "allow-frontend-to-backend"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.frontend_labels
+    }
+
+    policy_types = ["Egress"]
+
+    # Allow DNS resolution
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "53"
+        protocol = "UDP"
+      }
+    }
+
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "53"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow frontend to backend communication
+    egress {
+      to {
+        pod_selector {
+          match_labels = local.mongodb_labels  # Backend runs in MongoDB pod
+        }
+      }
+      ports {
+        port     = "5000"
+        protocol = "TCP"
+      }
+    }
+  }
+}
+
+# MongoDB Backup CronJob
+resource "kubernetes_cron_job_v1" "mongodb_backup" {
+  metadata {
+    name      = "mongodb-backup"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    schedule = "0 2 * * *"  # Daily at 2 AM
+    job_template {
+      metadata {
+        labels = local.mongodb_labels
+      }
+      spec {
+        template {
+          metadata {
+            labels = local.mongodb_labels
+          }
+          spec {
+            container {
+              name  = "mongodb-backup"
+              image = "mongo:7.0.1"
+              command = [
+                "sh",
+                "-c",
+                "mongodump --host mongodb --username $MONGO_USERNAME --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/$(date +%Y%m%d_%H%M%S)"
+              ]
+
+              env {
+                name = "MONGO_USERNAME"
+                value_from {
+                  secret_key_ref {
+                    name = kubernetes_secret.app_secrets.metadata[0].name
+                    key  = "mongodb-root-password"
+                  }
+                }
+              }
+
+              env {
+                name = "MONGO_PASSWORD"
+                value_from {
+                  secret_key_ref {
+                    name = kubernetes_secret.app_secrets.metadata[0].name
+                    key  = "mongodb-root-password"
+                  }
+                }
+              }
+
+              volume_mount {
+                name       = "backup-storage"
+                mount_path = "/backup"
+              }
+            }
+
+            volume {
+              name = "backup-storage"
+              empty_dir {}
+            }
+
+            restart_policy = "OnFailure"
+          }
+        }
+      }
+    }
+  }
+}
 output "namespace" {
   description = "Kubernetes namespace"
   value       = "${var.namespace}-${var.environment}"

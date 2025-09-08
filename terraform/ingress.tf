@@ -22,7 +22,6 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
     labels    = local.common_labels
     annotations = {
       "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
       "nginx.ingress.kubernetes.io/ssl-redirect"   = var.environment == "production" ? "true" : "false"
       "cert-manager.io/cluster-issuer"             = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
     }
@@ -42,6 +41,20 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
 
       http {
         path {
+          path      = "/api/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.backend.metadata[0].name
+              port {
+                number = 5000
+              }
+            }
+          }
+        }
+
+        path {
           path      = "/"
           path_type = "Prefix"
 
@@ -50,20 +63,6 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
               name = kubernetes_service.frontend.metadata[0].name
               port {
                 number = 3001
-              }
-            }
-          }
-        }
-
-        path {
-          path      = "/api"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.backend.metadata[0].name
-              port {
-                number = 5000
               }
             }
           }
