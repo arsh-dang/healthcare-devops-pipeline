@@ -84,6 +84,13 @@ variable "datadog_api_key" {
   sensitive   = true
 }
 
+variable "mongodb_root_password" {
+  description = "MongoDB root password (leave empty for auto-generation)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "monitoring_retention_days" {
   description = "Prometheus data retention in days"
   type        = number
@@ -138,12 +145,17 @@ locals {
   backend_labels  = merge(local.common_labels, { component = "backend" })
   mongodb_labels  = merge(local.common_labels, { component = "mongodb" })
   monitoring_labels = merge(local.common_labels, { component = "monitoring" })
+  
+  # Use provided password or generate random one
+  mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
 }
 
-# Random password for MongoDB
+# Random password for MongoDB (only if not provided via variable)
 resource "random_password" "mongodb_password" {
+  count = var.mongodb_root_password == "" ? 1 : 0
+  
   length  = 32
-  special = false
+  special = true
   upper   = true
   lower   = true
   numeric = true
@@ -193,7 +205,7 @@ resource "kubernetes_secret" "app_secrets" {
   type = "Opaque"
 
   data = {
-    mongodb-root-password = random_password.mongodb_password.result
+    mongodb-root-password = local.mongodb_password
     jwt-secret            = "super-secret-jwt-key-${var.environment}"
   }
 }
@@ -958,6 +970,12 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
     }
   }
 }
+output "mongodb_password" {
+  description = "MongoDB root password (sensitive - only shown for convenience)"
+  value       = local.mongodb_password
+  sensitive   = true
+}
+
 output "namespace" {
   description = "Kubernetes namespace"
   value       = "${var.namespace}-${var.environment}"
