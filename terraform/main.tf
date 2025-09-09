@@ -251,18 +251,24 @@ resource "kubernetes_stateful_set" "mongodb" {
             #!/bin/bash
             set -e
             
-            echo "Starting MongoDB with authentication..."
+            echo "Starting MongoDB initialization..."
             
             # Check if MongoDB has been initialized
             if [ ! -f /data/db/.mongodb_initialized ]; then
-              echo "First run - initializing MongoDB..."
+              echo "First run - initializing MongoDB without auth..."
               
-              # Create initialization script
-              cat > /data/db/init.js << 'EOF'
-                const password = process.env.MONGO_INITDB_ROOT_PASSWORD;
+              # Start MongoDB without auth for initialization
+              mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
+              
+              # Wait for MongoDB to start
+              sleep 10
+              
+              echo "Creating admin user..."
+              # Create users using mongosh
+              mongosh --eval "
                 db.getSiblingDB('admin').createUser({
                   user: 'admin',
-                  pwd: password,
+                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
                   roles: [
                     { role: 'userAdminAnyDatabase', db: 'admin' },
                     { role: 'readWriteAnyDatabase', db: 'admin' },
@@ -273,33 +279,27 @@ resource "kubernetes_stateful_set" "mongodb" {
                 
                 db.getSiblingDB('healthcare-app').createUser({
                   user: 'admin',
-                  pwd: password,
+                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
                   roles: [
                     { role: 'readWrite', db: 'healthcare-app' },
                     { role: 'dbAdmin', db: 'healthcare-app' }
                   ]
                 });
-EOF
+              "
               
-              # Start MongoDB with auth and initialization script
-              mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log --fork
-              
-              # Wait for MongoDB to start
-              sleep 5
-              
-              # Run initialization script
-              mongosh --eval "load('/data/db/init.js')"
+              # Stop the temporary MongoDB instance
+              mongod --dbpath /data/db --shutdown
+              sleep 2
               
               # Mark as initialized
               touch /data/db/.mongodb_initialized
               echo "MongoDB initialization complete."
-              
-              # Shutdown and restart cleanly
-              mongod --dbpath /data/db --shutdown
-              sleep 2
+            else
+              echo "MongoDB already initialized, starting with auth..."
             fi
             
             # Start MongoDB with authentication
+            echo "Starting MongoDB with authentication..."
             exec mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log
             EOT
           ]
@@ -347,9 +347,9 @@ EOF
 
           startup_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 10
+            initial_delay_seconds = 15
             period_seconds        = 10
             timeout_seconds       = 5
             failure_threshold     = 30  # Allow up to 5 minutes for startup
@@ -357,9 +357,9 @@ EOF
 
           liveness_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 60
+            initial_delay_seconds = 120
             period_seconds        = 30
             timeout_seconds       = 10
             failure_threshold     = 3
@@ -367,12 +367,12 @@ EOF
 
           readiness_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval \"db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
+            initial_delay_seconds = 60
+            period_seconds        = 15
             timeout_seconds       = 5
-            failure_threshold     = 5
+            failure_threshold     = 3
           }
         }
 
