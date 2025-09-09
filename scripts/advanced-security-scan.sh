@@ -50,14 +50,14 @@ console.log('- Low:', stats.low || 0);
 console.log('- Info:', stats.info || 0);
 
 if (stats.critical > 0) {
-    console.log('❌ CRITICAL vulnerabilities found!');
+    console.log('[FAIL] CRITICAL vulnerabilities found!');
     process.exit(1);
 }
 if (stats.high > 5) {
-    console.log('⚠️  Too many HIGH vulnerabilities!');
+    console.log('[WARNING] Too many HIGH vulnerabilities!');
     process.exit(1);
 }
-console.log('✅ npm audit passed security threshold');
+console.log('[SUCCESS] npm audit passed security threshold');
 "
 
 echo "3. Running Semgrep for SAST analysis..."
@@ -83,12 +83,12 @@ try {
     console.log('- Total findings:', findings.length);
     
     if (critical > 0) {
-        console.log('❌ Critical security issues found!');
+        console.log('[FAIL] Critical security issues found!');
         process.exit(1);
     }
-    console.log('✅ SAST analysis passed');
+    console.log('[SUCCESS] SAST analysis passed');
 } catch (e) {
-    console.log('⚠️  Semgrep results not available');
+    console.log('[WARNING] Semgrep results not available');
 }
 "
 
@@ -122,11 +122,11 @@ for image in "healthcare-app-frontend" "healthcare-app-backend"; do
             console.log('- Total vulnerabilities:', vulnerabilities.length);
             
             if (critical > 0) {
-                console.log('❌ Critical vulnerabilities in container!');
+                console.log('[FAIL] Critical vulnerabilities in container!');
                 process.exit(1);
             }
         } catch (e) {
-            console.log('⚠️  Trivy results not available for $image');
+            console.log('[WARNING] Trivy results not available for $image');
         }
         "
     else
@@ -155,16 +155,16 @@ try {
     console.log('- Potential secrets found:', secrets.length);
     
     if (secrets.length > 0) {
-        console.log('⚠️  Potential secrets detected:');
+        console.log('[WARNING] Potential secrets detected:');
         secrets.forEach(secret => {
             console.log('  -', secret.DetectorName, 'in', secret.SourceMetadata?.Data?.Filesystem?.file);
         });
-        console.log('❌ Secrets found in codebase!');
+        console.log('[FAIL] Secrets found in codebase!');
         process.exit(1);
     }
-    console.log('✅ No secrets detected');
+    console.log('[SUCCESS] No secrets detected');
 } catch (e) {
-    console.log('⚠️  Secrets scan results not available');
+    console.log('[WARNING] Secrets scan results not available');
 }
 "
 
@@ -195,10 +195,10 @@ const report = {
 };
 
 fs.writeFileSync('$REPORT_DIR/security-summary.json', JSON.stringify(report, null, 2));
-console.log('📊 Security report generated: $REPORT_DIR/security-summary.json');
+console.log('[REPORT] Security report generated: $REPORT_DIR/security-summary.json');
 "
 
-echo "✅ Advanced Security Testing Completed!"
-echo "📁 Reports available in: $REPORT_DIR/"
-echo "📊 Security Summary:"
+echo "[SUCCESS] Advanced Security Testing Completed!"
+echo "Reports available in: $REPORT_DIR/"
+echo "[REPORT] Security Summary:"
 cat $REPORT_DIR/security-summary.json

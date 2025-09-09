@@ -661,7 +661,7 @@ const collectFeedback = async (deploymentId, environment) => {
 ```markdown
 # Sprint Retrospective Template
 
-## What Went Well? 🎉
+## What Went Well?
 - Successful zero-downtime deployment
 - 99.9% uptime maintained
 - All security scans passed

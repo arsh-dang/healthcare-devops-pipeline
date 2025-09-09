@@ -19,11 +19,11 @@ let testResults = {
 
 async function runTest(testName, testFunction) {
   try {
-    console.log(`🧪 Running ${testName}...`);
+    console.log(`Running ${testName}...`);
     await testFunction();
     testResults.passed++;
     testResults.details.push({ name: testName, status: 'PASSED' });
-    console.log(`✅ ${testName} - PASSED`);
+    console.log(`[SUCCESS] ${testName} - PASSED`);
   } catch (error) {
     testResults.failed++;
     const errorDetails = {
@@ -43,7 +43,7 @@ async function runTest(testName, testFunction) {
       } : undefined
     };
     testResults.details.push(errorDetails);
-    console.log(`❌ ${testName} - FAILED: ${error.message}`);
+    console.log(`[ERROR] ${testName} - FAILED: ${error.message}`);
     if (error.response) {
       console.log(`   Response Status: ${error.response.status}`);
       console.log(`   Response Data:`, error.response.data);
@@ -174,7 +174,7 @@ async function testDatabaseConnection() {
 }
 
 async function runIntegrationTests() {
-  console.log('🚀 Starting Integration Tests...');
+  console.log('Starting Integration Tests...');
   console.log(`API Base URL: ${API_BASE_URL}`);
   console.log(`Frontend URL: ${FRONTEND_URL}`);
   
@@ -186,7 +186,7 @@ async function runIntegrationTests() {
   }
   
   // Wait for services to be ready
-  console.log('⏳ Waiting for services to be ready...');
+  console.log('Waiting for services to be ready...');
   await new Promise(resolve => setTimeout(resolve, 10000));
   
   // Run all tests
@@ -196,14 +196,14 @@ async function runIntegrationTests() {
   await runTest('Frontend Availability Test', testFrontendAvailability);
   
   // Print summary
-  console.log('\n📊 Integration Test Summary:');
+  console.log('\nIntegration Test Summary:');
   console.log(`Total Tests: ${testResults.total}`);
   console.log(`Passed: ${testResults.passed}`);
   console.log(`Failed: ${testResults.failed}`);
   console.log(`Success Rate: ${((testResults.passed / testResults.total) * 100).toFixed(2)}%`);
   
   if (testResults.failed > 0) {
-    console.log('\n❌ Failed Tests:');
+    console.log('\n[ERROR] Failed Tests:');
     testResults.details
       .filter(test => test.status === 'FAILED')
       .forEach(test => {
@@ -217,6 +217,6 @@ async function runIntegrationTests() {
 
 // Run the tests
 runIntegrationTests().catch(error => {
-  console.error('💥 Integration tests crashed:', error);
+  console.error('Integration tests crashed:', error);
   process.exit(1);
 });

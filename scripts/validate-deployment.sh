@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🔍 Healthcare App Deployment Validation"
+echo "Healthcare App Deployment Validation"
 echo "========================================"
 
 # Colors
@@ -15,20 +15,20 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 print_status() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}[SUCCESS] $1${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}[WARNING] $1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}[ERROR] $1${NC}"
 }
 
 # Validation functions
 validate_docker() {
-    echo "🐳 Validating Docker..."
+    echo "Validating Docker..."
     if docker ps &> /dev/null; then
         print_status "Docker is running"
         docker --version
@@ -39,7 +39,7 @@ validate_docker() {
 }
 
 validate_kubernetes() {
-    echo "⚙️  Validating Kubernetes..."
+    echo "Validating Kubernetes..."
     if kubectl cluster-info &> /dev/null; then
         print_status "Kubernetes cluster is accessible"
         kubectl version --client --short
@@ -50,7 +50,7 @@ validate_kubernetes() {
 }
 
 validate_jenkins() {
-    echo "🔧 Validating Jenkins..."
+    echo "Validating Jenkins..."
     if curl -s http://localhost:8080 > /dev/null; then
         print_status "Jenkins is running on http://localhost:8080"
     else
@@ -60,7 +60,7 @@ validate_jenkins() {
 }
 
 validate_sonarqube() {
-    echo "📊 Validating SonarQube..."
+    echo "Validating SonarQube..."
     if curl -s http://localhost:9000/api/system/status | grep -q "UP"; then
         print_status "SonarQube is running on http://localhost:9000"
     else
@@ -70,7 +70,7 @@ validate_sonarqube() {
 }
 
 validate_application_build() {
-    echo "🏗️  Validating Application Build..."
+    echo "Validating Application Build..."
     if [ -f "package.json" ]; then
         if npm run build > /dev/null 2>&1; then
             print_status "Application builds successfully"
@@ -85,7 +85,7 @@ validate_application_build() {
 }
 
 validate_kubernetes_deployment() {
-    echo "🚀 Validating Kubernetes Deployment..."
+    echo "Validating Kubernetes Deployment..."
     
     # Check if any healthcare app pods are running (Terraform-managed)
     if kubectl get pods -l app=healthcare-app 2>/dev/null | grep -q "Running"; then
@@ -102,7 +102,7 @@ validate_kubernetes_deployment() {
 }
 
 validate_monitoring() {
-    echo "📊 Validating Monitoring..."
+    echo "Validating Monitoring..."
     
     # Check Prometheus
     if kubectl get svc prometheus-service 2>/dev/null | grep -q "prometheus"; then
@@ -120,7 +120,7 @@ validate_monitoring() {
 }
 
 test_api_endpoints() {
-    echo "🧪 Testing API Endpoints..."
+    echo "Testing API Endpoints..."
     
     # Test if backend is accessible
     BACKEND_URL="http://localhost:5000"
@@ -133,7 +133,7 @@ test_api_endpoints() {
 }
 
 validate_security_tools() {
-    echo "🔒 Validating Security Tools..."
+    echo "Validating Security Tools..."
     
     tools=("trivy" "semgrep" "trufflehog")
     for tool in "${tools[@]}"; do
@@ -146,7 +146,7 @@ validate_security_tools() {
 }
 
 validate_terraform() {
-    echo "🏗️  Validating Terraform..."
+    echo "Validating Terraform..."
     if [ -f "terraform/main.tf" ]; then
         cd terraform
         if terraform validate > /dev/null 2>&1; then
@@ -181,7 +181,7 @@ validate_security_tools && validation_results+=("security:pass") || validation_r
 validate_terraform && validation_results+=("terraform:pass") || validation_results+=("terraform:fail")
 
 echo ""
-echo "📋 Validation Summary"
+echo "Validation Summary"
 echo "===================="
 
 passed=0
@@ -192,15 +192,15 @@ for result in "${validation_results[@]}"; do
     IFS=':' read -r component status <<< "$result"
     case $status in
         "pass")
-            echo -e "${GREEN}✅ $component${NC}"
+            echo -e "${GREEN}[SUCCESS] $component${NC}"
             ((passed++))
             ;;
         "fail")
-            echo -e "${RED}❌ $component${NC}"
+            echo -e "${RED}[ERROR] $component${NC}"
             ((failed++))
             ;;
         "warn")
-            echo -e "${YELLOW}⚠️  $component${NC}"
+            echo -e "${YELLOW}[WARNING] $component${NC}"
             ((warnings++))
             ;;
     esac
@@ -212,7 +212,7 @@ echo "Results: $passed passed, $failed failed, $warnings warnings"
 if [ $failed -eq 0 ]; then
     print_status "Validation completed successfully!"
     echo ""
-    echo "🎯 Ready for pipeline execution!"
+    echo "Ready for pipeline execution!"
     echo "Next steps:"
     echo "1. Configure Jenkins credentials"
     echo "2. Create Jenkins pipeline job"

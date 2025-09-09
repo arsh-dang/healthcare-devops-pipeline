@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🔧 Jenkins Configuration Helper"
+echo "Jenkins Configuration Helper"
 echo "==============================="
 
 # Colors for output
@@ -15,15 +15,15 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 print_status() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}[SUCCESS] $1${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}[WARNING] $1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}[ERROR] $1${NC}"
 }
 
 # Check if Jenkins is running
@@ -42,7 +42,7 @@ JENKINS_HOME="/opt/homebrew/var/lib/jenkins"
 if [ -f "$JENKINS_HOME/secrets/initialAdminPassword" ]; then
     ADMIN_PASSWORD=$(cat "$JENKINS_HOME/secrets/initialAdminPassword")
     echo ""
-    echo "🔑 Initial Admin Password:"
+    echo "Initial Admin Password:"
     echo "=========================="
     echo "$ADMIN_PASSWORD"
     echo ""
@@ -51,7 +51,7 @@ if [ -f "$JENKINS_HOME/secrets/initialAdminPassword" ]; then
 fi
 
 # Check SonarQube status
-echo "📊 Checking SonarQube..."
+echo "Checking SonarQube..."
 if curl -s http://localhost:9000/api/system/status | grep -q "UP"; then
     print_status "SonarQube is running"
 else
@@ -60,7 +60,7 @@ fi
 
 # Generate SonarQube token instructions
 echo ""
-echo "🎫 SonarQube Token Generation:"
+echo "SonarQube Token Generation:"
 echo "==============================="
 echo "1. Go to http://localhost:9000"
 echo "2. Login with admin/admin"
@@ -72,7 +72,7 @@ echo "7. Copy the token for Jenkins configuration"
 echo ""
 
 # Docker Hub instructions
-echo "🐳 Docker Hub Setup:"
+echo "Docker Hub Setup:"
 echo "===================="
 echo "1. Create account at https://hub.docker.com"
 echo "2. Create repository: healthcare-app-frontend"
@@ -82,7 +82,7 @@ echo "5. Update Jenkinsfile with your Docker Hub username"
 echo ""
 
 # Kubeconfig setup
-echo "⚙️  Kubeconfig Setup:"
+echo "Kubeconfig Setup:"
 echo "====================="
 echo "Your kubeconfig location: ~/.kube/config"
 if [ -f ~/.kube/config ]; then
@@ -97,7 +97,7 @@ fi
 
 # Jenkins plugins list
 echo ""
-echo "📦 Required Jenkins Plugins:"
+echo "Required Jenkins Plugins:"
 echo "============================"
 cat << EOF
 Install these plugins via Jenkins UI (Manage Jenkins > Manage Plugins):
@@ -126,7 +126,7 @@ Security:
 EOF
 
 echo ""
-echo "🎯 Jenkins Job Creation:"
+echo "Jenkins Job Creation:"
 echo "========================"
 echo "1. Go to Jenkins Dashboard"
 echo "2. Click 'New Item'"
@@ -141,7 +141,7 @@ echo "6. Save and build"
 echo ""
 
 # Credentials setup checklist
-echo "🔐 Credentials Checklist:"
+echo "Credentials Checklist:"
 echo "========================="
 echo "Add these in Jenkins (Manage Jenkins > Manage Credentials):"
 echo ""
@@ -158,7 +158,7 @@ echo ""
 
 # Update Jenkinsfile with username
 if [ -f "Jenkinsfile" ]; then
-    echo "📝 Update Required:"
+    echo "Update Required:"
     echo "=================="
     echo "Edit Jenkinsfile and replace 'yourusername' with your Docker Hub username:"
     echo "  DOCKER_REPO = 'yourusername/healthcare-app'"
@@ -170,7 +170,7 @@ fi
 echo ""
 print_status "Configuration guide complete!"
 echo ""
-echo "🚀 Ready to proceed with:"
+echo "Ready to proceed with:"
 echo "1. Jenkins plugin installation"
 echo "2. Credentials configuration"
 echo "3. Pipeline job creation"

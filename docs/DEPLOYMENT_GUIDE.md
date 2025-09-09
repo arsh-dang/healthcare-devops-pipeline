@@ -492,7 +492,7 @@ spec:
           app: healthcare
 ```
 
-## 🚨 Rollback Procedures
+## Rollback Procedures
 
 ### Automatic Rollback
 ```groovy

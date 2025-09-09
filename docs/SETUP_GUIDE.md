@@ -210,7 +210,7 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 - **Business Metrics**: User registrations, appointment bookings
 - **Security**: Failed login attempts, vulnerability counts
 
-## 🛠  Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 

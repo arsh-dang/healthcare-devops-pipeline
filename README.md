@@ -92,7 +92,7 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 
 ##   7-Stage Pipeline Implementation
 
-### **Stage 1: Build & Package** 🔨
+### **Stage 1: Build & Package**
 - **Frontend Build**: React application with production optimizations
 - **Backend Build**: Node.js application with dependency management
 - **Docker Images**: Multi-stage containerization for optimal image sizes
@@ -136,7 +136,7 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 - **Production Validation**: Comprehensive health checks and monitoring
 - **Automatic Rollback**: Failure detection and automatic recovery
 
-## 🛠  Technology Stack
+## Technology Stack
 
 | Category | Technology | Purpose |
 |----------|------------|---------|

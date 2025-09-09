@@ -700,7 +700,7 @@ const createAppointment = async (req, res) => {
 }
 ```
 
-## 🚨 Alerting Configuration
+## Alerting Configuration
 
 ### 1. Alertmanager Setup
 
@@ -759,7 +759,7 @@ receivers:
     slack_configs:
       - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
         channel: '#healthcare-critical'
-        title: '🚨 CRITICAL ALERT'
+        title: 'CRITICAL ALERT'
         text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
         
   - name: 'business-alerts'
@@ -877,7 +877,9 @@ setInterval(async () => {
 }, 60000); // Every minute
 ```
 
-## 📱 Custom Monitoring Solutions
+});
+
+## Custom Monitoring Solutions
 
 ### 1. Business Metrics Dashboard
 

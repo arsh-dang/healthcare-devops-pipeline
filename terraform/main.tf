@@ -520,7 +520,6 @@ resource "helm_release" "datadog" {
   name       = "datadog"
   repository = "https://helm.datadoghq.com"
   chart      = "datadog"
-  version    = "3.43.12"
   namespace  = kubernetes_namespace.healthcare.metadata[0].name
 
   set {

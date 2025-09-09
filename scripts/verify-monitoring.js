@@ -49,14 +49,14 @@ async function testEndpoint(name, url, expectedStatus = 200) {
     const response = await makeRequest(url);
     
     if (response.statusCode === expectedStatus) {
-      log(`✓ ${name}: OK (${response.statusCode})`, 'green');
+      log(`[OK] ${name}: OK (${response.statusCode})`, 'green');
       return true;
     } else {
-      log(`✗ ${name}: Unexpected status ${response.statusCode}`, 'red');
+      log(`[FAIL] ${name}: Unexpected status ${response.statusCode}`, 'red');
       return false;
     }
   } catch (error) {
-    log(`✗ ${name}: ${error.message}`, 'red');
+    log(`[FAIL] ${name}: ${error.message}`, 'red');
     return false;
   }
 }
@@ -71,22 +71,22 @@ async function testPrometheusTargets(url) {
       const activeTargets = data.data?.activeTargets || [];
       const healthyTargets = activeTargets.filter(t => t.health === 'up');
       
-      log(`✓ Prometheus targets: ${healthyTargets.length}/${activeTargets.length} healthy`, 'green');
+      log(`[OK] Prometheus targets: ${healthyTargets.length}/${activeTargets.length} healthy`, 'green');
       
       // Log target details
       activeTargets.forEach(target => {
-        const status = target.health === 'up' ? '✓' : '✗';
+        const status = target.health === 'up' ? '[OK]' : '[FAIL]';
         const color = target.health === 'up' ? 'green' : 'red';
         log(`  ${status} ${target.job}: ${target.instance} (${target.health})`, color);
       });
       
       return healthyTargets.length > 0;
     } else {
-      log(`✗ Prometheus targets: HTTP ${response.statusCode}`, 'red');
+      log(`[FAIL] Prometheus targets: HTTP ${response.statusCode}`, 'red');
       return false;
     }
   } catch (error) {
-    log(`✗ Prometheus targets: ${error.message}`, 'red');
+    log(`[FAIL] Prometheus targets: ${error.message}`, 'red');
     return false;
   }
 }
@@ -117,10 +117,10 @@ async function main() {
   const total = results.length;
   
   if (passed === total) {
-    log(`✓ All ${total} tests passed`, 'green');
+    log(`[SUCCESS] All ${total} tests passed`, 'green');
     process.exit(0);
   } else {
-    log(`✗ ${total - passed}/${total} tests failed`, 'red');
+    log(`[FAIL] ${total - passed}/${total} tests failed`, 'red');
     process.exit(1);
   }
 }
