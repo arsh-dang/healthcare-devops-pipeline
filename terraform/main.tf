@@ -339,7 +339,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           liveness_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password \"$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
+              command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
             }
             initial_delay_seconds = 60
             period_seconds        = 10
@@ -347,7 +347,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           readiness_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password \"$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
+              command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
             }
             initial_delay_seconds = 30
             period_seconds        = 10
