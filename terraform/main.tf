@@ -225,9 +225,62 @@ resource "kubernetes_stateful_set" "mongodb" {
           image = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
 
-          # Command to start MongoDB with authentication (user already created)
+          # Command to initialize MongoDB with authentication
           command = ["/bin/bash"]
-          args    = ["-c", "echo 'Starting MongoDB with authentication...' && mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log"]
+          args    = ["-c", <<-EOT
+            #!/bin/bash
+            set -e
+            
+            echo "Starting MongoDB initialization..."
+            
+            # Check if MongoDB has been initialized
+            if [ ! -f /data/db/.mongodb_initialized ]; then
+              echo "First run - initializing MongoDB without auth..."
+              
+              # Start MongoDB without auth for initialization
+              mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
+              
+              # Wait for MongoDB to start
+              sleep 5
+              
+              echo "Creating admin user..."
+              mongosh --eval "
+                db.getSiblingDB('admin').createUser({
+                  user: 'admin',
+                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
+                  roles: [
+                    { role: 'userAdminAnyDatabase', db: 'admin' },
+                    { role: 'readWriteAnyDatabase', db: 'admin' },
+                    { role: 'dbAdminAnyDatabase', db: 'admin' },
+                    { role: 'clusterAdmin', db: 'admin' }
+                  ]
+                });
+                
+                db.getSiblingDB('healthcare-app').createUser({
+                  user: 'admin',
+                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
+                  roles: [
+                    { role: 'readWrite', db: 'healthcare-app' },
+                    { role: 'dbAdmin', db: 'healthcare-app' }
+                  ]
+                });
+              "
+              
+              # Stop the temporary MongoDB instance
+              mongod --dbpath /data/db --shutdown
+              
+              # Mark as initialized
+              touch /data/db/.mongodb_initialized
+              echo "MongoDB initialization complete."
+            else
+              echo "MongoDB already initialized, starting with auth..."
+            fi
+            
+            # Start MongoDB with authentication
+            echo "Starting MongoDB with authentication..."
+            exec mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log
+            EOT
+          ]
 
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
@@ -874,12 +927,7 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
 
               env {
                 name = "MONGO_USERNAME"
-                value_from {
-                  secret_key_ref {
-                    name = kubernetes_secret.app_secrets.metadata[0].name
-                    key  = "mongodb-root-password"
-                  }
-                }
+                value = "admin"
               }
 
               env {
