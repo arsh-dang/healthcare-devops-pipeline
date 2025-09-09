@@ -1,6 +1,82 @@
 # Healthcare DevOps Pipeline
 
-A comprehensive **7-stage CI/CD pipeline** for healthcare web application deployment using Jenkins, Docker, Kubernetes, and Terraform. This enterprise-grade DevOps solution implements industry best practices for secure, scalable, and reliable healthcare application deployment.
+A comprehensive **7-stage CI/CD pipeline** for healthcare web application deployment using Jenkins, Docker, ## Technology Stack
+
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Frontend** | React.js 18, CSS Modules | Modern, responsive user interface |
+| **Backend** | Node.js, Express.js | RESTful API and business logic |
+| **Database** | MongoDB | Healthcare data storage |
+| **CI/CD** | Jenkins, Blue Ocean | Automated pipeline orchestration |
+| **Containerization** | Docker, Docker Compose | Application packaging and deployment |
+| **Orchestration** | Kubernetes | Container orchestration and scaling |
+| **Infrastructure** | Terraform | Infrastructure as Code |
+| **Monitoring** | Prometheus, Grafana | Metrics collection and visualization |
+| **Security** | Trivy, TruffleHog, SonarQube | Multi-layer security analysis |
+| **Quality** | Jest, ESLint, SonarQube | Code quality and testing |
+
+## 📁 Project Structure & Configuration
+
+### Configuration Files
+- **`.env.example`** - Environment variables template
+- **`docker-compose.yml`** - Local development environment
+- **`Dockerfile.frontend`** - Frontend container build
+- **`Dockerfile.backend`** - Backend container build
+- **`nginx.conf`** - Nginx configuration for frontend
+- **`Jenkinsfile`** - Complete 7-stage CI/CD pipeline
+- **`Jenkinsfile.enhanced`** - Enhanced pipeline with additional features
+
+### Scripts Directory
+- **`scripts/advanced-security-scan.sh`** - Comprehensive security scanning
+- **`scripts/jenkins-setup-helper.sh`** - Jenkins configuration assistance
+- **`scripts/jenkins-plugins-guide.sh`** - Jenkins plugins documentation
+- **`scripts/validate-deployment.sh`** - Deployment validation
+- **`scripts/verify-monitoring.js`** - Monitoring verification
+- **`scripts/init-mongo.js`** - MongoDB initialization script
+
+### Terraform Configuration
+- **`terraform/main.tf`** - Main infrastructure configuration
+- **`terraform/deploy.sh`** - Infrastructure deployment script
+- **`terraform/manage-passwords.sh`** - Password management utility
+- **`terraform/terraform.tfvars.example`** - Terraform variables template
+- **`terraform/production.tfvars`** - Production environment variables
+
+### Testing & Quality
+- **`test-integration.js`** - Integration test suite
+- **`postman/healthcare-api.postman_collection.json`** - API test collection
+- **`sonar-project.properties`** - SonarQube configuration
+- **`load-tests/artillery-config.yml`** - Load testing configuration
+
+## ✅ Pipeline Readiness Checklist
+
+### ✅ **Completed Setup Tasks**
+- [x] **Environment Configuration**: `.env.example` with all required variables
+- [x] **Docker Compose**: Complete local development environment
+- [x] **Executable Scripts**: All shell scripts made executable
+- [x] **MongoDB Initialization**: Database setup script with sample data
+- [x] **Password Management**: HD-grade password management system
+- [x] **Infrastructure Ready**: Terraform configuration for Kubernetes deployment
+- [x] **Security Scanning**: Comprehensive security analysis scripts
+- [x] **Monitoring Setup**: Prometheus and Grafana configuration
+- [x] **CI/CD Pipeline**: Complete 7-stage Jenkins pipeline
+- [x] **Testing Suite**: Unit, integration, and API testing configured
+
+### ✅ **Ready for Pipeline Execution**
+- [x] **Jenkins Integration**: Pipeline configured for automated builds
+- [x] **Docker Images**: Multi-stage builds for frontend and backend
+- [x] **Kubernetes Deployment**: StatefulSet configuration with MongoDB
+- [x] **Health Checks**: Application and infrastructure monitoring
+- [x] **Security Compliance**: Multi-layer security scanning
+- [x] **Production Deployment**: Blue-green deployment strategy
+- [x] **Monitoring Stack**: Complete observability setup
+- [x] **Documentation**: Comprehensive setup and deployment guides
+
+### 🚀 **Next Steps for Pipeline Execution**
+1. **Configure Jenkins**: Set up Jenkins with required credentials
+2. **Push to Repository**: Ensure all changes are committed and pushed
+3. **Trigger Pipeline**: Run the Jenkins pipeline for automated deployment
+4. **Monitor Deployment**: Use Grafana dashboards for real-time monitoring
+5. **Validate Production**: Perform final validation in production environmentd Terraform. This enterprise-grade DevOps solution implements industry best practices for secure, scalable, and reliable healthcare application deployment.
 
 [![Pipeline Status](https://img.shields.io/badge/Pipeline-7--Stage-success)](./Jenkinsfile)
 [![Test Coverage](https://img.shields.io/badge/Coverage-98.35%25-brightgreen)](./coverage)
@@ -170,17 +246,57 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
 git clone https://github.com/arsh-dang/healthcare-devops-pipeline.git
 cd healthcare-devops-pipeline
 
-# Install dependencies
-npm install
+# Run the automated setup script
+./setup.sh
 
-# Start development environment
-npm run dev
-
-# Run tests
-npm test
+# Or set up manually:
+# cp .env.example .env
+# npm install
+# chmod +x scripts/*.sh
+# chmod +x terraform/*.sh
 ```
 
-### 2. Jenkins Pipeline Setup
+### 2. Local Development with Docker
+```bash
+# Start all services (MongoDB, Backend, Frontend)
+docker-compose up -d
+
+# View service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000
+# Health Check: http://localhost:5000/health
+
+# Stop services
+docker-compose down
+```
+
+### 2. Local Development with Docker
+```bash
+# Start all services (MongoDB, Backend, Frontend)
+docker-compose up -d
+
+# View service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000
+# Health Check: http://localhost:5000/health
+
+# Stop services
+docker-compose down
+```
+
+### 3. Jenkins Pipeline Setup
 ```bash
 # 1. Create new Pipeline job in Jenkins
 # 2. Configure Pipeline script from SCM
@@ -189,7 +305,7 @@ npm test
 # 5. Script Path: Jenkinsfile
 ```
 
-### 3. Infrastructure Deployment
+### 4. Infrastructure Deployment
 ```bash
 # Initialize Terraform
 cd terraform

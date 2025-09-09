@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: healthcare-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-securepassword123}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-healthcare-app}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: healthcare-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 5000
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_USERNAME: ${MONGODB_USERNAME:-admin}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD:-securepassword123}
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-healthcare-app}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      DD_TRACE_ENABLED: ${DD_TRACE_ENABLED:-false}
+    ports:
+      - "5000:5000"
+      - "5001:5000"  # Alternative port for CI/CD
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    volumes:
+      - ./server:/app/server:ro
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React App
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: healthcare-frontend
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
+      REACT_APP_VERSION: ${REACT_APP_VERSION:-1.0.0}
+      DD_RUM_ENABLED: ${DD_RUM_ENABLED:-false}
+      DD_RUM_APPLICATION_ID: ${DD_RUM_APPLICATION_ID}
+      DD_RUM_CLIENT_TOKEN: ${DD_RUM_CLIENT_TOKEN}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3000:3001"
+      - "3001:3001"  # Alternative port for CI/CD
+    depends_on:
+      - backend
+    networks:
+      - healthcare-network
+    volumes:
+      - ./src:/app/src:ro
+      - ./public:/app/public:ro
+      - /app/node_modules
+      - /app/build
+
+  # Redis (Optional - for caching/session management)
+  redis:
+    image: redis:7-alpine
+    container_name: healthcare-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - healthcare-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  healthcare-network:
+    driver: bridge
