@@ -256,10 +256,12 @@ resource "kubernetes_stateful_set" "mongodb" {
               sleep 5
               
               echo "Creating admin user..."
+              # Use environment variable directly in mongosh
               mongosh --eval "
+                const password = process.env.MONGO_INITDB_ROOT_PASSWORD;
                 db.getSiblingDB('admin').createUser({
                   user: 'admin',
-                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
+                  pwd: password,
                   roles: [
                     { role: 'userAdminAnyDatabase', db: 'admin' },
                     { role: 'readWriteAnyDatabase', db: 'admin' },
@@ -270,7 +272,7 @@ resource "kubernetes_stateful_set" "mongodb" {
                 
                 db.getSiblingDB('healthcare-app').createUser({
                   user: 'admin',
-                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
+                  pwd: password,
                   roles: [
                     { role: 'readWrite', db: 'healthcare-app' },
                     { role: 'dbAdmin', db: 'healthcare-app' }
@@ -337,7 +339,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           liveness_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password \"$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
             }
             initial_delay_seconds = 60
             period_seconds        = 10
@@ -345,7 +347,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           readiness_probe {
             exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password \"$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
             }
             initial_delay_seconds = 30
             period_seconds        = 10
