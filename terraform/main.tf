@@ -253,7 +253,7 @@ resource "kubernetes_stateful_set" "mongodb" {
               mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
               
               # Wait for MongoDB to start
-              sleep 5
+              sleep 10
               
               echo "Creating admin user..."
               # Use environment variable directly in mongosh
@@ -341,16 +341,20 @@ resource "kubernetes_stateful_set" "mongodb" {
             exec {
               command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 60
-            period_seconds        = 10
+            initial_delay_seconds = 120
+            period_seconds        = 15
+            timeout_seconds       = 5
+            failure_threshold     = 3
           }
 
           readiness_probe {
             exec {
               command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
+            initial_delay_seconds = 60
+            period_seconds        = 15
+            timeout_seconds       = 5
+            failure_threshold     = 3
           }
         }
 
