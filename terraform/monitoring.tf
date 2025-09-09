@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "monitoring" {
       purpose   = "observability"
     })
   }
-  
+
   lifecycle {
     ignore_changes = [metadata[0].labels]
   }
@@ -37,7 +37,7 @@ resource "kubernetes_config_map" "prometheus_config" {
 
       scrape_configs = [
         {
-          job_name        = "prometheus"
+          job_name = "prometheus"
           static_configs = [
             {
               targets = ["localhost:9090"]
@@ -363,7 +363,7 @@ resource "kubernetes_cluster_role" "prometheus" {
     non_resource_urls = ["/metrics"]
     verbs             = ["get"]
   }
-  
+
   lifecycle {
     ignore_changes = [metadata[0].labels]
   }
@@ -391,10 +391,10 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
 # Prometheus PVC (conditional)
 resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   count = var.enable_persistent_storage ? 1 : 0
-  
+
   # Don't wait for binding since local-path uses WaitForFirstConsumer mode
   wait_until_bound = false
-  
+
   metadata {
     name      = "prometheus-storage"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
@@ -405,7 +405,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = var.environment == "production" ? "50Gi" : "2Gi"  # Smaller for staging
+        storage = var.environment == "production" ? "50Gi" : "2Gi" # Smaller for staging
       }
     }
     # Use local-path storage class which is available in the cluster
@@ -413,7 +413,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   }
 
   timeouts {
-    create = "120s"  # Reduced timeout for staging PVC binding
+    create = "120s" # Reduced timeout for staging PVC binding
   }
 }
 
@@ -485,10 +485,10 @@ resource "kubernetes_config_map" "grafana_config" {
       apiVersion = 1
       providers = [
         {
-          name    = "default"
-          orgId   = 1
-          folder  = ""
-          type    = "file"
+          name   = "default"
+          orgId  = 1
+          folder = ""
+          type   = "file"
           options = {
             path = "/etc/grafana/provisioning/dashboards"
           }
@@ -715,10 +715,10 @@ resource "kubernetes_deployment" "grafana" {
 # Grafana PVC (conditional)
 resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   count = var.enable_persistent_storage ? 1 : 0
-  
+
   # Don't wait for binding since local-path uses WaitForFirstConsumer mode
   wait_until_bound = false
-  
+
   metadata {
     name      = "grafana-storage"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
@@ -737,7 +737,7 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   }
 
   timeouts {
-    create = "120s"  # Reduced timeout for staging PVC binding
+    create = "120s" # Reduced timeout for staging PVC binding
   }
 }
 
@@ -848,7 +848,7 @@ output "prometheus_service" {
 }
 
 output "grafana_service" {
-  description = "Grafana service name"  
+  description = "Grafana service name"
   value       = kubernetes_service.grafana.metadata[0].name
 }
 

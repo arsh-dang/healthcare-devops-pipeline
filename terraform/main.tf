@@ -228,7 +228,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
   spec {
     service_name = "mongodb"
-    replicas     = var.environment == "production" ? 3 : 1
+    replicas     = 1
 
     selector {
       match_labels = local.mongodb_labels
@@ -240,76 +240,34 @@ resource "kubernetes_stateful_set" "mongodb" {
       }
 
       spec {
-        # Init container to set up MongoDB properly
-        init_container {
-          name  = "mongodb-init"
-          image = "mongo:7.0.1"
-          command = ["/bin/bash", "-c"]
-          args = [<<-EOT
-            #!/bin/bash
-            set -e
-            
-            echo "Setting up MongoDB data directory..."
-            
-            # Create necessary directories
-            mkdir -p /data/db
-            mkdir -p /var/log/mongodb
-            
-            # Set proper permissions for MongoDB user
-            chown -R 999:999 /data/db
-            chown -R 999:999 /var/log/mongodb
-            
-            echo "MongoDB directories initialized"
-            EOT
-          ]
-          
-          volume_mount {
-            name       = "mongodb-data"
-            mount_path = "/data/db"
-          }
-          
-          volume_mount {
-            name       = "mongodb-logs"
-            mount_path = "/var/log/mongodb"
-          }
-          
-          security_context {
-            run_as_user = 0  # Run as root to set permissions
-          }
-        }
-
         container {
           name  = "mongodb"
           image = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
 
-          # Simplified MongoDB startup with proper authentication
-          command = ["/bin/bash"]
-          args    = ["-c", <<-EOT
+          # MongoDB startup with initialization
+          command = ["/bin/bash", "-c"]
+          args = [<<-EOF
             #!/bin/bash
             set -e
-            
-            echo "Starting MongoDB..."
-            
+
+            echo "Starting MongoDB initialization..."
+
             # Check if MongoDB has been initialized
             if [ ! -f /data/db/.mongodb_initialized ]; then
-              echo "First run - initializing MongoDB..."
-              
+              echo "First run - initializing MongoDB without auth..."
+
               # Start MongoDB without auth for initialization
               mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
-              
               # Wait for MongoDB to start
               sleep 10
-              
-              echo "Creating users..."
-              # Get password from environment
-              PASSWORD="$MONGO_INITDB_ROOT_PASSWORD"
-              
-              # Create users using mongosh with proper password
+
+              echo "Creating admin user..."
+              # Create users using mongosh
               mongosh --eval "
                 db.getSiblingDB('admin').createUser({
                   user: 'admin',
-                  pwd: '$PASSWORD',
+                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
                   roles: [
                     { role: 'userAdminAnyDatabase', db: 'admin' },
                     { role: 'readWriteAnyDatabase', db: 'admin' },
@@ -317,30 +275,32 @@ resource "kubernetes_stateful_set" "mongodb" {
                     { role: 'clusterAdmin', db: 'admin' }
                   ]
                 });
-                
+
                 db.getSiblingDB('healthcare-app').createUser({
                   user: 'admin',
-                  pwd: '$PASSWORD',
+                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
                   roles: [
                     { role: 'readWrite', db: 'healthcare-app' },
                     { role: 'dbAdmin', db: 'healthcare-app' }
                   ]
                 });
               "
-              
+
               # Stop the temporary MongoDB instance
               mongod --dbpath /data/db --shutdown
               sleep 2
-              
+
               # Mark as initialized
               touch /data/db/.mongodb_initialized
               echo "MongoDB initialization complete."
+            else
+              echo "MongoDB already initialized, starting with auth..."
             fi
-            
+
             # Start MongoDB with authentication
             echo "Starting MongoDB with authentication..."
             exec mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log
-            EOT
+            EOF
           ]
 
           env {
@@ -375,12 +335,12 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           resources {
             requests = {
-              cpu    = "200m"
-              memory = "512Mi"
+              cpu    = "500m"
+              memory = "1Gi"
             }
             limits = {
-              cpu    = "1000m"
-              memory = "2Gi"
+              cpu    = "2"
+              memory = "4Gi"
             }
           }
 
@@ -550,7 +510,7 @@ resource "kubernetes_stateful_set" "mongodb" {
           name = "tmp"
           empty_dir {}
         }
-
+      }
     }
 
     volume_claim_template {
@@ -593,6 +553,274 @@ resource "kubernetes_stateful_set" "mongodb" {
     delete = "5m"
   }
 }
+
+#     template {
+#       metadata {
+#         labels = local.mongodb_labels
+#       }
+
+#       spec {
+#         # Simplified spec without init containers for now
+
+#         container {
+#           name  = "mongodb"
+#           image = "mongo:7.0.1"
+#           image_pull_policy = "IfNotPresent"
+
+#           # Simplified MongoDB startup
+#           command = ["/bin/bash", "-c"]
+#           args = ["mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log"]
+
+#           env {
+#             name = "MONGO_INITDB_ROOT_PASSWORD"
+#             value_from {
+#               secret_key_ref {
+#                 name = kubernetes_secret.app_secrets.metadata[0].name
+#                 key  = "mongodb-root-password"
+#               }
+#             }
+#           }
+
+#           env {
+#             name  = "MONGO_INITDB_ROOT_USERNAME"
+#             value = "admin"
+#           }
+
+#           port {
+#             container_port = 27017
+#             name           = "mongodb"
+#           }
+
+#           volume_mount {
+#             name       = "mongodb-data"
+#             mount_path = "/data/db"
+#           }
+
+#           volume_mount {
+#             name       = "mongodb-logs"
+#             mount_path = "/var/log/mongodb"
+#           }
+
+#           resources {
+#             requests = {
+#               cpu    = "200m"
+#               memory = "512Mi"
+#             }
+#             limits = {
+#               cpu    = "1000m"
+#               memory = "2Gi"
+#             }
+#           }
+
+#           # Security context for MongoDB
+#           security_context {
+#             run_as_user                = 999
+#             run_as_group               = 999
+#             allow_privilege_escalation = false
+#             read_only_root_filesystem  = false
+#           }
+
+#           startup_probe {
+#             exec {
+#               command = ["mongosh", "--username", "admin", "--password", "$MONGO_INITDB_ROOT_PASSWORD", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+#             }
+#             initial_delay_seconds = 20
+#             period_seconds        = 10
+#             timeout_seconds       = 5
+#             failure_threshold     = 30
+#           }
+
+#           liveness_probe {
+#             exec {
+#               command = ["mongosh", "--username", "admin", "--password", "$MONGO_INITDB_ROOT_PASSWORD", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+#             }
+#             initial_delay_seconds = 120
+#             period_seconds        = 30
+#             timeout_seconds       = 10
+#             failure_threshold     = 3
+#           }
+
+#           readiness_probe {
+#             exec {
+#             command = ["mongosh", "--username", "admin", "--password", "$MONGO_INITDB_ROOT_PASSWORD", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+#             }
+#             initial_delay_seconds = 60
+#             period_seconds        = 15
+#             timeout_seconds       = 5
+#             failure_threshold     = 3
+#           }
+#         }
+
+#         container {
+#           name  = "backend"
+#           image = var.backend_image
+#           image_pull_policy = "IfNotPresent"
+
+#           port {
+#             container_port = 5000
+#             name           = "http"
+#           }
+
+#           env_from {
+#             config_map_ref {
+#               name = kubernetes_config_map.app_config.metadata[0].name
+#             }
+#           }
+
+#           env {
+#             name  = "MONGODB_HOST"
+#             value = "127.0.0.1"
+#           }
+
+#           env {
+#             name  = "MONGODB_PORT"
+#             value = "27017"
+#           }
+
+#           env {
+#             name  = "MONGODB_USERNAME"
+#             value = "admin"
+#           }
+
+#           env {
+#             name = "MONGODB_PASSWORD"
+#             value_from {
+#               secret_key_ref {
+#                 name = kubernetes_secret.app_secrets.metadata[0].name
+#                 key  = "mongodb-root-password"
+#               }
+#             }
+#           }
+
+#           env {
+#             name  = "MONGODB_DATABASE"
+#             value = "healthcare-app"
+#           }
+
+#           # Datadog APM environment variables
+#           env {
+#             name  = "DD_TRACE_ENABLED"
+#             value = var.enable_datadog ? "true" : "false"
+#           }
+
+#           env {
+#             name  = "DD_ENV"
+#             value = var.environment
+#           }
+
+#           env {
+#             name  = "DD_SERVICE"
+#             value = "healthcare-backend"
+#           }
+
+#           resources {
+#             requests = {
+#               cpu    = var.resource_limits.backend.cpu_request
+#               memory = var.resource_limits.backend.memory_request
+#             }
+#             limits = {
+#               cpu    = var.resource_limits.backend.cpu_limit
+#               memory = var.resource_limits.backend.memory_limit
+#             }
+#           }
+
+#           # Security context
+#           security_context {
+#             run_as_non_root            = true
+#             run_as_user                = 1000
+#             allow_privilege_escalation = false
+#             read_only_root_filesystem  = true
+#           }
+
+#           # Startup probe to wait for MongoDB
+#           startup_probe {
+#             http_get {
+#               path = "/health"
+#               port = "http"
+#             }
+#             initial_delay_seconds = 30
+#             period_seconds        = 10
+#             timeout_seconds       = 5
+#             failure_threshold     = 12  # Allow up to 2 minutes for startup
+#           }
+
+#           liveness_probe {
+#             http_get {
+#               path = "/health"
+#               port = "http"
+#             }
+#             initial_delay_seconds = 60
+#             period_seconds        = 15
+#             timeout_seconds       = 5
+#             failure_threshold     = 3
+#           }
+
+#           readiness_probe {
+#             http_get {
+#               path = "/health"
+#               port = "http"
+#             }
+#             initial_delay_seconds = 30
+#             period_seconds        = 10
+#             timeout_seconds       = 5
+#             failure_threshold     = 6
+#           }
+
+#           # Volume mount for temporary files (read-only root filesystem)
+#           volume_mount {
+#             name       = "tmp"
+#             mount_path = "/tmp"
+#           }
+#         }
+
+#         # Pod-level volumes
+#         volume {
+#           name = "tmp"
+#           empty_dir {}
+#         }
+
+#     }
+
+#     volume_claim_template {
+#       metadata {
+#         name = "mongodb-data"
+#         labels = local.mongodb_labels
+#       }
+#       spec {
+#         access_modes = ["ReadWriteOnce"]
+#         resources {
+#           requests = {
+#             storage = var.environment == "production" ? "100Gi" : "10Gi"
+#           }
+#         }
+#         storage_class_name = "local-path"
+#       }
+#     }
+
+#     volume_claim_template {
+#       metadata {
+#         name = "mongodb-logs"
+#         labels = local.mongodb_labels
+#       }
+#       spec {
+#         access_modes = ["ReadWriteOnce"]
+#         resources {
+#           requests = {
+#             storage = "1Gi"
+#           }
+#         }
+#         storage_class_name = "local-path"
+#       }
+#     }
+#   }
+
+#   # Add reasonable timeouts to prevent deployment timeout
+#   timeouts {
+#     create = "10m"
+#     update = "10m"
+#     delete = "5m"
+#   }
+# }
 # REMOVED: Backend now runs as sidecar in MongoDB pod
 
 # Frontend Deployment
@@ -846,63 +1074,62 @@ resource "kubernetes_network_policy" "default_deny" {
   }
 }
 
-resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
-  metadata {
-    name      = "allow-backend-to-mongodb"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-  }
+# resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
+#   metadata {
+#     name      = "allow-backend-to-mongodb"
+#     namespace = kubernetes_namespace.healthcare.metadata[0].name
+#   }
 
-  spec {
-    pod_selector {
-      match_labels = local.mongodb_labels  # Backend now runs in MongoDB pod
-    }
+#   spec {
+#     pod_selector {
+#       match_labels = local.mongodb_labels  # Backend now runs in MongoDB pod
+#     }
 
-    policy_types = ["Egress"]
+#     policy_types = ["Egress"]
 
-    # Allow DNS resolution
-    egress {
-      to {
-        namespace_selector {
-          match_labels = {
-            "kubernetes.io/metadata.name" = "kube-system"
-          }
-        }
-      }
-      ports {
-        port     = "53"
-        protocol = "UDP"
-      }
-      ports {
-        port     = "53"
-        protocol = "TCP"
-      }
-    }
+#     # Allow DNS resolution
+#     egress {
+#       to {
+#         namespace_selector {
+#           match_labels = {
+#             "kubernetes.io/metadata.name" = "kube-system"
+#           }
+#         }
+#       }
+#       ports {
+#         port     = "53"
+#         protocol = "UDP"
+#       }
+#       ports {
+#         port     = "53"
+#         protocol = "TCP"
+#       }
+#     }
 
-    # Allow all egress within the same namespace (simplified for reliability)
-    egress {
-      to {
-        namespace_selector {
-          match_labels = {
-            "kubernetes.io/metadata.name" = kubernetes_namespace.healthcare.metadata[0].labels.name
-          }
-        }
-      }
-    }
+#     # Allow all egress within the same namespace (simplified for reliability)
+#     egress {
+#       to {
+#         namespace_selector {
+#           match_labels = {
+#             "kubernetes.io/metadata.name" = kubernetes_namespace.healthcare.metadata[0].labels.name
+#           }
+#         }
+#       }
+#     }
 
-    # Allow external access for image pulls and other necessary traffic
-    egress {
-      to {}
-      ports {
-        port     = "80"
-        protocol = "TCP"
-      }
-      ports {
-        port     = "443"
-        protocol = "TCP"
-      }
-    }
-  }
-}
+#     # Allow external access for image pulls and other necessary traffic
+#     egress {
+#       to {}
+#       ports {
+#         port     = "80"
+#         protocol = "TCP"
+#       }
+#         port     = "443"
+#         protocol = "TCP"
+#       }
+#     }
+#   }
+# }
 
 # Allow external access to frontend
 resource "kubernetes_network_policy" "allow_frontend_ingress" {
@@ -933,32 +1160,32 @@ resource "kubernetes_network_policy" "allow_frontend_ingress" {
 }
 
 # Allow external access to backend
-resource "kubernetes_network_policy" "allow_backend_ingress" {
-  metadata {
-    name      = "allow-backend-ingress"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-  }
+# resource "kubernetes_network_policy" "allow_backend_ingress" {
+#   metadata {
+#     name      = "allow-backend-ingress"
+#     namespace = kubernetes_namespace.healthcare.metadata[0].name
+#   }
 
-  spec {
-    pod_selector {
-      match_labels = local.mongodb_labels  # Backend runs in MongoDB pod
-    }
+#   spec {
+#     pod_selector {
+#       match_labels = local.mongodb_labels  # Backend runs in MongoDB pod
+#     }
 
-    policy_types = ["Ingress"]
+#     policy_types = ["Ingress"]
 
-    ingress {
-      ports {
-        port     = "5000"
-        protocol = "TCP"
-      }
-      from {
-        ip_block {
-          cidr = "0.0.0.0/0"
-        }
-      }
-    }
-  }
-}
+#     ingress {
+#       ports {
+#         port     = "5000"
+#         protocol = "TCP"
+#       }
+#       from {
+#         ip_block {
+#           cidr = "0.0.0.0/0"
+#         }
+#       }
+#     }
+#   }
+# }
 
 # Allow frontend to backend communication
 resource "kubernetes_network_policy" "allow_frontend_to_backend" {
@@ -998,7 +1225,7 @@ resource "kubernetes_network_policy" "allow_frontend_to_backend" {
       to {
         namespace_selector {
           match_labels = {
-            "kubernetes.io/metadata.name" = kubernetes_namespace.healthcare.metadata[0].labels.name
+            "kubernetes.io/metadata.name" = kubernetes_namespace.healthcare.metadata[0].name
           }
         }
       }
@@ -1006,7 +1233,11 @@ resource "kubernetes_network_policy" "allow_frontend_to_backend" {
 
     # Allow external access for image pulls and other necessary traffic
     egress {
-      to {}
+      to {
+        ip_block {
+          cidr = "0.0.0.0/0"
+        }
+      }
       ports {
         port     = "80"
         protocol = "TCP"
@@ -1042,11 +1273,8 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
             container {
               name  = "mongodb-backup"
               image = "mongo:7.0.1"
-              command = [
-                "sh",
-                "-c",
-                "mongodump --host mongodb --username $MONGO_USERNAME --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/$(date +%Y%m%d_%H%M%S)"
-              ]
+              command = ["sh", "-c"]
+              args = ["mongodump --host mongodb --username admin --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/backup_$(date +%Y%m%d_%H%M%S)"]
 
               env {
                 name = "MONGO_USERNAME"

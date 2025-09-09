@@ -4,7 +4,7 @@
 # NGINX Ingress Controller (if not already installed)
 resource "kubernetes_namespace" "ingress_nginx" {
   count = var.environment == "production" ? 1 : 0
-  
+
   metadata {
     name = "ingress-nginx"
     labels = {
@@ -21,9 +21,9 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
     namespace = "${var.namespace}-${var.environment}"
     labels    = local.common_labels
     annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/ssl-redirect"   = var.environment == "production" ? "true" : "false"
-      "cert-manager.io/cluster-issuer"             = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
+      "kubernetes.io/ingress.class"              = "nginx"
+      "nginx.ingress.kubernetes.io/ssl-redirect" = var.environment == "production" ? "true" : "false"
+      "cert-manager.io/cluster-issuer"           = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
     }
   }
 
@@ -46,7 +46,8 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
 
           backend {
             service {
-              name = kubernetes_service.backend.metadata[0].name
+              # name = kubernetes_service.backend.metadata[0].name
+              name = "backend"
               port {
                 number = 5000
               }
