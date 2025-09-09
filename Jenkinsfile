@@ -579,7 +579,7 @@ pipeline {
                                         echo "Gitleaks not available, using basic grep patterns..."
                                         find src/ server/ -type f \\
                                             -name "*.js" -o -name "*.json" -o -name "*.env*" \\
-                                            -exec grep -l 'password\|secret\|key\|token' {} \\; > reports/secrets-found.txt || true
+                                            -exec grep -l "password\\|secret\\|key\\|token" {} \\; > reports/secrets-found.txt || true
                                     fi
 
                                     echo "Analyzing secrets findings..."
