@@ -25,6 +25,14 @@ provider "kubernetes" {
   config_context = "colima"
 }
 
+# Configure the Helm Provider
+provider "helm" {
+  kubernetes {
+    config_path    = "~/.kube/config"
+    config_context = "colima"
+  }
+}
+
 # Variables for environment configuration
 variable "environment" {
   description = "Environment name (staging, production)"
@@ -253,7 +261,7 @@ resource "kubernetes_stateful_set" "mongodb" {
               mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
               
               # Wait for MongoDB to start
-              sleep 10
+              sleep 15
               
               echo "Creating admin user..."
               # Use environment variable directly in mongosh
@@ -492,6 +500,13 @@ resource "kubernetes_stateful_set" "mongodb" {
       }
     }
   }
+
+  # Add timeouts to prevent deployment timeout
+  timeouts {
+    create = "15m"
+    update = "15m"
+    delete = "10m"
+  }
 }
 # REMOVED: Backend now runs as sidecar in MongoDB pod
 
@@ -643,6 +658,9 @@ resource "helm_release" "datadog" {
     name  = "clusterAgent.enabled"
     value = "true"
   }
+
+  # Add timeout for Helm operations
+  timeout = 600  # 10 minutes
 }
 
 resource "kubernetes_service" "backend" {
