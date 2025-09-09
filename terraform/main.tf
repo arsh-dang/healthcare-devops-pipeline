@@ -225,9 +225,9 @@ resource "kubernetes_stateful_set" "mongodb" {
           image = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
 
-          # Command to bind MongoDB to all interfaces
-          command = ["mongod"]
-          args    = ["--bind_ip", "127.0.0.1", "--auth"]
+          # Command to start MongoDB with authentication (user already created)
+          command = ["/bin/bash"]
+          args    = ["-c", "echo 'Starting MongoDB with authentication...' && mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log"]
 
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
@@ -254,6 +254,11 @@ resource "kubernetes_stateful_set" "mongodb" {
             mount_path = "/data/db"
           }
 
+          volume_mount {
+            name       = "mongodb-logs"
+            mount_path = "/var/log/mongodb"
+          }
+
           resources {
             requests = {
               cpu    = var.resource_limits.mongodb.cpu_request
@@ -267,18 +272,18 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           liveness_probe {
             exec {
-              command = ["mongosh", "--eval", "db.adminCommand('ping')"]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
             }
-            initial_delay_seconds = 30
+            initial_delay_seconds = 60
             period_seconds        = 10
           }
 
           readiness_probe {
             exec {
-              command = ["mongosh", "--eval", "db.adminCommand('ping')"]
+              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
             }
-            initial_delay_seconds = 5
-            period_seconds        = 5
+            initial_delay_seconds = 30
+            period_seconds        = 10
           }
         }
 
@@ -394,6 +399,22 @@ resource "kubernetes_stateful_set" "mongodb" {
         resources {
           requests = {
             storage = var.environment == "production" ? "100Gi" : "10Gi"
+          }
+        }
+        storage_class_name = "local-path"
+      }
+    }
+
+    volume_claim_template {
+      metadata {
+        name = "mongodb-logs"
+        labels = local.mongodb_labels
+      }
+      spec {
+        access_modes = ["ReadWriteOnce"]
+        resources {
+          requests = {
+            storage = "1Gi"
           }
         }
         storage_class_name = "local-path"
