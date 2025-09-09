@@ -251,21 +251,14 @@ resource "kubernetes_stateful_set" "mongodb" {
             #!/bin/bash
             set -e
             
-            echo "Starting MongoDB initialization..."
+            echo "Starting MongoDB with authentication..."
             
             # Check if MongoDB has been initialized
             if [ ! -f /data/db/.mongodb_initialized ]; then
-              echo "First run - initializing MongoDB without auth..."
+              echo "First run - initializing MongoDB..."
               
-              # Start MongoDB without auth for initialization
-              mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
-              
-              # Wait for MongoDB to start
-              sleep 15
-              
-              echo "Creating admin user..."
-              # Use environment variable directly in mongosh
-              mongosh --eval "
+              # Create initialization script
+              cat > /data/db/init.js << 'EOF'
                 const password = process.env.MONGO_INITDB_ROOT_PASSWORD;
                 db.getSiblingDB('admin').createUser({
                   user: 'admin',
@@ -286,20 +279,27 @@ resource "kubernetes_stateful_set" "mongodb" {
                     { role: 'dbAdmin', db: 'healthcare-app' }
                   ]
                 });
-              "
+EOF
               
-              # Stop the temporary MongoDB instance
-              mongod --dbpath /data/db --shutdown
+              # Start MongoDB with auth and initialization script
+              mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log --fork
+              
+              # Wait for MongoDB to start
+              sleep 5
+              
+              # Run initialization script
+              mongosh --eval "load('/data/db/init.js')"
               
               # Mark as initialized
               touch /data/db/.mongodb_initialized
               echo "MongoDB initialization complete."
-            else
-              echo "MongoDB already initialized, starting with auth..."
+              
+              # Shutdown and restart cleanly
+              mongod --dbpath /data/db --shutdown
+              sleep 2
             fi
             
             # Start MongoDB with authentication
-            echo "Starting MongoDB with authentication..."
             exec mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log
             EOT
           ]
@@ -336,22 +336,32 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           resources {
             requests = {
-              cpu    = var.resource_limits.mongodb.cpu_request
-              memory = var.resource_limits.mongodb.memory_request
+              cpu    = "200m"
+              memory = "512Mi"
             }
             limits = {
-              cpu    = var.resource_limits.mongodb.cpu_limit
-              memory = var.resource_limits.mongodb.memory_limit
+              cpu    = "1000m"
+              memory = "2Gi"
             }
+          }
+
+          startup_probe {
+            exec {
+              command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
+            }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 30  # Allow up to 5 minutes for startup
           }
 
           liveness_probe {
             exec {
               command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 120
-            period_seconds        = 15
-            timeout_seconds       = 5
+            initial_delay_seconds = 60
+            period_seconds        = 30
+            timeout_seconds       = 10
             failure_threshold     = 3
           }
 
@@ -359,10 +369,10 @@ resource "kubernetes_stateful_set" "mongodb" {
             exec {
               command = ["/bin/bash", "-c", "mongosh --username admin --authenticationDatabase admin --eval \"db.getSiblingDB('admin').auth('admin', process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping')\""]
             }
-            initial_delay_seconds = 60
-            period_seconds        = 15
+            initial_delay_seconds = 30
+            period_seconds        = 10
             timeout_seconds       = 5
-            failure_threshold     = 3
+            failure_threshold     = 5
           }
         }
 
@@ -501,11 +511,11 @@ resource "kubernetes_stateful_set" "mongodb" {
     }
   }
 
-  # Add timeouts to prevent deployment timeout
+  # Add reasonable timeouts to prevent deployment timeout
   timeouts {
-    create = "15m"
-    update = "15m"
-    delete = "10m"
+    create = "10m"
+    update = "10m"
+    delete = "5m"
   }
 }
 # REMOVED: Backend now runs as sidecar in MongoDB pod
