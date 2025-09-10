@@ -31,9 +31,6 @@ provider "kubernetes" {
   # client_certificate     = base64decode(var.kubernetes_client_certificate)
   # client_key             = base64decode(var.kubernetes_client_key)
 
-  # Load balancer configuration for production
-  load_config_file = true
-
   # Timeout settings
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
@@ -45,7 +42,7 @@ provider "kubernetes" {
 # Helm Provider Configuration
 # Uses the same Kubernetes configuration as the kubernetes provider
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     # Use the default kubeconfig location or KUBECONFIG environment variable
     config_path = var.kubeconfig_path != "" ? var.kubeconfig_path : null
 
@@ -54,14 +51,6 @@ provider "helm" {
     # cluster_ca_certificate = base64decode(var.kubernetes_cluster_ca_certificate)
     # client_certificate     = base64decode(var.kubernetes_client_certificate)
     # client_key             = base64decode(var.kubernetes_client_key)
-
-    load_config_file = true
-
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "kubectl"
-      args        = ["config", "current-context"]
-    }
   }
 }
 
