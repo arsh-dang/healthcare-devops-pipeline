@@ -39,6 +39,16 @@ handle_existing_resources() {
             -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
             kubernetes_cluster_role.prometheus prometheus-staging || true
     fi
+    
+    # Check if Datadog Helm release exists
+    if helm list -n healthcare-staging | grep -q datadog >/dev/null 2>&1; then
+        log "Datadog Helm release already exists, attempting to import..."
+        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
+            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
+            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
+            -var="enable_datadog=true" \
+            helm_release.datadog healthcare-staging/datadog || true
+    fi
 }
 
 # Function to clean up existing resources if needed
@@ -51,6 +61,12 @@ cleanup_existing_resources() {
     kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
     kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
     
+    # Clean up Datadog Helm release if it exists
+    if helm list -n healthcare-staging | grep -q datadog >/dev/null 2>&1; then
+        log "Removing existing Datadog Helm release..."
+        helm uninstall datadog -n healthcare-staging || true
+    fi
+    
     # Wait a bit for cleanup to complete
     sleep 10
 }
@@ -61,12 +77,15 @@ deploy_infrastructure() {
     local app_version=${2:-${BUILD_NUMBER:-latest}}
     local frontend_image=${3:-healthcare-app-frontend:${app_version}}
     local backend_image=${4:-healthcare-app-backend:${app_version}}
+    local datadog_api_key=${5:-${DATADOG_API_KEY:-""}}
+    local enable_datadog=${6:-${ENABLE_DATADOG:-false}}
     
     log "Starting infrastructure deployment..."
     log "Environment: $environment"
     log "App Version: $app_version"
     log "Frontend Image: $frontend_image"
     log "Backend Image: $backend_image"
+    log "Enable Datadog: $enable_datadog"
     
     # Change to terraform directory
     cd "$(dirname "$0")"
@@ -84,14 +103,18 @@ deploy_infrastructure() {
         handle_existing_resources
     fi
     
+    # Build terraform plan command with optional Datadog variables
+    local plan_cmd="terraform plan -var=\"environment=$environment\" -var=\"app_version=$app_version\" -var=\"frontend_image=$frontend_image\" -var=\"backend_image=$backend_image\""
+    
+    if [[ "$enable_datadog" == "true" && -n "$datadog_api_key" ]]; then
+        plan_cmd="$plan_cmd -var=\"enable_datadog=true\" -var=\"datadog_api_key=$datadog_api_key\""
+    fi
+    
+    plan_cmd="$plan_cmd -out=tfplan"
+    
     # Plan the deployment
     log "Planning Terraform deployment..."
-    terraform plan \
-        -var="environment=$environment" \
-        -var="app_version=$app_version" \
-        -var="frontend_image=$frontend_image" \
-        -var="backend_image=$backend_image" \
-        -out=tfplan
+    eval "$plan_cmd"
     
     # Apply the deployment
     log "Applying Terraform configuration..."
@@ -118,7 +141,8 @@ case "${1:-deploy}" in
     deploy)
         deploy_infrastructure "${2:-staging}" "${3:-${BUILD_NUMBER:-latest}}" \
             "${4:-healthcare-app-frontend:${BUILD_NUMBER:-latest}}" \
-            "${5:-healthcare-app-backend:${BUILD_NUMBER:-latest}}"
+            "${5:-healthcare-app-backend:${BUILD_NUMBER:-latest}}" \
+            "${6:-""}" "${7:-false}"
         ;;
     clean)
         log "Cleaning up all resources..."
@@ -129,14 +153,24 @@ case "${1:-deploy}" in
         handle_existing_resources
         ;;
     *)
-        echo "Usage: $0 {deploy|clean|import} [environment] [app_version] [frontend_image] [backend_image]"
+        echo "Usage: $0 {deploy|clean|import} [environment] [app_version] [frontend_image] [backend_image] [datadog_api_key] [enable_datadog]"
         echo "  deploy: Deploy infrastructure (default)"
         echo "  clean: Clean up existing resources"
         echo "  import: Import existing resources into Terraform state"
         echo ""
+        echo "Parameters:"
+        echo "  environment: Target environment (default: staging)"
+        echo "  app_version: Application version/build number (default: BUILD_NUMBER or latest)"
+        echo "  frontend_image: Frontend Docker image (default: healthcare-app-frontend:app_version)"
+        echo "  backend_image: Backend Docker image (default: healthcare-app-backend:app_version)"
+        echo "  datadog_api_key: Datadog API key (optional)"
+        echo "  enable_datadog: Enable Datadog monitoring (true/false, default: false)"
+        echo ""
         echo "Environment variables:"
         echo "  TERRAFORM_STRATEGY: 'import' (default) or 'clean'"
         echo "  BUILD_NUMBER: Build number for versioning"
+        echo "  DATADOG_API_KEY: Alternative way to pass Datadog API key"
+        echo "  ENABLE_DATADOG: Alternative way to enable Datadog (true/false)"
         exit 1
         ;;
 esac

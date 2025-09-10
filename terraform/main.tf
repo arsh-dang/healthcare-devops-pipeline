@@ -919,6 +919,11 @@ resource "helm_release" "datadog" {
   }
 
   set {
+    name  = "datadog.hostname"
+    value = "healthcare-cluster"
+  }
+
+  set {
     name  = "datadog.site"
     value = "datadoghq.com"
   }
@@ -939,7 +944,7 @@ resource "helm_release" "datadog" {
   }
 
   # Add timeout for Helm operations
-  timeout = 600  # 10 minutes
+  timeout = 1200  # 20 minutes
 }
 
 resource "kubernetes_service" "backend" {
