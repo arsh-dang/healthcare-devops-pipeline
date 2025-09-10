@@ -298,7 +298,7 @@ resource "kubernetes_stateful_set" "mongodb" {
             tcp_socket {
               port = "mongodb"
             }
-            initial_delay_seconds = 15
+            initial_delay_seconds = 30
             period_seconds        = 5
             timeout_seconds       = 3
             failure_threshold     = 12
@@ -489,7 +489,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
   # Add reasonable timeouts to prevent deployment timeout
   timeouts {
-    create = "5m"
+    create = "10m"
     update = "5m"
     delete = "3m"
   }
