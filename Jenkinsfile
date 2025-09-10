@@ -1,6 +1,20 @@
 // Force Jenkins to reload pipeline - add this at the very top of Jenkinsfile
 def forcePipelineReload = true
 
+// Pipeline properties for automatic builds
+properties([
+    pipelineTriggers([
+        // Trigger on SCM changes (optional - uncomment to enable)
+        // scm('H/5 * * * *'),
+        // Trigger on timer (optional - uncomment to enable)
+        // cron('H 2 * * *')
+    ]),
+    // Disable concurrent builds to avoid conflicts
+    disableConcurrentBuilds(),
+    // Build history
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+])
+
 node {
     try {
         // Environment variables setup
@@ -27,6 +41,48 @@ node {
                 echo '🔄 Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
                 echo "Current pipeline type: Scripted (no parameters required)"
+                echo "Build Number: ${BUILD_NUMBER}"
+                echo "Job Name: ${JOB_NAME}"
+                echo "Node Name: ${NODE_NAME}"
+            }
+            
+            stage('Validate Configuration') {
+                echo '🔍 Validating pipeline configuration and required files...'
+                
+                script {
+                    // Check for required files
+                    def requiredFiles = [
+                        'package.json',
+                        'Dockerfile.frontend', 
+                        'Dockerfile.backend',
+                        'terraform/main.tf',
+                        'terraform/providers.tf',
+                        'Jenkinsfile'
+                    ]
+                    
+                    def missingFiles = []
+                    requiredFiles.each { file ->
+                        if (!fileExists(file)) {
+                            missingFiles.add(file)
+                        }
+                    }
+                    
+                    if (missingFiles.size() > 0) {
+                        error("❌ Missing required files: ${missingFiles.join(', ')}")
+                    } else {
+                        echo "✅ All required files are present"
+                    }
+                    
+                    // Validate Terraform syntax
+                    if (fileExists('terraform/main.tf')) {
+                        sh '''
+                            cd terraform
+                            echo "Validating Terraform configuration..."
+                            terraform init -backend=false || echo "⚠️  Terraform init failed, but continuing..."
+                            terraform validate || echo "⚠️  Terraform validation failed, but continuing..."
+                        '''
+                    }
+                }
             }
             
             stage('Checkout') {
@@ -45,10 +101,19 @@ node {
                 // Verify tools are available
                 sh '''
                     echo "Checking available tools..."
-                    which node || echo "Node.js not found in PATH"
-                    which npm || echo "npm not found in PATH"
-                    which docker || echo "Docker not found in PATH"
+                    which node || echo "⚠️  Node.js not found in PATH"
+                    which npm || echo "⚠️  npm not found in PATH"
+                    which docker || echo "⚠️  Docker not found in PATH"
+                    which kubectl || echo "⚠️  kubectl not found in PATH"
+                    which terraform || echo "⚠️  terraform not found in PATH"
                     echo "PATH: $PATH"
+                    
+                    # Check if we're in a CI environment
+                    if [ -n "$JENKINS_HOME" ]; then
+                        echo "✅ Running in Jenkins CI environment"
+                    else
+                        echo "ℹ️  Not running in Jenkins environment"
+                    fi
                 '''
             }
             
