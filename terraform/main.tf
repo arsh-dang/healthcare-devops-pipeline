@@ -881,35 +881,26 @@ resource "helm_release" "datadog" {
   chart      = "datadog"
   namespace  = kubernetes_namespace.healthcare.metadata[0].name
 
-  set {
-    name  = "datadog.apiKey"
-    value = var.datadog_api_key
-  }
-
-  set {
-    name  = "datadog.hostname"
-    value = "healthcare-cluster"
-  }
-
-  set {
-    name  = "datadog.site"
-    value = "datadoghq.com"
-  }
-
-  set {
-    name  = "agents.containerLogs.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "datadog.apm.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "clusterAgent.enabled"
-    value = "true"
-  }
+  values = [
+    yamlencode({
+      datadog = {
+        apiKey    = var.datadog_api_key
+        hostname  = "healthcare-cluster"
+        site      = "datadoghq.com"
+        apm = {
+          enabled = true
+        }
+      }
+      agents = {
+        containerLogs = {
+          enabled = true
+        }
+      }
+      clusterAgent = {
+        enabled = true
+      }
+    })
+  ]
 
   # Add timeout for Helm operations
   timeout = 1200  # 20 minutes
