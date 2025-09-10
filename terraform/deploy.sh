@@ -20,6 +20,7 @@ handle_existing_resources() {
         terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
             -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
             -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
+            -var="enable_datadog=${TF_VAR_enable_datadog:-false}" \
             kubernetes_namespace.healthcare healthcare-staging || true
     fi
     
@@ -28,6 +29,7 @@ handle_existing_resources() {
         terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
             -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
             -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
+            -var="enable_datadog=${TF_VAR_enable_datadog:-false}" \
             kubernetes_namespace.monitoring monitoring-staging || true
     fi
     
@@ -37,6 +39,7 @@ handle_existing_resources() {
         terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
             -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
             -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
+            -var="enable_datadog=${TF_VAR_enable_datadog:-false}" \
             kubernetes_cluster_role.prometheus prometheus-staging || true
     fi
     
@@ -77,8 +80,8 @@ deploy_infrastructure() {
     local app_version=${2:-${BUILD_NUMBER:-latest}}
     local frontend_image=${3:-healthcare-app-frontend:${app_version}}
     local backend_image=${4:-healthcare-app-backend:${app_version}}
-    local datadog_api_key=${5:-${DATADOG_API_KEY:-""}}
-    local enable_datadog=${6:-${ENABLE_DATADOG:-false}}
+    local datadog_api_key=${5:-${TF_VAR_datadog_api_key:-${DATADOG_API_KEY:-""}}}
+    local enable_datadog=${6:-${TF_VAR_enable_datadog:-${ENABLE_DATADOG:-false}}}
     
     log "Starting infrastructure deployment..."
     log "Environment: $environment"
