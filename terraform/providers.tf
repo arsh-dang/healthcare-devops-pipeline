@@ -22,36 +22,15 @@ terraform {
 # Kubernetes Provider Configuration
 # Uses kubeconfig for cluster authentication
 provider "kubernetes" {
-  # Use the default kubeconfig location or KUBECONFIG environment variable
-  config_path = var.kubeconfig_path != "" ? var.kubeconfig_path : null
-
-  # Alternative: Use explicit cluster configuration (uncomment if needed)
-  # host                   = var.kubernetes_host
-  # cluster_ca_certificate = base64decode(var.kubernetes_cluster_ca_certificate)
-  # client_certificate     = base64decode(var.kubernetes_client_certificate)
-  # client_key             = base64decode(var.kubernetes_client_key)
-
-  # Timeout settings
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "kubectl"
-    args        = ["config", "current-context"]
-  }
+  # Use the default kubeconfig location (~/.kube/config or KUBECONFIG env var)
+  # config_path is automatically detected if not specified
 }
 
 # Helm Provider Configuration
 # Uses the same Kubernetes configuration as the kubernetes provider
 provider "helm" {
-  kubernetes = {
-    # Use the default kubeconfig location or KUBECONFIG environment variable
-    config_path = var.kubeconfig_path != "" ? var.kubeconfig_path : null
-
-    # Alternative: Use explicit cluster configuration (uncomment if needed)
-    # host                   = var.kubernetes_host
-    # cluster_ca_certificate = base64decode(var.kubernetes_cluster_ca_certificate)
-    # client_certificate     = base64decode(var.kubernetes_client_certificate)
-    # client_key             = base64decode(var.kubernetes_client_key)
-  }
+  # Use the default kubeconfig location (~/.kube/config or KUBECONFIG env var)
+  # config_path is automatically detected if not specified
 }
 
 # Random Provider (no configuration needed)
