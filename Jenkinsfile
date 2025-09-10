@@ -929,6 +929,21 @@ node {
                 script {
                     try {
                         dir('terraform') {
+                            // Verify kubectl connectivity first
+                            sh '''
+                                echo "Verifying kubectl connectivity..."
+                                which kubectl || (echo "kubectl not found - please install kubectl" && exit 1)
+                                
+                                echo "Checking Kubernetes cluster connection..."
+                                kubectl cluster-info || (echo "Cannot connect to Kubernetes cluster" && exit 1)
+                                
+                                echo "Current kubectl context:"
+                                kubectl config current-context
+                                
+                                echo "Available storage classes:"
+                                kubectl get storageclass || echo "No storage classes found"
+                            '''
+                            
                             if (fileExists('./deploy.sh')) {
                                 // Use the deployment script with clean strategy for reliability
                                 withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DD_API_KEY', required: false)]) {

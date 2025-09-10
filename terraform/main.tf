@@ -109,6 +109,36 @@ variable "enable_persistent_storage" {
   default     = true
 }
 
+variable "kubeconfig_path" {
+  description = "Path to kubeconfig file (leave empty to use default)"
+  type        = string
+  default     = ""
+}
+
+variable "kubernetes_host" {
+  description = "Kubernetes cluster host URL"
+  type        = string
+  default     = ""
+}
+
+variable "kubernetes_cluster_ca_certificate" {
+  description = "Kubernetes cluster CA certificate"
+  type        = string
+  default     = ""
+}
+
+variable "kubernetes_client_certificate" {
+  description = "Kubernetes client certificate"
+  type        = string
+  default     = ""
+}
+
+variable "kubernetes_client_key" {
+  description = "Kubernetes client key"
+  type        = string
+  default     = ""
+}
+
 # Local values for computed configurations
 locals {
   common_labels = {

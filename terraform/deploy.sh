@@ -5,9 +5,34 @@
 
 set -e
 
-# Function to log messages
-log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+# Function to verify Kubernetes cluster connectivity
+verify_kubernetes_connection() {
+    log "Verifying Kubernetes cluster connectivity..."
+    
+    # Check if kubectl is available
+    if ! command -v kubectl >/dev/null 2>&1; then
+        log "ERROR: kubectl not found. Please install kubectl."
+        exit 1
+    fi
+    
+    # Check if we can connect to the cluster
+    if ! kubectl cluster-info >/dev/null 2>&1; then
+        log "ERROR: Cannot connect to Kubernetes cluster. Please check your kubeconfig."
+        log "Current kubectl config:"
+        kubectl config current-context 2>/dev/null || log "No current context set"
+        exit 1
+    fi
+    
+    # Show cluster info
+    log "Connected to Kubernetes cluster:"
+    kubectl cluster-info | head -3
+    
+    # Check if required storage class exists
+    if ! kubectl get storageclass local-path >/dev/null 2>&1; then
+        log "WARNING: local-path storage class not found. Some resources may fail to deploy."
+        log "Available storage classes:"
+        kubectl get storageclass 2>/dev/null || log "No storage classes found"
+    fi
 }
 
 # Function to handle existing resources
@@ -89,6 +114,9 @@ deploy_infrastructure() {
     log "Frontend Image: $frontend_image"
     log "Backend Image: $backend_image"
     log "Enable Datadog: $enable_datadog"
+    
+    # Verify Kubernetes connectivity before proceeding
+    verify_kubernetes_connection
     
     # Change to terraform directory
     cd "$(dirname "$0")"
