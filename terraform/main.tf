@@ -245,64 +245,6 @@ resource "kubernetes_stateful_set" "mongodb" {
           image = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
 
-          # MongoDB startup with initialization
-          command = ["/bin/bash", "-c"]
-          args = [<<-EOF
-            #!/bin/bash
-            set -e
-
-            echo "Starting MongoDB initialization..."
-
-            # Check if MongoDB has been initialized
-            if [ ! -f /data/db/.mongodb_initialized ]; then
-              echo "First run - initializing MongoDB without auth..."
-
-              # Start MongoDB without auth for initialization
-              mongod --bind_ip 127.0.0.1 --dbpath /data/db --logpath /var/log/mongodb/init.log --fork
-              # Wait for MongoDB to start
-              sleep 10
-
-              echo "Creating admin user..."
-              # Create users using mongosh
-              mongosh --eval "
-                db.getSiblingDB('admin').createUser({
-                  user: 'admin',
-                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
-                  roles: [
-                    { role: 'userAdminAnyDatabase', db: 'admin' },
-                    { role: 'readWriteAnyDatabase', db: 'admin' },
-                    { role: 'dbAdminAnyDatabase', db: 'admin' },
-                    { role: 'clusterAdmin', db: 'admin' }
-                  ]
-                });
-
-                db.getSiblingDB('healthcare-app').createUser({
-                  user: 'admin',
-                  pwd: '$MONGO_INITDB_ROOT_PASSWORD',
-                  roles: [
-                    { role: 'readWrite', db: 'healthcare-app' },
-                    { role: 'dbAdmin', db: 'healthcare-app' }
-                  ]
-                });
-              "
-
-              # Stop the temporary MongoDB instance
-              mongod --dbpath /data/db --shutdown
-              sleep 2
-
-              # Mark as initialized
-              touch /data/db/.mongodb_initialized
-              echo "MongoDB initialization complete."
-            else
-              echo "MongoDB already initialized, starting with auth..."
-            fi
-
-            # Start MongoDB with authentication
-            echo "Starting MongoDB with authentication..."
-            exec mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log
-            EOF
-          ]
-
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
             value_from {
@@ -353,32 +295,32 @@ resource "kubernetes_stateful_set" "mongodb" {
           }
 
           startup_probe {
-            exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
+            tcp_socket {
+              port = "mongodb"
             }
-            initial_delay_seconds = 20
-            period_seconds        = 10
-            timeout_seconds       = 5
-            failure_threshold     = 30
+            initial_delay_seconds = 15
+            period_seconds        = 5
+            timeout_seconds       = 3
+            failure_threshold     = 12
           }
 
           liveness_probe {
-            exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
-            }
-            initial_delay_seconds = 120
-            period_seconds        = 30
-            timeout_seconds       = 10
-            failure_threshold     = 3
-          }
-
-          readiness_probe {
-            exec {
-              command = ["/bin/bash", "-c", "mongosh --username admin --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")'"]
+            tcp_socket {
+              port = "mongodb"
             }
             initial_delay_seconds = 60
             period_seconds        = 15
             timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            tcp_socket {
+              port = "mongodb"
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 3
             failure_threshold     = 3
           }
         }
@@ -464,16 +406,15 @@ resource "kubernetes_stateful_set" "mongodb" {
             read_only_root_filesystem  = true
           }
 
-          # Startup probe to wait for MongoDB
           startup_probe {
             http_get {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
-            timeout_seconds       = 5
-            failure_threshold     = 12  # Allow up to 2 minutes for startup
+            initial_delay_seconds = 45
+            period_seconds        = 15
+            timeout_seconds       = 10
+            failure_threshold     = 6
           }
 
           liveness_probe {
@@ -481,9 +422,9 @@ resource "kubernetes_stateful_set" "mongodb" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 60
-            period_seconds        = 15
-            timeout_seconds       = 5
+            initial_delay_seconds = 20  # Reduced from 30
+            period_seconds        = 10
+            timeout_seconds       = 3
             failure_threshold     = 3
           }
 
@@ -492,10 +433,10 @@ resource "kubernetes_stateful_set" "mongodb" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 30
-            period_seconds        = 10
-            timeout_seconds       = 5
-            failure_threshold     = 6
+            initial_delay_seconds = 15  # Reduced from 30
+            period_seconds        = 5    # Reduced from 10
+            timeout_seconds       = 3    # Reduced from 5
+            failure_threshold     = 3    # Reduced from 6
           }
 
           # Volume mount for temporary files (read-only root filesystem)
@@ -548,9 +489,9 @@ resource "kubernetes_stateful_set" "mongodb" {
 
   # Add reasonable timeouts to prevent deployment timeout
   timeouts {
-    create = "10m"
-    update = "10m"
-    delete = "5m"
+    create = "5m"
+    update = "5m"
+    delete = "3m"
   }
 }
 
@@ -896,16 +837,46 @@ resource "kubernetes_deployment" "frontend" {
             read_only_root_filesystem  = true
           }
 
-          # Writable /tmp for nginx temp dirs when root FS is read-only
+          # Writable mounts for nginx with read-only root filesystem
           volume_mount {
             name       = "tmp"
             mount_path = "/tmp"
+          }
+
+          volume_mount {
+            name       = "nginx-cache"
+            mount_path = "/var/cache/nginx"
+          }
+
+          volume_mount {
+            name       = "nginx-run"
+            mount_path = "/var/run"
+          }
+
+          volume_mount {
+            name       = "nginx-log"
+            mount_path = "/var/log/nginx"
           }
         }
 
         # Pod-level volumes
         volume {
           name = "tmp"
+          empty_dir {}
+        }
+
+        volume {
+          name = "nginx-cache"
+          empty_dir {}
+        }
+
+        volume {
+          name = "nginx-run"
+          empty_dir {}
+        }
+
+        volume {
+          name = "nginx-log"
           empty_dir {}
         }
       }
