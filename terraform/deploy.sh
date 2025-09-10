@@ -106,8 +106,14 @@ deploy_infrastructure() {
     # Build terraform plan command with optional Datadog variables
     local plan_cmd="terraform plan -var=\"environment=$environment\" -var=\"app_version=$app_version\" -var=\"frontend_image=$frontend_image\" -var=\"backend_image=$backend_image\""
     
-    if [[ "$enable_datadog" == "true" && -n "$datadog_api_key" ]]; then
-        plan_cmd="$plan_cmd -var=\"enable_datadog=true\" -var=\"datadog_api_key=$datadog_api_key\""
+    # Always include enable_datadog variable to ensure proper conditional logic
+    if [[ "$enable_datadog" == "true" ]]; then
+        plan_cmd="$plan_cmd -var=\"enable_datadog=true\""
+        if [[ -n "$datadog_api_key" ]]; then
+            plan_cmd="$plan_cmd -var=\"datadog_api_key=$datadog_api_key\""
+        fi
+    else
+        plan_cmd="$plan_cmd -var=\"enable_datadog=false\""
     fi
     
     plan_cmd="$plan_cmd -out=tfplan"

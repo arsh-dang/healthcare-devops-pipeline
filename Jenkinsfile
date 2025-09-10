@@ -937,7 +937,7 @@ node {
                                         export TERRAFORM_STRATEGY=clean
                                         export BUILD_NUMBER=''' + BUILD_NUMBER + '''
                                         export TF_VAR_enable_datadog=''' + (env.DD_API_KEY ? 'true' : 'false') + '''
-                                        export TF_VAR_datadog_api_key=''' + (env.DD_API_KEY ? env.DD_API_KEY : '') + '''
+                                        export TF_VAR_datadog_api_key=''' + (env.DD_API_KEY ?: '') + '''
                                         ./deploy.sh deploy staging ''' + BUILD_NUMBER + ''' healthcare-app-frontend:''' + BUILD_NUMBER + ''' healthcare-app-backend:''' + BUILD_NUMBER + '''
                                     '''
                                 }
