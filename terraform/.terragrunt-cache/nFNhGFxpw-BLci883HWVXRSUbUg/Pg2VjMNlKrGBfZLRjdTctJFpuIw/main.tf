@@ -1,0 +1,1275 @@
+# Healthcare DevOps Infrastructure as Code
+# Supports multiple environments with integrated monitoring
+
+# Variables for environment configuration
+variable "environment" {
+  description = "Environment name (staging, production)"
+  type        = string
+  default     = "staging"
+}
+
+variable "app_version" {
+  description = "Application version/build number for deployment"
+  type        = string
+  default     = "latest"
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace"
+  type        = string
+  default     = "healthcare"
+}
+
+variable "frontend_image" {
+  description = "Frontend Docker image with tag"
+  type        = string
+  default     = "healthcare-app-frontend:latest"
+}
+
+variable "backend_image" {
+  description = "Backend Docker image with tag"
+  type        = string
+  default     = "healthcare-app-backend:latest"
+}
+
+variable "replica_count" {
+  description = "Number of replicas for each service"
+  type        = map(number)
+  default = {
+    frontend = 2
+    backend  = 3
+  }
+}
+
+variable "enable_monitoring" {
+  description = "Enable monitoring stack deployment"
+  type        = bool
+  default     = true
+}
+
+variable "enable_datadog" {
+  description = "Enable Datadog agent deployment"
+  type        = bool
+  default     = false
+}
+
+variable "datadog_api_key" {
+  description = "Datadog API key"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "mongodb_root_password" {
+  description = "MongoDB root password (leave empty for auto-generation)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "monitoring_retention_days" {
+  description = "Prometheus data retention in days"
+  type        = number
+  default     = 15
+}
+
+variable "resource_limits" {
+  description = "Resource limits for containers"
+  type = map(object({
+    cpu_request    = string
+    memory_request = string
+    cpu_limit      = string
+    memory_limit   = string
+  }))
+  default = {
+    frontend = {
+      cpu_request    = "100m"
+      memory_request = "128Mi"
+      cpu_limit      = "500m"
+      memory_limit   = "512Mi"
+    }
+    backend = {
+      cpu_request    = "200m"
+      memory_request = "256Mi"
+      cpu_limit      = "1000m"
+      memory_limit   = "1Gi"
+    }
+    mongodb = {
+      cpu_request    = "500m"
+      memory_request = "1Gi"
+      cpu_limit      = "2000m"
+      memory_limit   = "4Gi"
+    }
+  }
+}
+
+variable "enable_persistent_storage" {
+  description = "Enable persistent storage for monitoring components"
+  type        = bool
+  default     = true
+}
+
+# Local values for computed configurations
+locals {
+  common_labels = {
+    app         = "healthcare-app"
+    environment = var.environment
+    managed-by  = "terraform"
+  }
+
+  frontend_labels = merge(local.common_labels, { component = "frontend" })
+  backend_labels  = merge(local.common_labels, { component = "backend" })
+  mongodb_labels  = merge(local.common_labels, { component = "mongodb" })
+  monitoring_labels = merge(local.common_labels, { component = "monitoring" })
+  
+  # Use provided password or generate random one
+  mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
+}
+
+# Random password for MongoDB (only if not provided via variable)
+resource "random_password" "mongodb_password" {
+  count = var.mongodb_root_password == "" ? 1 : 0
+  
+  length  = 32
+  special = true
+  upper   = true
+  lower   = true
+  numeric = true
+}
+
+# Kubernetes Namespace for application
+resource "kubernetes_namespace" "healthcare" {
+  metadata {
+    name = "${var.namespace}-${var.environment}"
+    labels = local.common_labels
+  }
+
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
+}
+
+# ConfigMap for application configuration
+resource "kubernetes_config_map" "app_config" {
+  metadata {
+    name      = "healthcare-app-config"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.common_labels
+  }
+
+  data = {
+    NODE_ENV                = var.environment
+    MONGODB_DATABASE        = "healthcare-app"
+    PROMETHEUS_METRICS_PORT = "9090"
+    LOG_LEVEL               = var.environment == "production" ? "info" : "debug"
+    CORS_ORIGIN             = var.environment == "production" ? "https://healthcare.company.com" : "*"
+    API_RATE_LIMIT          = "100"
+    API_TIMEOUT             = "30000"
+    HEALTH_CHECK_INTERVAL   = "30"
+    MAX_CONNECTIONS         = "10"
+  }
+}
+
+# Secret for sensitive configuration
+resource "kubernetes_secret" "app_secrets" {
+  metadata {
+    name      = "healthcare-app-secrets"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.common_labels
+  }
+
+  type = "Opaque"
+
+  data = {
+    mongodb-root-password = local.mongodb_password
+    jwt-secret            = "super-secret-jwt-key-${var.environment}"
+  }
+}
+
+# MongoDB StatefulSet with advanced configuration
+resource "kubernetes_stateful_set" "mongodb" {
+  metadata {
+    name      = "mongodb"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    service_name = "mongodb"
+    replicas     = 1
+
+    selector {
+      match_labels = local.mongodb_labels
+    }
+
+    template {
+      metadata {
+        labels = local.mongodb_labels
+      }
+
+      spec {
+        container {
+          name  = "mongodb"
+          image = "mongo:7.0.1"
+          image_pull_policy = "IfNotPresent"
+
+          env {
+            name = "MONGO_INITDB_ROOT_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.app_secrets.metadata[0].name
+                key  = "mongodb-root-password"
+              }
+            }
+          }
+
+          env {
+            name  = "MONGO_INITDB_ROOT_USERNAME"
+            value = "admin"
+          }
+
+          port {
+            container_port = 27017
+            name           = "mongodb"
+          }
+
+          volume_mount {
+            name       = "mongodb-data"
+            mount_path = "/data/db"
+          }
+
+          volume_mount {
+            name       = "mongodb-logs"
+            mount_path = "/var/log/mongodb"
+          }
+
+          resources {
+            requests = {
+              cpu    = "500m"
+              memory = "1Gi"
+            }
+            limits = {
+              cpu    = "2"
+              memory = "4Gi"
+            }
+          }
+
+          # Security context for MongoDB
+          security_context {
+            run_as_user                = 999
+            run_as_group               = 999
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = false
+          }
+
+          startup_probe {
+            tcp_socket {
+              port = "mongodb"
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 5
+            timeout_seconds       = 3
+            failure_threshold     = 12
+          }
+
+          liveness_probe {
+            tcp_socket {
+              port = "mongodb"
+            }
+            initial_delay_seconds = 60
+            period_seconds        = 15
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            tcp_socket {
+              port = "mongodb"
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 3
+            failure_threshold     = 3
+          }
+        }
+
+        container {
+          name  = "backend"
+          image = var.backend_image
+          image_pull_policy = "IfNotPresent"
+
+          port {
+            container_port = 5000
+            name           = "http"
+          }
+
+          env_from {
+            config_map_ref {
+              name = kubernetes_config_map.app_config.metadata[0].name
+            }
+          }
+
+          env {
+            name  = "MONGODB_HOST"
+            value = "127.0.0.1"
+          }
+
+          env {
+            name  = "MONGODB_PORT"
+            value = "27017"
+          }
+
+          env {
+            name  = "MONGODB_USERNAME"
+            value = "admin"
+          }
+
+          env {
+            name = "MONGODB_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.app_secrets.metadata[0].name
+                key  = "mongodb-root-password"
+              }
+            }
+          }
+
+          env {
+            name  = "MONGODB_DATABASE"
+            value = "healthcare-app"
+          }
+
+          # Datadog APM environment variables
+          env {
+            name  = "DD_TRACE_ENABLED"
+            value = var.enable_datadog ? "true" : "false"
+          }
+
+          env {
+            name  = "DD_ENV"
+            value = var.environment
+          }
+
+          env {
+            name  = "DD_SERVICE"
+            value = "healthcare-backend"
+          }
+
+          resources {
+            requests = {
+              cpu    = var.resource_limits.backend.cpu_request
+              memory = var.resource_limits.backend.memory_request
+            }
+            limits = {
+              cpu    = var.resource_limits.backend.cpu_limit
+              memory = var.resource_limits.backend.memory_limit
+            }
+          }
+
+          # Security context
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = true
+          }
+
+          startup_probe {
+            http_get {
+              path = "/health"
+              port = "http"
+            }
+            initial_delay_seconds = 45
+            period_seconds        = 15
+            timeout_seconds       = 10
+            failure_threshold     = 6
+          }
+
+          liveness_probe {
+            http_get {
+              path = "/health"
+              port = "http"
+            }
+            initial_delay_seconds = 20  # Reduced from 30
+            period_seconds        = 10
+            timeout_seconds       = 3
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            http_get {
+              path = "/health"
+              port = "http"
+            }
+            initial_delay_seconds = 15  # Reduced from 30
+            period_seconds        = 5    # Reduced from 10
+            timeout_seconds       = 3    # Reduced from 5
+            failure_threshold     = 3    # Reduced from 6
+          }
+
+          # Volume mount for temporary files (read-only root filesystem)
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
+          }
+        }
+
+        # Pod-level volumes
+        volume {
+          name = "tmp"
+          empty_dir {}
+        }
+      }
+    }
+
+    volume_claim_template {
+      metadata {
+        name = "mongodb-data"
+        labels = local.mongodb_labels
+      }
+      spec {
+        access_modes = ["ReadWriteOnce"]
+        resources {
+          requests = {
+            storage = var.environment == "production" ? "100Gi" : "10Gi"
+          }
+        }
+        storage_class_name = "local-path"
+      }
+    }
+
+    volume_claim_template {
+      metadata {
+        name = "mongodb-logs"
+        labels = local.mongodb_labels
+      }
+      spec {
+        access_modes = ["ReadWriteOnce"]
+        resources {
+          requests = {
+            storage = "1Gi"
+          }
+        }
+        storage_class_name = "local-path"
+      }
+    }
+  }
+
+  # Add reasonable timeouts to prevent deployment timeout
+  timeouts {
+    create = "10m"
+    update = "5m"
+    delete = "3m"
+  }
+}
+
+#     template {
+#       metadata {
+#         labels = local.mongodb_labels
+#       }
+
+#       spec {
+#         # Simplified spec without init containers for now
+
+#         container {
+#           name  = "mongodb"
+#           image = "mongo:7.0.1"
+#           image_pull_policy = "IfNotPresent"
+
+#           # Simplified MongoDB startup
+#           command = ["/bin/bash", "-c"]
+#           args = ["mongod --bind_ip 127.0.0.1 --auth --dbpath /data/db --logpath /var/log/mongodb/mongod.log"]
+
+#           env {
+#             name = "MONGO_INITDB_ROOT_PASSWORD"
+#             value_from {
+#               secret_key_ref {
+#                 name = kubernetes_secret.app_secrets.metadata[0].name
+#                 key  = "mongodb-root-password"
+#               }
+#             }
+#           }
+
+#           env {
+#             name  = "MONGO_INITDB_ROOT_USERNAME"
+#             value = "admin"
+#           }
+
+#           port {
+#             container_port = 27017
+#             name           = "mongodb"
+#           }
+
+#           volume_mount {
+#             name       = "mongodb-data"
+#             mount_path = "/data/db"
+#           }
+
+#           volume_mount {
+#             name       = "mongodb-logs"
+#             mount_path = "/var/log/mongodb"
+#           }
+
+#           resources {
+#             requests = {
+#               cpu    = "200m"
+#               memory = "512Mi"
+#             }
+#             limits = {
+#               cpu    = "1000m"
+#               memory = "2Gi"
+#             }
+#           }
+
+#           # Security context for MongoDB
+#           security_context {
+#             run_as_user                = 999
+#             run_as_group               = 999
+#             allow_privilege_escalation = false
+#             read_only_root_filesystem  = false
+#           }
+
+#           startup_probe {
+#             exec {
+#               command = ["mongosh", "--username", "admin", "--password", "$MONGO_INITDB_ROOT_PASSWORD", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+#             }
+#             initial_delay_seconds = 20
+#             period_seconds        = 10
+#             timeout_seconds       = 5
+#             failure_threshold     = 30
+#           }
+
+#           liveness_probe {
+#             exec {
+#               command = ["mongosh", "--username", "admin", "--password", "$MONGO_INITDB_ROOT_PASSWORD", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+#             }
+#             initial_delay_seconds = 120
+#             period_seconds        = 30
+#             timeout_seconds       = 10
+#             failure_threshold     = 3
+#           }
+
+#           readiness_probe {
+#             exec {
+#             command = ["mongosh", "--username", "admin", "--password", "$MONGO_INITDB_ROOT_PASSWORD", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+#             }
+#             initial_delay_seconds = 60
+#             period_seconds        = 15
+#             timeout_seconds       = 5
+#             failure_threshold     = 3
+#           }
+#         }
+
+#         container {
+#           name  = "backend"
+#           image = var.backend_image
+#           image_pull_policy = "IfNotPresent"
+
+#           port {
+#             container_port = 5000
+#             name           = "http"
+#           }
+
+#           env_from {
+#             config_map_ref {
+#               name = kubernetes_config_map.app_config.metadata[0].name
+#             }
+#           }
+
+#           env {
+#             name  = "MONGODB_HOST"
+#             value = "127.0.0.1"
+#           }
+
+#           env {
+#             name  = "MONGODB_PORT"
+#             value = "27017"
+#           }
+
+#           env {
+#             name  = "MONGODB_USERNAME"
+#             value = "admin"
+#           }
+
+#           env {
+#             name = "MONGODB_PASSWORD"
+#             value_from {
+#               secret_key_ref {
+#                 name = kubernetes_secret.app_secrets.metadata[0].name
+#                 key  = "mongodb-root-password"
+#               }
+#             }
+#           }
+
+#           env {
+#             name  = "MONGODB_DATABASE"
+#             value = "healthcare-app"
+#           }
+
+#           # Datadog APM environment variables
+#           env {
+#             name  = "DD_TRACE_ENABLED"
+#             value = var.enable_datadog ? "true" : "false"
+#           }
+
+#           env {
+#             name  = "DD_ENV"
+#             value = var.environment
+#           }
+
+#           env {
+#             name  = "DD_SERVICE"
+#             value = "healthcare-backend"
+#           }
+
+#           resources {
+#             requests = {
+#               cpu    = var.resource_limits.backend.cpu_request
+#               memory = var.resource_limits.backend.memory_request
+#             }
+#             limits = {
+#               cpu    = var.resource_limits.backend.cpu_limit
+#               memory = var.resource_limits.backend.memory_limit
+#             }
+#           }
+
+#           # Security context
+#           security_context {
+#             run_as_non_root            = true
+#             run_as_user                = 1000
+#             allow_privilege_escalation = false
+#             read_only_root_filesystem  = true
+#           }
+
+#           # Startup probe to wait for MongoDB
+#           startup_probe {
+#             http_get {
+#               path = "/health"
+#               port = "http"
+#             }
+#             initial_delay_seconds = 30
+#             period_seconds        = 10
+#             timeout_seconds       = 5
+#             failure_threshold     = 12  # Allow up to 2 minutes for startup
+#           }
+
+#           liveness_probe {
+#             http_get {
+#               path = "/health"
+#               port = "http"
+#             }
+#             initial_delay_seconds = 60
+#             period_seconds        = 15
+#             timeout_seconds       = 5
+#             failure_threshold     = 3
+#           }
+
+#           readiness_probe {
+#             http_get {
+#               path = "/health"
+#               port = "http"
+#             }
+#             initial_delay_seconds = 30
+#             period_seconds        = 10
+#             timeout_seconds       = 5
+#             failure_threshold     = 6
+#           }
+
+#           # Volume mount for temporary files (read-only root filesystem)
+#           volume_mount {
+#             name       = "tmp"
+#             mount_path = "/tmp"
+#           }
+#         }
+
+#         # Pod-level volumes
+#         volume {
+#           name = "tmp"
+#           empty_dir {}
+#         }
+
+#     }
+
+#     volume_claim_template {
+#       metadata {
+#         name = "mongodb-data"
+#         labels = local.mongodb_labels
+#       }
+#       spec {
+#         access_modes = ["ReadWriteOnce"]
+#         resources {
+#           requests = {
+#             storage = var.environment == "production" ? "100Gi" : "10Gi"
+#           }
+#         }
+#         storage_class_name = "local-path"
+#       }
+#     }
+
+#     volume_claim_template {
+#       metadata {
+#         name = "mongodb-logs"
+#         labels = local.mongodb_labels
+#       }
+#       spec {
+#         access_modes = ["ReadWriteOnce"]
+#         resources {
+#           requests = {
+#             storage = "1Gi"
+#           }
+#         }
+#         storage_class_name = "local-path"
+#       }
+#     }
+#   }
+
+#   # Add reasonable timeouts to prevent deployment timeout
+#   timeouts {
+#     create = "10m"
+#     update = "10m"
+#     delete = "5m"
+#   }
+# }
+# REMOVED: Backend now runs as sidecar in MongoDB pod
+
+# Frontend Deployment
+resource "kubernetes_deployment" "frontend" {
+  wait_for_rollout = false
+
+  metadata {
+    name      = "frontend"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.frontend_labels
+  }
+
+  spec {
+    replicas = var.replica_count.frontend
+
+    selector {
+      match_labels = local.frontend_labels
+    }
+
+    template {
+      metadata {
+        labels = local.frontend_labels
+      }
+
+      spec {
+        container {
+          name  = "frontend"
+          image = var.frontend_image
+          image_pull_policy = "IfNotPresent"
+
+          port {
+            container_port = 3001
+            name           = "http"
+          }
+
+          resources {
+            requests = {
+              cpu    = var.resource_limits.frontend.cpu_request
+              memory = var.resource_limits.frontend.memory_request
+            }
+            limits = {
+              cpu    = var.resource_limits.frontend.cpu_limit
+              memory = var.resource_limits.frontend.memory_limit
+            }
+          }
+
+          liveness_probe {
+            http_get {
+              path = "/"
+              port = "http"
+            }
+            initial_delay_seconds = 60
+            period_seconds        = 15
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            http_get {
+              path = "/"
+              port = "http"
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 6
+          }
+
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 101
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = true
+          }
+
+          # Writable mounts for nginx with read-only root filesystem
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
+          }
+
+          volume_mount {
+            name       = "nginx-cache"
+            mount_path = "/var/cache/nginx"
+          }
+
+          volume_mount {
+            name       = "nginx-run"
+            mount_path = "/var/run"
+          }
+
+          volume_mount {
+            name       = "nginx-log"
+            mount_path = "/var/log/nginx"
+          }
+        }
+
+        # Pod-level volumes
+        volume {
+          name = "tmp"
+          empty_dir {}
+        }
+
+        volume {
+          name = "nginx-cache"
+          empty_dir {}
+        }
+
+        volume {
+          name = "nginx-run"
+          empty_dir {}
+        }
+
+        volume {
+          name = "nginx-log"
+          empty_dir {}
+        }
+      }
+    }
+  }
+}
+
+# Services
+resource "kubernetes_service" "mongodb" {
+  metadata {
+    name      = "mongodb"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    selector = local.mongodb_labels
+
+    port {
+      port        = 27017
+      target_port = "mongodb"
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+# Optional Datadog Agent via Helm (when enabled)
+resource "helm_release" "datadog" {
+  count      = var.enable_datadog ? 1 : 0
+  name       = "datadog"
+  repository = "https://helm.datadoghq.com"
+  chart      = "datadog"
+  namespace  = kubernetes_namespace.healthcare.metadata[0].name
+
+  set {
+    name  = "datadog.apiKey"
+    value = var.datadog_api_key
+  }
+
+  set {
+    name  = "datadog.hostname"
+    value = "healthcare-cluster"
+  }
+
+  set {
+    name  = "datadog.site"
+    value = "datadoghq.com"
+  }
+
+  set {
+    name  = "agents.containerLogs.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "datadog.apm.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "clusterAgent.enabled"
+    value = "true"
+  }
+
+  # Add timeout for Helm operations
+  timeout = 1200  # 20 minutes
+}
+
+resource "kubernetes_service" "backend" {
+  metadata {
+    name      = "backend"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.backend_labels
+    annotations = {
+      "prometheus.io/scrape" = "true"
+      "prometheus.io/port"   = "5000"
+    }
+  }
+
+  spec {
+    selector = local.mongodb_labels  # Point to MongoDB pod which contains backend
+
+    port {
+      port        = 5000
+      target_port = "http"
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+resource "kubernetes_service" "frontend" {
+  metadata {
+    name      = "frontend"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.frontend_labels
+  }
+
+  spec {
+    selector = local.frontend_labels
+
+    port {
+      port        = 3001
+      target_port = "http"
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+# Horizontal Pod Autoscalers
+resource "kubernetes_horizontal_pod_autoscaler_v2" "mongodb_hpa" {
+  metadata {
+    name      = "mongodb-hpa"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    scale_target_ref {
+      api_version = "apps/v1"
+      kind        = "StatefulSet"
+      name        = kubernetes_stateful_set.mongodb.metadata[0].name
+    }
+
+    min_replicas = 1
+    max_replicas = 3
+
+    metric {
+      type = "Resource"
+      resource {
+        name = "cpu"
+        target {
+          type                = "Utilization"
+          average_utilization = 70
+        }
+      }
+    }
+
+    metric {
+      type = "Resource"
+      resource {
+        name = "memory"
+        target {
+          type                = "Utilization"
+          average_utilization = 80
+        }
+      }
+    }
+  }
+}
+
+# Network Policies for security
+resource "kubernetes_network_policy" "default_deny" {
+  metadata {
+    name      = "default-deny-all"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {}
+    policy_types = ["Ingress", "Egress"]
+  }
+}
+
+# resource "kubernetes_network_policy" "allow_backend_to_mongodb" {
+#   metadata {
+#     name      = "allow-backend-to-mongodb"
+#     namespace = kubernetes_namespace.healthcare.metadata[0].name
+#   }
+
+#   spec {
+#     pod_selector {
+#       match_labels = local.mongodb_labels  # Backend now runs in MongoDB pod
+#     }
+
+#     policy_types = ["Egress"]
+
+#     # Allow DNS resolution
+#     egress {
+#       to {
+#         namespace_selector {
+#           match_labels = {
+#             "kubernetes.io/metadata.name" = "kube-system"
+#           }
+#         }
+#       }
+#       ports {
+#         port     = "53"
+#         protocol = "UDP"
+#       }
+#       ports {
+#         port     = "53"
+#         protocol = "TCP"
+#       }
+#     }
+
+#     # Allow all egress within the same namespace (simplified for reliability)
+#     egress {
+#       to {
+#         namespace_selector {
+#           match_labels = {
+#             "kubernetes.io/metadata.name" = kubernetes_namespace.healthcare.metadata[0].labels.name
+#           }
+#         }
+#       }
+#     }
+
+#     # Allow external access for image pulls and other necessary traffic
+#     egress {
+#       to {}
+#       ports {
+#         port     = "80"
+#         protocol = "TCP"
+#       }
+#         port     = "443"
+#         protocol = "TCP"
+#       }
+#     }
+#   }
+# }
+
+# Allow external access to frontend
+resource "kubernetes_network_policy" "allow_frontend_ingress" {
+  metadata {
+    name      = "allow-frontend-ingress"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.frontend_labels
+    }
+
+    policy_types = ["Ingress"]
+
+    ingress {
+      ports {
+        port     = "3001"
+        protocol = "TCP"
+      }
+      from {
+        ip_block {
+          cidr = "0.0.0.0/0"
+        }
+      }
+    }
+  }
+}
+
+# Allow external access to backend
+# resource "kubernetes_network_policy" "allow_backend_ingress" {
+#   metadata {
+#     name      = "allow-backend-ingress"
+#     namespace = kubernetes_namespace.healthcare.metadata[0].name
+#   }
+
+#   spec {
+#     pod_selector {
+#       match_labels = local.mongodb_labels  # Backend runs in MongoDB pod
+#     }
+
+#     policy_types = ["Ingress"]
+
+#     ingress {
+#       ports {
+#         port     = "5000"
+#         protocol = "TCP"
+#       }
+#       from {
+#         ip_block {
+#           cidr = "0.0.0.0/0"
+#         }
+#       }
+#     }
+#   }
+# }
+
+# Allow frontend to backend communication
+resource "kubernetes_network_policy" "allow_frontend_to_backend" {
+  metadata {
+    name      = "allow-frontend-to-backend"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.frontend_labels
+    }
+
+    policy_types = ["Egress"]
+
+    # Allow DNS resolution
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "53"
+        protocol = "UDP"
+      }
+      ports {
+        port     = "53"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow all egress within the same namespace (simplified for reliability)
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = kubernetes_namespace.healthcare.metadata[0].name
+          }
+        }
+      }
+    }
+
+    # Allow external access for image pulls and other necessary traffic
+    egress {
+      to {
+        ip_block {
+          cidr = "0.0.0.0/0"
+        }
+      }
+      ports {
+        port     = "80"
+        protocol = "TCP"
+      }
+      ports {
+        port     = "443"
+        protocol = "TCP"
+      }
+    }
+  }
+}
+
+# MongoDB Backup CronJob
+resource "kubernetes_cron_job_v1" "mongodb_backup" {
+  metadata {
+    name      = "mongodb-backup"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    schedule = "0 2 * * *"  # Daily at 2 AM
+    job_template {
+      metadata {
+        labels = local.mongodb_labels
+      }
+      spec {
+        template {
+          metadata {
+            labels = local.mongodb_labels
+          }
+          spec {
+            container {
+              name  = "mongodb-backup"
+              image = "mongo:7.0.1"
+              command = ["sh", "-c"]
+              args = ["mongodump --host mongodb --username admin --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/backup_$(date +%Y%m%d_%H%M%S)"]
+
+              env {
+                name = "MONGO_USERNAME"
+                value = "admin"
+              }
+
+              env {
+                name = "MONGO_PASSWORD"
+                value_from {
+                  secret_key_ref {
+                    name = kubernetes_secret.app_secrets.metadata[0].name
+                    key  = "mongodb-root-password"
+                  }
+                }
+              }
+
+              volume_mount {
+                name       = "backup-storage"
+                mount_path = "/backup"
+              }
+            }
+
+            volume {
+              name = "backup-storage"
+              empty_dir {}
+            }
+
+            restart_policy = "OnFailure"
+          }
+        }
+      }
+    }
+  }
+}
+output "mongodb_password" {
+  description = "MongoDB root password (sensitive - only shown for convenience)"
+  value       = local.mongodb_password
+  sensitive   = true
+}
+
+output "namespace" {
+  description = "Kubernetes namespace"
+  value       = "${var.namespace}-${var.environment}"
+}
+
+output "mongodb_service" {
+  description = "MongoDB service name"
+  value       = kubernetes_service.mongodb.metadata[0].name
+}
+
+output "backend_service" {
+  description = "Backend service name"
+  value       = kubernetes_service.backend.metadata[0].name
+}
+
+output "frontend_service" {
+  description = "Frontend service name"
+  value       = kubernetes_service.frontend.metadata[0].name
+}

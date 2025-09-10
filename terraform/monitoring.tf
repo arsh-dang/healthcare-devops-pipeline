@@ -157,10 +157,12 @@ resource "kubernetes_config_map" "prometheus_rules" {
               for   = "5m"
               labels = {
                 severity = "warning"
+                team     = "platform"
               }
               annotations = {
                 summary     = "High CPU usage detected"
-                description = "CPU usage is above 80% for more than 5 minutes"
+                description = "CPU usage is above 80% for more than 5 minutes in {{ $labels.namespace }}"
+                runbook     = "https://docs.company.com/runbooks/high-cpu"
               }
             },
             {
@@ -169,10 +171,12 @@ resource "kubernetes_config_map" "prometheus_rules" {
               for   = "5m"
               labels = {
                 severity = "critical"
+                team     = "platform"
               }
               annotations = {
                 summary     = "High memory usage detected"
-                description = "Memory usage is above 90% for more than 5 minutes"
+                description = "Memory usage is above 90% for more than 5 minutes in {{ $labels.namespace }}"
+                runbook     = "https://docs.company.com/runbooks/high-memory"
               }
             },
             {
@@ -181,10 +185,12 @@ resource "kubernetes_config_map" "prometheus_rules" {
               for   = "1m"
               labels = {
                 severity = "critical"
+                team     = "backend"
               }
               annotations = {
                 summary     = "Healthcare backend service is down"
                 description = "The healthcare backend service has been down for more than 1 minute"
+                runbook     = "https://docs.company.com/runbooks/service-down"
               }
             },
             {
@@ -193,10 +199,96 @@ resource "kubernetes_config_map" "prometheus_rules" {
               for   = "5m"
               labels = {
                 severity = "warning"
+                team     = "backend"
               }
               annotations = {
                 summary     = "High response time detected"
                 description = "95th percentile response time is above 1 second for more than 5 minutes"
+                runbook     = "https://docs.company.com/runbooks/high-response-time"
+              }
+            },
+            {
+              alert = "DatabaseConnectionFailure"
+              expr  = "mongodb_connections_current{namespace=\"${var.namespace}-${var.environment}\"} < 1"
+              for   = "2m"
+              labels = {
+                severity = "critical"
+                team     = "database"
+              }
+              annotations = {
+                summary     = "MongoDB connection failure"
+                description = "MongoDB has no active connections for more than 2 minutes"
+                runbook     = "https://docs.company.com/runbooks/mongodb-connection"
+              }
+            },
+            {
+              alert = "DiskSpaceLow"
+              expr  = "(1 - node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 > 85"
+              for   = "5m"
+              labels = {
+                severity = "warning"
+                team     = "platform"
+              }
+              annotations = {
+                summary     = "Low disk space"
+                description = "Disk usage is above 85% for more than 5 minutes"
+                runbook     = "https://docs.company.com/runbooks/low-disk-space"
+              }
+            },
+            {
+              alert = "PodRestartRateHigh"
+              expr  = "rate(kube_pod_container_status_restarts_total{namespace=\"${var.namespace}-${var.environment}\"}[10m]) > 0.5"
+              for   = "5m"
+              labels = {
+                severity = "warning"
+                team     = "platform"
+              }
+              annotations = {
+                summary     = "High pod restart rate"
+                description = "Pods are restarting at a rate > 0.5 per minute for more than 5 minutes"
+                runbook     = "https://docs.company.com/runbooks/pod-restarts"
+              }
+            },
+            {
+              alert = "SecurityVulnerabilityDetected"
+              expr  = "healthcare_security_vulnerabilities_total{severity=\"critical\"} > 0"
+              for   = "1m"
+              labels = {
+                severity = "critical"
+                team     = "security"
+              }
+              annotations = {
+                summary     = "Critical security vulnerability detected"
+                description = "Critical security vulnerabilities found in the application"
+                runbook     = "https://docs.company.com/runbooks/security-vulnerability"
+              }
+            },
+            {
+              alert = "APITimeoutRateHigh"
+              expr  = "rate(http_request_duration_seconds_count{job=\"healthcare-backend\", status_code=\"408\"}[5m]) / rate(http_request_duration_seconds_count{job=\"healthcare-backend\"}[5m]) * 100 > 5"
+              for   = "3m"
+              labels = {
+                severity = "warning"
+                team     = "backend"
+              }
+              annotations = {
+                summary     = "High API timeout rate"
+                description = "API timeout rate is above 5% for more than 3 minutes"
+                runbook     = "https://docs.company.com/runbooks/api-timeouts"
+              }
+            },
+            {
+              alert = "DatabaseSlowQuery"
+              expr  = "rate(mongodb_op_counters_total{type=\"query\"}[5m]) > 1000"
+              for   = "5m"
+              labels = {
+                severity = "info"
+                team     = "database"
+              }
+              annotations = {
+                summary     = "High database query rate"
+                description = "Database query rate is unusually high (>1000 queries/minute)"
+                runbook     = "https://docs.company.com/runbooks/database-performance"
               }
             }
           ]

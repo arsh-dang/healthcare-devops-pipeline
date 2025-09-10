@@ -1,0 +1,50 @@
+# Example Terraform variables file for production deployment
+# Copy this to terraform.tfvars and customize for your environment
+
+# Environment configuration
+environment = "production"
+app_version = "v1.2.3"
+
+# Docker images
+frontend_image = "your-registry/healthcare-app-frontend:v1.2.3"
+backend_image = "your-registry/healthcare-app-backend:v1.2.3"
+
+# MongoDB Configuration (HD-grade approach)
+# Option 1: Use a known password (recommended for production)
+mongodb_root_password = "YourSecurePassword123!"
+
+# Option 2: Leave empty for auto-generation (less predictable)
+# mongodb_root_password = ""
+
+# Monitoring
+enable_monitoring = true
+enable_datadog = true
+datadog_api_key = "your-datadog-api-key"
+
+# Resource scaling for production
+replica_count = {
+  frontend = 3
+  backend = 5
+}
+
+# Production resource limits
+resource_limits = {
+  frontend = {
+    cpu_request = "200m"
+    memory_request = "256Mi"
+    cpu_limit = "1000m"
+    memory_limit = "1Gi"
+  }
+  backend = {
+    cpu_request = "500m"
+    memory_request = "512Mi"
+    cpu_limit = "2000m"
+    memory_limit = "2Gi"
+  }
+  mongodb = {
+    cpu_request = "1000m"
+    memory_request = "2Gi"
+    cpu_limit = "4000m"
+    memory_limit = "8Gi"
+  }
+}

@@ -1,38 +1,6 @@
 # Healthcare DevOps Infrastructure as Code
 # Supports multiple environments with integrated monitoring
 
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.23"
-    }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.11"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
-    }
-  }
-}
-
-# Configure the Kubernetes Provider
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "colima"
-}
-
-# Configure the Helm Provider
-provider "helm" {
-  kubernetes {
-    config_path    = "~/.kube/config"
-    config_context = "colima"
-  }
-}
-
 # Variables for environment configuration
 variable "environment" {
   description = "Environment name (staging, production)"

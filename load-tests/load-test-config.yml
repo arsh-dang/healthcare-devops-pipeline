@@ -1,0 +1,116 @@
+config:
+  target: 'http://localhost:5000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up phase"
+    - duration: 120
+      arrivalRate: 10
+      name: "Load testing phase"
+    - duration: 60
+      arrivalRate: 20
+      name: "Stress testing phase"
+    - duration: 30
+      arrivalRate: 50
+      name: "Spike testing phase"
+    - duration: 60
+      arrivalRate: 5
+      name: "Cool down phase"
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: "Health Check Load Test"
+    weight: 20
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+            - hasProperty: 'status'
+            - equals:
+                - status: 'ok'
+
+  - name: "API Load Test - Appointments"
+    weight: 50
+    flow:
+      - get:
+          url: "/api/appointments"
+          expect:
+            - statusCode: 200
+            - contentType: 'application/json'
+      - post:
+          url: "/api/appointments"
+          json:
+            title: "Load Test Appointment {{ $randomString() }}"
+            description: "Automated load testing appointment"
+            dateTime: "{{ $randomDate() }}"
+            clinic: "Load Test Clinic"
+            clinicName: "Load Test Clinic"
+            image: "test-image.jpg"
+            address: "123 Load Test Street"
+            doctor: "Dr. Load Test"
+            doctorSpecialty: "Load Testing"
+          expect:
+            - statusCode: 201
+          capture:
+            json: "$.appointmentId"
+            as: "appointmentId"
+      - get:
+          url: "/api/appointments/{{ appointmentId }}"
+          expect:
+            - statusCode: 200
+      - delete:
+          url: "/api/appointments/{{ appointmentId }}"
+          expect:
+            - statusCode: 204
+
+  - name: "Database Load Test"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/appointments"
+          json:
+            title: "Database Load Test {{ $randomString() }}"
+            description: "Testing database performance under load"
+            dateTime: "{{ $randomDate() }}"
+            clinic: "Database Test Clinic"
+            clinicName: "Database Test Clinic"
+            image: "db-test.jpg"
+            address: "456 Database Street"
+            doctor: "Dr. Database"
+            doctorSpecialty: "Database Testing"
+          expect:
+            - statusCode: 201
+          capture:
+            json: "$.appointmentId"
+            as: "dbAppointmentId"
+      - loop:
+          - get:
+              url: "/api/appointments/{{ dbAppointmentId }}"
+              expect:
+                - statusCode: 200
+        count: 5
+      - delete:
+          url: "/api/appointments/{{ dbAppointmentId }}"
+          expect:
+            - statusCode: 204
+
+  - name: "Error Handling Test"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/appointments/invalid-id"
+          expect:
+            - statusCode: 404
+      - post:
+          url: "/api/appointments"
+          json:
+            invalidField: "This should cause validation error"
+          expect:
+            - statusCode: 400
+      - get:
+          url: "/nonexistent-endpoint"
+          expect:
+            - statusCode: 404
