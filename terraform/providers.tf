@@ -22,15 +22,15 @@ terraform {
 # Kubernetes Provider Configuration
 # Uses kubeconfig for cluster authentication
 provider "kubernetes" {
-  # Use the default kubeconfig location (~/.kube/config or KUBECONFIG env var)
-  # config_path is automatically detected if not specified
+  config_path = "~/.kube/config"
 }
 
 # Helm Provider Configuration
 # Uses the same Kubernetes configuration as the kubernetes provider
 provider "helm" {
-  # Use the default kubeconfig location (~/.kube/config or KUBECONFIG env var)
-  # config_path is automatically detected if not specified
+  kubernetes = {
+    config_path = "~/.kube/config"
+  }
 }
 
 # Random Provider (no configuration needed)
