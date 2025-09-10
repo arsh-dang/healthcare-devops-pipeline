@@ -48,6 +48,11 @@ lint-results.json
 reports/
 security-reports/
 
+# Demo and documentation files (not needed in version control)
+DEMO_VIDEO_SCRIPT.md
+HIGH_HD_ACHIEVEMENT.md
+PIPELINE_READY.md
+
 # Temporary development scripts
 fix-*.js
 temp-*.js
