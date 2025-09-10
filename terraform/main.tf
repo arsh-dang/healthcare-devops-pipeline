@@ -920,6 +920,10 @@ resource "helm_release" "datadog" {
         apm = {
           enabled = true
         }
+        logs = {
+          enabled = true
+          containerCollectAll = true
+        }
       }
       agents = {
         containerLogs = {
@@ -927,6 +931,15 @@ resource "helm_release" "datadog" {
         }
       }
       clusterAgent = {
+        enabled = true
+        metricsProvider = {
+          enabled = true
+        }
+      }
+      clusterChecksRunner = {
+        enabled = false  # Disable to reduce complexity
+      }
+      kubeStateMetricsCore = {
         enabled = true
       }
     })
@@ -1273,6 +1286,71 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
         }
       }
     }
+  }
+}
+
+# Datadog Cluster Agent RBAC (when Datadog is enabled)
+resource "kubernetes_cluster_role" "datadog_cluster_agent" {
+  count = var.enable_datadog ? 1 : 0
+
+  metadata {
+    name = "datadog-cluster-agent"
+  }
+
+  rule {
+    api_groups = [""]
+    resources  = ["nodes", "namespaces", "pods", "services", "endpoints", "persistentvolumes", "persistentvolumeclaims", "configmaps", "secrets", "serviceaccounts", "events"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["apps"]
+    resources  = ["deployments", "daemonsets", "replicasets", "statefulsets"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["batch"]
+    resources  = ["jobs", "cronjobs"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["networking.k8s.io"]
+    resources  = ["networkpolicies", "ingresses"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["rbac.authorization.k8s.io"]
+    resources  = ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+    verbs      = ["get", "list", "watch"]
+  }
+
+  rule {
+    api_groups = ["autoscaling"]
+    resources  = ["horizontalpodautoscalers"]
+    verbs      = ["get", "list", "watch"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "datadog_cluster_agent" {
+  count = var.enable_datadog ? 1 : 0
+
+  metadata {
+    name = "datadog-cluster-agent"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role.datadog_cluster_agent[0].metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "datadog-cluster-agent"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
   }
 }
 output "mongodb_password" {
