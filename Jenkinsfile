@@ -1311,3 +1311,6 @@ node {
         sh 'docker image prune -f || true'
     }
 }
+// Force Jenkins to reload pipeline configuration
+// This comment ensures Jenkins detects the pipeline change
+def forceReload = true
