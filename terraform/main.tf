@@ -932,8 +932,14 @@ resource "helm_release" "datadog" {
     })
   ]
 
-  # Add timeout for Helm operations
-  timeout = 1200  # 20 minutes
+  # Increased timeout for Helm operations to handle slow deployments
+  timeout = 2400  # 40 minutes
+
+  # Additional options for robustness
+  atomic           = false
+  wait             = false
+  cleanup_on_fail  = true
+  dependency_update = true
 }
 
 resource "kubernetes_service" "backend" {
