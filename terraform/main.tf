@@ -924,11 +924,6 @@ resource "helm_release" "datadog" {
   }
 
   set {
-    name  = "datadog.env"
-    value = var.environment
-  }
-
-  set {
     name  = "agents.containerLogs.enabled"
     value = "true"
   }
