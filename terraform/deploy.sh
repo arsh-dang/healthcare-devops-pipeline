@@ -90,7 +90,7 @@ handle_existing_resources() {
             -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
             -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
             -var="enable_datadog=true" \
-            kubernetes_cluster_role.datadog_cluster_agent datadog-cluster-agent || true
+            kubernetes_cluster_role.datadog_cluster_agent[0] datadog-cluster-agent || true
     fi
     
     # Check if Datadog ClusterRoleBinding exists
@@ -100,7 +100,7 @@ handle_existing_resources() {
             -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
             -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
             -var="enable_datadog=true" \
-            kubernetes_cluster_role_binding.datadog_cluster_agent datadog-cluster-agent || true
+            kubernetes_cluster_role_binding.datadog_cluster_agent[0] datadog-cluster-agent || true
     fi
 }
 
