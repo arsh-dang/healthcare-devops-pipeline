@@ -1,7 +1,7 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import App from './App';
 import { SavedAppointmentsProvider } from './store/saved-appointments-context';
 
@@ -25,15 +25,21 @@ jest.mock('./pages/SavedAppointments', () => {
 });
 
 // Mock Layout component
+function MockLayout({ children }) {
+  return (
+    <div data-testid="layout">
+      <div>Layout Component</div>
+      {children}
+    </div>
+  );
+}
+
+MockLayout.propTypes = {
+  children: PropTypes.node,
+};
+
 jest.mock('./components/layout/Layout', () => {
-  return function MockLayout({ children }) {
-    return (
-      <div data-testid="layout">
-        <div>Layout Component</div>
-        {children}
-      </div>
-    );
-  };
+  return MockLayout;
 });
 
 const renderWithRouter = (component, { route = '/' } = {}) => {

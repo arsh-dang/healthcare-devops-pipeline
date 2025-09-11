@@ -2,6 +2,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import AllAppointmentsPage from './AllAppointments';
 import SavedAppointmentsProvider from '../store/saved-appointments-context';
 
@@ -9,18 +10,24 @@ import SavedAppointmentsProvider from '../store/saved-appointments-context';
 global.fetch = jest.fn();
 
 // Mock AppointmentList component
+function MockAppointmentList({ appointments }) {
+  return (
+    <div data-testid="appointment-list">
+      {appointments.map((appointment, index) => (
+        <div key={index} data-testid={`appointment-${index}`}>
+          {appointment.patientName}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+MockAppointmentList.propTypes = {
+  appointments: PropTypes.arrayOf(PropTypes.object),
+};
+
 jest.mock('../components/appointments/AppointmentList', () => {
-  function MockAppointmentList({ appointments }) {
-    return (
-      <div data-testid="appointment-list">
-        {appointments.map((appointment, index) => (
-          <div key={index} data-testid={`appointment-${index}`}>
-            {appointment.patientName}
-          </div>
-        ))}
-      </div>
-    );
-  }  return MockAppointmentList;
+  return MockAppointmentList;
 });
 
 const renderWithProviders = () => {

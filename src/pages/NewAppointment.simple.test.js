@@ -2,6 +2,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import NewAppointmentPage from './NewAppointment';
 
 // Mock useNavigate hook
@@ -15,20 +16,27 @@ jest.mock('react-router-dom', () => ({
 global.fetch = jest.fn();
 
 // Mock AppointmentForm component
+function MockAppointmentForm({ onAddAppointment, disabled }) {
+  return (
+    <div data-testid="appointment-form">
+      <button 
+        onClick={() => onAddAppointment({ patientName: 'John Doe' })}
+        disabled={disabled}
+        data-testid="submit-button"
+      >
+        Submit
+      </button>
+    </div>
+  );
+}
+
+MockAppointmentForm.propTypes = {
+  onAddAppointment: PropTypes.func,
+  disabled: PropTypes.bool,
+};
+
 jest.mock('../components/appointments/AppointmentForm', () => {
-  function MockAppointmentForm({ onAddAppointment, disabled }) {
-    return (
-      <div data-testid="appointment-form">
-        <button 
-          onClick={() => onAddAppointment({ patientName: 'John Doe' })}
-          disabled={disabled}
-          data-testid="submit-button"
-        >
-          Submit
-        </button>
-      </div>
-    );
-  }  return MockAppointmentForm;
+  return MockAppointmentForm;
 });
 
 const renderWithRouter = () => {

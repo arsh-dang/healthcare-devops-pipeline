@@ -2,21 +2,27 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import AllAppointmentsPage from './AllAppointments';
 import SavedAppointmentsProvider from '../store/saved-appointments-context';
 
 global.fetch = jest.fn();
 
+function MockAppointmentList({ appointments }) {
+  return (
+    <div data-testid="appointment-list">
+      {appointments.map((appointment) => (
+        <div key={appointment.id}>{appointment.patientName}</div>
+      ))}
+    </div>
+  );
+}
+
+MockAppointmentList.propTypes = {
+  appointments: PropTypes.arrayOf(PropTypes.object),
+};
+
 jest.mock('../components/appointments/AppointmentList', () => {
-  function MockAppointmentList({ appointments }) {
-    return (
-      <div data-testid="appointment-list">
-        {appointments.map((appointment) => (
-          <div key={appointment.id}>{appointment.patientName}</div>
-        ))}
-      </div>
-    );
-  }
   return MockAppointmentList;
 });
 

@@ -2,23 +2,31 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import AllAppointmentsPage from './AllAppointments';
 import { SavedAppointmentsProvider } from '../store/saved-appointments-context';
 
 // Mock AppointmentList component
+function MockAppointmentList({ appointments, onDeleteAppointment }) {
+  return (
+    <div data-testid="appointment-list">
+      {appointments.map((appointment) => (
+        <div key={appointment.id} data-testid={`appointment-${appointment.id}`}>
+          <span>{appointment.title}</span>
+          <button onClick={() => onDeleteAppointment(appointment.id)}>Delete</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+MockAppointmentList.propTypes = {
+  appointments: PropTypes.arrayOf(PropTypes.object),
+  onDeleteAppointment: PropTypes.func,
+};
+
 jest.mock('../components/appointments/AppointmentList', () => {
-  function MockAppointmentList({ appointments, onDeleteAppointment }) {
-    return (
-      <div data-testid="appointment-list">
-        {appointments.map((appointment) => (
-          <div key={appointment.id} data-testid={`appointment-${appointment.id}`}>
-            <span>{appointment.title}</span>
-            <button onClick={() => onDeleteAppointment(appointment.id)}>Delete</button>
-          </div>
-        ))}
-      </div>
-    );
-  }  return MockAppointmentList;
+  return MockAppointmentList;
 });
 
 // Mock console.error to avoid error logs in tests
