@@ -2383,44 +2383,100 @@ node {
                                     
                                     echo "Monitoring canary deployment health..."
                                     
-                                    # Simulate health monitoring for 2 minutes
-                                    MONITOR_DURATION=120
-                                    HEALTH_CHECKS_PASSED=0
-                                    HEALTH_CHECKS_FAILED=0
-                                    
-                                    for i in $(seq 1 12); do
-                                        # Simulate health check
-                                        if [ $((RANDOM % 10)) -gt 1 ]; then
-                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "Health check $i: PASSED"
-                                        else
-                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "Health check $i: FAILED"
-                                        fi
+                                    # Check if health check script exists and is executable
+                                    if [ -f "scripts/health-check.sh" ]; then
+                                        echo "Using real health check script..."
+                                        chmod +x scripts/health-check.sh
                                         
-                                        # Send health check metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.canary.health.passed\\",
-                                                            \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.canary.health.failed\\",
-                                                            \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
-                                        fi
+                                        # Set environment variables for health checks
+                                        export APP_URL="http://localhost:3001"
+                                        export API_URL="http://localhost:5001"
                                         
-                                        sleep 10
-                                    done
+                                        # Run health checks for 2 minutes (12 checks, 10 seconds apart)
+                                        MONITOR_DURATION=120
+                                        HEALTH_CHECKS_PASSED=0
+                                        HEALTH_CHECKS_FAILED=0
+                                        
+                                        for i in $(seq 1 12); do
+                                            echo "Running health check iteration $i..."
+                                            
+                                            # Run the actual health check script
+                                            if ./scripts/health-check.sh >/dev/null 2>&1; then
+                                                HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                                echo "Health check $i: PASSED"
+                                            else
+                                                HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                                echo "Health check $i: FAILED"
+                                            fi
+                                            
+                                            # Send health check metrics
+                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                                    -H "Content-Type: application/json" \\
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -d "{
+                                                        \\"series\\": [
+                                                            {
+                                                                \\"metric\\": \\"jenkins.canary.health.passed\\",
+                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
+                                                            },
+                                                            {
+                                                                \\"metric\\": \\"jenkins.canary.health.failed\\",
+                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
+                                                            }
+                                                        ]
+                                                    }" || echo "Failed to send Datadog metrics"
+                                            fi
+                                            
+                                            # Wait 10 seconds before next check (unless it's the last one)
+                                            if [ $i -lt 12 ]; then
+                                                sleep 10
+                                            fi
+                                        done
+                                    else
+                                        echo "Health check script not found, falling back to basic simulation..."
+                                        
+                                        # Fallback to basic simulation if script is missing
+                                        MONITOR_DURATION=120
+                                        HEALTH_CHECKS_PASSED=0
+                                        HEALTH_CHECKS_FAILED=0
+                                        
+                                        for i in $(seq 1 12); do
+                                            # Basic HTTP check simulation
+                                            if curl -s --max-time 5 http://localhost:3001 >/dev/null 2>&1; then
+                                                HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                                echo "Health check $i: PASSED"
+                                            else
+                                                HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                                echo "Health check $i: FAILED"
+                                            fi
+                                            
+                                            # Send health check metrics
+                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                                    -H "Content-Type: application/json" \\
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -d "{
+                                                        \\"series\\": [
+                                                            {
+                                                                \\"metric\\": \\"jenkins.canary.health.passed\\",
+                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
+                                                            },
+                                                            {
+                                                                \\"metric\\": \\"jenkins.canary.health.failed\\",
+                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
+                                                            }
+                                                        ]
+                                                    }" || echo "Failed to send Datadog metrics"
+                                            fi
+                                            
+                                            sleep 10
+                                        done
+                                    fi
                                     
                                     # Calculate success rate
                                     TOTAL_CHECKS=$((HEALTH_CHECKS_PASSED + HEALTH_CHECKS_FAILED))
@@ -2432,7 +2488,7 @@ node {
                                     echo "Failed: $HEALTH_CHECKS_FAILED"
                                     echo "Success rate: $SUCCESS_RATE%"
                                     
-                                    # Determine if canary is healthy
+                                    # Determine if canary is healthy (using 70% threshold)
                                     if [ $SUCCESS_RATE -ge 70 ]; then
                                         CANARY_HEALTH_STATUS="healthy"
                                         echo "Canary deployment is healthy - proceeding with rollout"
