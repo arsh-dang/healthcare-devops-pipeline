@@ -2,58 +2,52 @@
 export const formatDate = (dateString) => {
   if (!dateString) return '';
   
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  } catch (error) {
-    return '';
-  }
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
 };
 
 export const formatTime = (timeString) => {
   if (!timeString) return '';
   
-  try {
-    const [hours, minutes] = timeString.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    
-    if (isNaN(date.getTime())) return '';
-    
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (error) {
+  const [hours, minutes] = timeString.split(':');
+  const hoursNum = parseInt(hours);
+  const minutesNum = parseInt(minutes);
+  
+  // Validate hours (0-23) and minutes (0-59)
+  if (isNaN(hoursNum) || isNaN(minutesNum) || hoursNum < 0 || hoursNum > 23 || minutesNum < 0 || minutesNum > 59) {
     return '';
   }
+  
+  const date = new Date();
+  date.setHours(hoursNum, minutesNum);
+  
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 export const formatDateTime = (dateTimeString) => {
   if (!dateTimeString) return '';
   
-  try {
-    const date = new Date(dateTimeString);
-    if (isNaN(date.getTime())) return '';
-    
-    return date.toLocaleString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  } catch (error) {
-    return '';
-  }
+  const date = new Date(dateTimeString);
+  if (isNaN(date.getTime())) return '';
+  
+  return date.toLocaleString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 export const isValidEmail = (email) => {
