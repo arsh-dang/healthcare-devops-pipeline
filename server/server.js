@@ -121,9 +121,11 @@ if (MONGODB_USERNAME && MONGODB_PASSWORD) {
     process.env.MONGODB_URI ||
     `mongodb://${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
 }
-
+// eslint-disable-next-line no-console
 console.log(`Connecting to MongoDB at: ${MONGODB_HOST}:${MONGODB_PORT}`);
+// eslint-disable-next-line no-console
 console.log(`Database: ${MONGODB_DATABASE}`);
+// eslint-disable-next-line no-console
 console.log(`Using authentication: ${!!MONGODB_USERNAME}`);
 
 mongoose
