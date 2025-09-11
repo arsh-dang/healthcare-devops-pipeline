@@ -2759,11 +2759,20 @@ node {
                                         echo "Backend started with PID: $BACKEND_PID"
                                         cd ..
                                         
-                                        # Start frontend in background
-                                        echo "Starting frontend on port 3001..."
-                                        PORT=3001 nohup npm start > frontend-green.log 2>&1 &
-                                        FRONTEND_PID=$!
-                                        echo "Frontend started with PID: $FRONTEND_PID"
+                                        # Start frontend using serve for production build
+                                        echo "Starting frontend on port 3001 using production build..."
+                                        if command -v npx >/dev/null 2>&1; then
+                                            nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
+                                            FRONTEND_PID=$!
+                                            echo "Frontend started with PID: $FRONTEND_PID"
+                                        else
+                                            echo "npx not available, trying python http server..."
+                                            cd build
+                                            nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 &
+                                            FRONTEND_PID=$!
+                                            echo "Frontend started with PID: $FRONTEND_PID"
+                                            cd ..
+                                        fi
                                         
                                         # Wait for applications to start
                                         echo "Waiting for applications to start..."
