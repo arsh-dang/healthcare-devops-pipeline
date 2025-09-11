@@ -2792,23 +2792,36 @@ node {
                         stage('Deploy to Green Environment') {
                             echo 'Deploying new version to green environment'
                             sh '''
-                                set -x  # Enable debug output
                                 cd ${WORKSPACE}
-                                echo "=== DEPLOYMENT STAGE START ==="
-                                echo "Current working directory: $(pwd)"
-                                echo "Date and time: $(date)"
-                                echo "User: $(whoami)"
-                                echo "Available commands:"
-                                which kubectl || echo "kubectl not found"
-                                which node || echo "node not found"
-                                which npm || echo "npm not found"
-                                which npx || echo "npx not found"
+                                echo "Starting simplified deployment process..."
                                 
-                                # Test basic shell functionality
-                                echo "Testing basic shell commands..."
-                                ls -la | head -3
-                                pwd
-                                echo "Basic shell test completed"
+                                # Start MongoDB
+                                echo "Starting MongoDB..."
+                                mkdir -p mongodb-data
+                                nohup mongod --dbpath ./mongodb-data --port 27017 --logpath mongodb-green.log > /dev/null 2>&1 &
+                                MONGODB_PID=$!
+                                echo "$MONGODB_PID" > green-mongodb.pid
+                                sleep 3
+                                
+                                # Start backend server
+                                echo "Starting backend server..."
+                                export PORT=5001 NODE_ENV=production MONGODB_HOST=localhost MONGODB_PORT=27017 MONGODB_DATABASE=healthcare-app
+                                nohup npm run server > backend-green.log 2>&1 &
+                                BACKEND_PID=$!
+                                echo "$BACKEND_PID" > green-backend.pid
+                                sleep 3
+                                
+                                # Start frontend server
+                                echo "Starting frontend server..."
+                                if [ ! -d "build" ]; then
+                                    npm run build
+                                fi
+                                nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
+                                FRONTEND_PID=$!
+                                echo "$FRONTEND_PID" > green-frontend.pid
+                                
+                                echo "Green environment deployment completed"
+                            '''
                                 
                                 # Test package.json accessibility
                                 echo "Testing package.json accessibility..."
