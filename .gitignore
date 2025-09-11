@@ -42,6 +42,7 @@ frontend.tar
 package.json.backup
 Jenkinsfile.backup
 Jenkinsfile.datadog.backup
+Jenkinsfile.new
 
 # Temporary Jenkins scripts
 jenkins-*.groovy
