@@ -82,6 +82,26 @@ handle_existing_resources() {
             -var="enable_datadog=true" \
             helm_release.datadog healthcare-staging/datadog || true
     fi
+    
+    # Check if Datadog ClusterRole exists
+    if kubectl get clusterrole datadog-cluster-agent >/dev/null 2>&1; then
+        log "Datadog ClusterRole already exists, attempting to import..."
+        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
+            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
+            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
+            -var="enable_datadog=true" \
+            kubernetes_cluster_role.datadog_cluster_agent datadog-cluster-agent || true
+    fi
+    
+    # Check if Datadog ClusterRoleBinding exists
+    if kubectl get clusterrolebinding datadog-cluster-agent >/dev/null 2>&1; then
+        log "Datadog ClusterRoleBinding already exists, attempting to import..."
+        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
+            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
+            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
+            -var="enable_datadog=true" \
+            kubernetes_cluster_role_binding.datadog_cluster_agent datadog-cluster-agent || true
+    fi
 }
 
 # Function to clean up existing resources if needed
@@ -99,6 +119,10 @@ cleanup_existing_resources() {
         log "Removing existing Datadog Helm release..."
         helm uninstall datadog -n healthcare-staging || true
     fi
+    
+    # Clean up Datadog RBAC resources
+    kubectl delete clusterrole datadog-cluster-agent --ignore-not-found=true || true
+    kubectl delete clusterrolebinding datadog-cluster-agent --ignore-not-found=true || true
     
     # Wait a bit for cleanup to complete
     sleep 10
