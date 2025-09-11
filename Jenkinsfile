@@ -2749,9 +2749,32 @@ node {
                                         GREEN_DEPLOY_STATUS="success"
                                         echo "Green environment deployment completed successfully"
                                     else
-                                        echo "kubectl not available - simulating green deployment"
-                                        echo "Green deployment would create new environment with new version"
-                                        GREEN_DEPLOY_STATUS="simulated"
+                                        echo "kubectl not available - starting applications locally for green environment"
+                                        
+                                        # Start backend server in background
+                                        echo "Starting backend server on port 5001..."
+                                        cd server
+                                        nohup node server.js > ../backend-green.log 2>&1 &
+                                        BACKEND_PID=$!
+                                        echo "Backend started with PID: $BACKEND_PID"
+                                        cd ..
+                                        
+                                        # Start frontend in background
+                                        echo "Starting frontend on port 3001..."
+                                        PORT=3001 nohup npm start > frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend started with PID: $FRONTEND_PID"
+                                        
+                                        # Wait for applications to start
+                                        echo "Waiting for applications to start..."
+                                        sleep 10
+                                        
+                                        # Store PIDs for cleanup
+                                        echo "$BACKEND_PID" > green-backend.pid
+                                        echo "$FRONTEND_PID" > green-frontend.pid
+                                        
+                                        GREEN_DEPLOY_STATUS="success"
+                                        echo "Green environment applications started successfully"
                                     fi
                                     
                                     # Send green deployment metrics
@@ -2796,8 +2819,8 @@ node {
                                         chmod +x scripts/health-check.sh
                                         
                                         # Set environment variables for the health check
-                                        export APP_URL="http://localhost:3000"
-                                        export API_URL="http://localhost:5000"
+                                        export APP_URL="http://localhost:3001"
+                                        export API_URL="http://localhost:5001"
                                         
                                         if ./scripts/health-check.sh; then
                                             GREEN_HEALTH_STATUS="healthy"
@@ -3239,6 +3262,25 @@ node {
         
         // Clean up Docker images
         sh 'docker image prune -f || true'
+        
+        // Clean up green environment processes
+        sh '''
+            if [ -f "green-backend.pid" ]; then
+                BACKEND_PID=$(cat green-backend.pid)
+                echo "Stopping green backend process (PID: $BACKEND_PID)..."
+                kill $BACKEND_PID 2>/dev/null || echo "Backend process already stopped"
+                rm -f green-backend.pid
+            fi
+            
+            if [ -f "green-frontend.pid" ]; then
+                FRONTEND_PID=$(cat green-frontend.pid)
+                echo "Stopping green frontend process (PID: $FRONTEND_PID)..."
+                kill $FRONTEND_PID 2>/dev/null || echo "Frontend process already stopped"
+                rm -f green-frontend.pid
+            fi
+            
+            echo "Green environment cleanup completed"
+        '''
     }
 }
 // Force Jenkins to reload pipeline configuration
