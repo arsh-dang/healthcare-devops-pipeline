@@ -2722,6 +2722,14 @@ node {
                             echo 'Deploying new version to green environment'
                             sh '''
                                 cd ${WORKSPACE}
+                                echo "=== DEPLOYMENT STAGE START ==="
+                                echo "Current working directory: $(pwd)"
+                                echo "Date and time: $(date)"
+                                echo "Available commands:"
+                                which kubectl || echo "kubectl not found"
+                                which node || echo "node not found"
+                                which npm || echo "npm not found"
+                                which npx || echo "npx not found"
                                 
                                 # Send green deployment start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
@@ -2765,7 +2773,9 @@ node {
                                     echo "Dependencies already installed"
                                 fi
                                 
+                                echo "Checking kubectl availability..."
                                 if command -v kubectl >/dev/null 2>&1; then
+                                    echo "kubectl is available - using Kubernetes deployment path"
                                     # Deploy to green environment
                                     echo "Creating green deployment"
                                     
@@ -2776,6 +2786,130 @@ node {
                                     echo "Green environment deployment completed successfully"
                                 else
                                     echo "kubectl not available - starting applications locally for green environment"
+                                    
+                                    # Start backend server in background
+                                    echo "Starting backend server on port 5001..."
+                                    echo "Current directory: $(pwd)"
+                                    echo "Checking .env file:"
+                                    if [ -f ".env" ]; then
+                                        cat .env
+                                    else
+                                        echo "No .env file found"
+                                    fi
+                                    
+                                    # Set environment variables explicitly
+                                    export PORT=5001
+                                    export NODE_ENV=production
+                                    echo "Environment variables set: PORT=$PORT, NODE_ENV=$NODE_ENV"
+                                    
+                                    # Start the backend using npm script
+                                    echo "Starting backend with npm script..."
+                                    nohup npm run server > backend-green.log 2>&1 &
+                                    BACKEND_PID=$!
+                                    echo "Backend process started with PID: $BACKEND_PID"
+                                    
+                                    # Give it a moment to start
+                                    sleep 3
+                                    
+                                    # Check if process is still running
+                                    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+                                        echo "Backend process is running successfully"
+                                        echo "$BACKEND_PID" > green-backend.pid
+                                        echo "Backend PID file created: $(cat green-backend.pid)"
+                                    else
+                                        echo "ERROR: Backend process failed to start"
+                                        echo "Checking backend log for errors:"
+                                        if [ -f "backend-green.log" ]; then
+                                            tail -30 backend-green.log
+                                        fi
+                                        exit 1
+                                    fi
+                                    
+                                    # Start frontend using serve for production build
+                                    echo "Starting frontend on port 3001 using production build..."
+                                    echo "Current directory: $(pwd)"
+                                    echo "Checking if build directory exists:"
+                                    if [ -d "build" ]; then
+                                        echo "Build directory exists"
+                                        ls -la build/ | head -10
+                                    else
+                                        echo "ERROR: Build directory not found - building frontend..."
+                                        npm run build
+                                        if [ ! -d "build" ]; then
+                                            echo "ERROR: Failed to build frontend"
+                                            exit 1
+                                        fi
+                                    fi
+                                    
+                                    if command -v npx >/dev/null 2>&1; then
+                                        echo "Using npx to serve frontend..."
+                                        nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend process started with PID: $FRONTEND_PID"
+                                        
+                                        # Give it a moment to start
+                                        sleep 2
+                                        
+                                        # Check if process is still running
+                                        if ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                            echo "Frontend process is running successfully"
+                                            echo "$FRONTEND_PID" > green-frontend.pid
+                                            echo "Frontend PID file created: $(cat green-frontend.pid)"
+                                        else
+                                            echo "ERROR: Frontend process failed to start with npx"
+                                            echo "Checking frontend log for errors:"
+                                            if [ -f "frontend-green.log" ]; then
+                                                tail -20 frontend-green.log
+                                            fi
+                                            exit 1
+                                        fi
+                                    else
+                                        echo "npx not available, trying python http server..."
+                                        cd build
+                                        nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend process started with PID: $FRONTEND_PID"
+                                        
+                                        # Give it a moment to start
+                                        sleep 2
+                                        
+                                        # Check if process is still running
+                                        if ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                            echo "Frontend process is running successfully"
+                                            cd ..
+                                            echo "$FRONTEND_PID" > green-frontend.pid
+                                            echo "Frontend PID file created: $(cat green-frontend.pid)"
+                                        else
+                                            echo "ERROR: Frontend process failed to start with python"
+                                            echo "Checking frontend log for errors:"
+                                            if [ -f "../frontend-green.log" ]; then
+                                                tail -20 ../frontend-green.log
+                                            fi
+                                            cd ..
+                                            exit 1
+                                        fi
+                                    fi
+                                    
+                                    GREEN_DEPLOY_STATUS="success"
+                                    echo "Green environment applications started successfully"
+                                fi
+                                
+                                echo "=== DEPLOYMENT STAGE END ==="
+                                
+                                # Send green deployment metrics
+                                if [ -n "$DATADOG_API_KEY" ]; then
+                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        -H "Content-Type: application/json" \\
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                        -d "{
+                                            \\"series\\": [{
+                                                \\"metric\\": \\"jenkins.bluegreen.green.deploy.result\\",
+                                                \\"points\\": [[$(date +%s), \$([ \\"$GREEN_DEPLOY_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
+                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                            }]
+                                        }" || echo "Failed to send Datadog metrics"
+                                fi
+                            '''
                                     
                                     # Start backend server in background
                                     echo "Starting backend server on port 5001..."
