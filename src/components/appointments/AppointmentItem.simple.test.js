@@ -179,7 +179,7 @@ describe('AppointmentItem Component', () => {
     fireEvent.click(deleteButton);
     
     expect(global.confirm).toHaveBeenCalled();
-    expect(fetch).toHaveBeenCalledWith('/api/appointments/apt-1', {
+    expect(fetch).toHaveBeenCalledWith('http://127.0.0.1:5001/api/appointments/apt-1', {
       method: 'DELETE'
     });
     
@@ -270,7 +270,7 @@ describe('AppointmentItem Component', () => {
     fireEvent.click(deleteButton);
     
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/appointments/apt-1', {
+      expect(fetch).toHaveBeenCalledWith('http://127.0.0.1:5001/api/appointments/apt-1', {
         method: 'DELETE'
       });
     });

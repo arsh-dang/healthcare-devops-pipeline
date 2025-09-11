@@ -125,7 +125,7 @@ describe('AppointmentItem', () => {
     fireEvent.click(deleteButton);
     
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/appointments/1', {
+      expect(fetch).toHaveBeenCalledWith('http://127.0.0.1:5001/api/appointments/1', {
         method: 'DELETE',
       });
     });
