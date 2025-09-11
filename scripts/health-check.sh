@@ -181,6 +181,7 @@ echo ""
 # 1. Frontend application health check
 if [ "$IS_CI" = true ]; then
     echo "CI environment detected - simulating frontend health check..."
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     print_success "Frontend application check passed (simulated)"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
@@ -190,6 +191,7 @@ fi
 # 2. API health endpoint check
 if [ "$IS_CI" = true ]; then
     echo "CI environment detected - simulating API health check..."
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     print_success "API health endpoint check passed (simulated)"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
@@ -199,6 +201,7 @@ fi
 # 3. API appointments endpoint check
 if [ "$IS_CI" = true ]; then
     echo "CI environment detected - simulating API appointments check..."
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     print_success "API appointments endpoint check passed (simulated)"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
@@ -208,6 +211,7 @@ fi
 # 4. Database connectivity check
 if [ "$IS_CI" = true ]; then
     echo "CI environment detected - simulating database connectivity check..."
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     print_success "Database connectivity check passed (simulated)"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
@@ -217,6 +221,7 @@ fi
 # 5. Performance check
 if [ "$IS_CI" = true ]; then
     echo "CI environment detected - simulating performance check..."
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     print_success "Performance check passed (simulated)"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
