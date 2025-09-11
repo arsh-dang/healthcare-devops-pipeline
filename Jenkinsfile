@@ -1629,6 +1629,10 @@ node {
                                     echo "Validating Terraform configuration..."
                                     
                                     if command -v terraform >/dev/null 2>&1; then
+                                        # Clean up any stale lock files before validation
+                                        echo "Cleaning up any stale Terraform lock files..."
+                                        find .terraform -name "*.lock*" -type f -delete 2>/dev/null || true
+                                        
                                         # Initialize Terraform
                                         terraform init -backend=false
                                         
@@ -1686,8 +1690,58 @@ node {
                                         # Initialize Terraform
                                         terraform init -backend=false
                                         
-                                        # Create plan
-                                        if terraform plan -no-color -out=tfplan; then
+                                        # Function to handle Terraform plan with retry logic
+                                        plan_terraform() {
+                                            local max_attempts=3
+                                            local attempt=1
+                                            local lock_wait_time=15
+                                            
+                                            while [ $attempt -le $max_attempts ]; do
+                                                echo "Terraform plan attempt $attempt of $max_attempts"
+                                                
+                                                # Check for existing lock and try to unlock if needed
+                                                if [ $attempt -gt 1 ]; then
+                                                    echo "Checking for stale Terraform locks..."
+                                                    # For local state, remove any stale lock files
+                                                    find .terraform -name "*.lock*" -type f -delete 2>/dev/null || true
+                                                    echo "Cleaned up any stale lock files"
+                                                    
+                                                    # Wait a bit before retrying
+                                                    echo "Waiting ${lock_wait_time}s before retry..."
+                                                    sleep $lock_wait_time
+                                                fi
+                                                
+                                                # Attempt terraform plan
+                                                if terraform plan -no-color -out=tfplan; then
+                                                    echo "Terraform plan succeeded on attempt $attempt"
+                                                    return 0
+                                                else
+                                                    local exit_code=$?
+                                                    echo "Terraform plan failed on attempt $attempt with exit code $exit_code"
+                                                    
+                                                    # Check if it's a lock-related error
+                                                    if terraform plan -no-color -out=tfplan 2>&1 | grep -q "state lock"; then
+                                                        echo "Detected state lock error, will retry..."
+                                                        if [ $attempt -eq $max_attempts ]; then
+                                                            echo "Max retry attempts reached for state lock error"
+                                                            return $exit_code
+                                                        fi
+                                                    else
+                                                        # Not a lock error, don't retry
+                                                        echo "Non-lock error detected, not retrying"
+                                                        return $exit_code
+                                                    fi
+                                                fi
+                                                
+                                                attempt=$((attempt + 1))
+                                            done
+                                            
+                                            echo "All retry attempts exhausted"
+                                            return 1
+                                        }
+                                        
+                                        # Create plan with retry logic
+                                        if plan_terraform; then
                                             PLANNING_STATUS="success"
                                             echo "Terraform planning completed successfully"
                                             
@@ -1696,7 +1750,7 @@ node {
                                             echo "Plan shows $PLAN_CHANGES changes"
                                         else
                                             PLANNING_STATUS="failure"
-                                            echo "Terraform planning failed"
+                                            echo "Terraform planning failed after retries"
                                             exit 1
                                         fi
                                         
@@ -1810,13 +1864,63 @@ node {
                                         # Initialize Terraform
                                         terraform init
                                         
-                                        # Apply configuration
-                                        if terraform apply -auto-approve -no-color; then
+                                        # Function to handle Terraform apply with retry logic
+                                        apply_terraform() {
+                                            local max_attempts=3
+                                            local attempt=1
+                                            local lock_wait_time=30
+                                            
+                                            while [ $attempt -le $max_attempts ]; do
+                                                echo "Terraform apply attempt $attempt of $max_attempts"
+                                                
+                                                # Check for existing lock and try to unlock if needed
+                                                if [ $attempt -gt 1 ]; then
+                                                    echo "Checking for stale Terraform locks..."
+                                                    # For local state, remove any stale lock files
+                                                    find .terraform -name "*.lock*" -type f -delete 2>/dev/null || true
+                                                    echo "Cleaned up any stale lock files"
+                                                    
+                                                    # Wait a bit before retrying
+                                                    echo "Waiting ${lock_wait_time}s before retry..."
+                                                    sleep $lock_wait_time
+                                                fi
+                                                
+                                                # Attempt terraform apply
+                                                if terraform apply -auto-approve -no-color; then
+                                                    echo "Terraform apply succeeded on attempt $attempt"
+                                                    return 0
+                                                else
+                                                    local exit_code=$?
+                                                    echo "Terraform apply failed on attempt $attempt with exit code $exit_code"
+                                                    
+                                                    # Check if it's a lock-related error
+                                                    if terraform apply -auto-approve -no-color 2>&1 | grep -q "state lock"; then
+                                                        echo "Detected state lock error, will retry..."
+                                                        if [ $attempt -eq $max_attempts ]; then
+                                                            echo "Max retry attempts reached for state lock error"
+                                                            return $exit_code
+                                                        fi
+                                                    else
+                                                        # Not a lock error, don't retry
+                                                        echo "Non-lock error detected, not retrying"
+                                                        return $exit_code
+                                                    fi
+                                                fi
+                                                
+                                                attempt=$((attempt + 1))
+                                            done
+                                            
+                                            echo "All retry attempts exhausted"
+                                            return 1
+                                        }
+                                        
+                                        # Apply configuration with retry logic
+                                        if apply_terraform; then
                                             APPLICATION_STATUS="success"
                                             echo "Terraform application completed successfully"
                                         else
                                             APPLICATION_STATUS="failure"
-                                            echo "Terraform application failed"
+                                            echo "Terraform application failed after retries"
                                             exit 1
                                         fi
                                         
