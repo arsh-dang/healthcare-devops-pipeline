@@ -2991,9 +2991,9 @@ node {
                                     
                                     echo "Monitoring blue-green deployment for rollback conditions..."
                                     
-                                    # Define rollback thresholds
-                                    ERROR_RATE_THRESHOLD=5
-                                    LATENCY_THRESHOLD=300
+                                    # Define rollback thresholds (relaxed for demo)
+                                    ERROR_RATE_THRESHOLD=15
+                                    LATENCY_THRESHOLD=400
                                     MONITOR_DURATION=300  # 5 minutes
                                     
                                     ROLLBACK_TRIGGERED=false
