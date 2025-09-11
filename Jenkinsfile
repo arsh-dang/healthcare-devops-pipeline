@@ -2754,49 +2754,45 @@ node {
                                     # Start backend server in background
                                     echo "Starting backend server on port 5001..."
                                     cd server
-                                    nohup node server.js > ../backend-green.log 2>&1 &
-                                    BACKEND_PID=$!
-                                    echo "Backend started with PID: $BACKEND_PID"
-                                    cd ..
+                                    if nohup node server.js > ../backend-green.log 2>&1 & then
+                                        BACKEND_PID=$!
+                                        echo "Backend started with PID: $BACKEND_PID"
+                                        cd ..
+                                        echo "$BACKEND_PID" > green-backend.pid
+                                        echo "Backend PID file created: $(cat green-backend.pid)"
+                                    else
+                                        echo "ERROR: Failed to start backend server"
+                                        cd ..
+                                        exit 1
+                                    fi
                                     
                                     # Start frontend using serve for production build
                                     echo "Starting frontend on port 3001 using production build..."
                                     if command -v npx >/dev/null 2>&1; then
-                                        nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
-                                        FRONTEND_PID=$!
-                                        echo "Frontend started with PID: $FRONTEND_PID"
+                                        if nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 & then
+                                            FRONTEND_PID=$!
+                                            echo "Frontend started with PID: $FRONTEND_PID"
+                                            echo "$FRONTEND_PID" > green-frontend.pid
+                                            echo "Frontend PID file created: $(cat green-frontend.pid)"
+                                        else
+                                            echo "ERROR: Failed to start frontend server with npx"
+                                            exit 1
+                                        fi
                                     else
                                         echo "npx not available, trying python http server..."
                                         cd build
-                                        nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 &
-                                        FRONTEND_PID=$!
-                                        echo "Frontend started with PID: $FRONTEND_PID"
-                                        cd ..
+                                        if nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 & then
+                                            FRONTEND_PID=$!
+                                            echo "Frontend started with PID: $FRONTEND_PID"
+                                            cd ..
+                                            echo "$FRONTEND_PID" > green-frontend.pid
+                                            echo "Frontend PID file created: $(cat green-frontend.pid)"
+                                        else
+                                            echo "ERROR: Failed to start frontend server with python"
+                                            cd ..
+                                            exit 1
+                                        fi
                                     fi
-                                    
-                                    # Wait longer for applications to fully start
-                                    echo "Waiting for applications to fully start..."
-                                    sleep 20
-                                    
-                                    # Verify applications are running
-                                    echo "Verifying applications are running..."
-                                    if ps -p $BACKEND_PID > /dev/null 2>&1; then
-                                        echo "Backend process is running (PID: $BACKEND_PID)"
-                                    else
-                                        echo "ERROR: Backend process failed to start"
-                                        exit 1
-                                    fi
-                                    
-                                    if ps -p $FRONTEND_PID > /dev/null 2>&1; then
-                                        echo "Frontend process is running (PID: $FRONTEND_PID)"
-                                    else
-                                        echo "ERROR: Frontend process failed to start"
-                                        exit 1
-                                    fi
-                                    
-                                    # Store PIDs for cleanup
-                                    echo "$BACKEND_PID" > green-backend.pid
-                                    echo "$FRONTEND_PID" > green-frontend.pid
                                     
                                     GREEN_DEPLOY_STATUS="success"
                                     echo "Green environment applications started successfully"
@@ -2840,26 +2836,62 @@ node {
                                 
                                 echo "Running health checks on green environment..."
                                 
+                                # Debug: List files in workspace
+                                echo "Files in workspace:"
+                                ls -la
+                                
                                 # Check if applications are still running
                                 if [ -f "green-backend.pid" ]; then
                                     BACKEND_PID=$(cat green-backend.pid)
-                                    if ! ps -p $BACKEND_PID > /dev/null 2>&1; then
-                                        echo "ERROR: Backend process is not running"
+                                    echo "Found backend PID file with PID: $BACKEND_PID"
+                                    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+                                        echo "Backend process is running (PID: $BACKEND_PID)"
+                                    else
+                                        echo "ERROR: Backend process is not running (PID: $BACKEND_PID)"
+                                        echo "Checking backend log for errors:"
+                                        if [ -f "backend-green.log" ]; then
+                                            tail -20 backend-green.log
+                                        else
+                                            echo "No backend log file found"
+                                        fi
                                         exit 1
                                     fi
                                 else
                                     echo "ERROR: Backend PID file not found"
+                                    echo "Checking if backend log exists:"
+                                    if [ -f "backend-green.log" ]; then
+                                        echo "Backend log exists, showing last 20 lines:"
+                                        tail -20 backend-green.log
+                                    else
+                                        echo "No backend log file found"
+                                    fi
                                     exit 1
                                 fi
                                 
                                 if [ -f "green-frontend.pid" ]; then
                                     FRONTEND_PID=$(cat green-frontend.pid)
-                                    if ! ps -p $FRONTEND_PID > /dev/null 2>&1; then
-                                        echo "ERROR: Frontend process is not running"
+                                    echo "Found frontend PID file with PID: $FRONTEND_PID"
+                                    if ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                        echo "Frontend process is running (PID: $FRONTEND_PID)"
+                                    else
+                                        echo "ERROR: Frontend process is not running (PID: $FRONTEND_PID)"
+                                        echo "Checking frontend log for errors:"
+                                        if [ -f "frontend-green.log" ]; then
+                                            tail -20 frontend-green.log
+                                        else
+                                            echo "No frontend log file found"
+                                        fi
                                         exit 1
                                     fi
                                 else
                                     echo "ERROR: Frontend PID file not found"
+                                    echo "Checking if frontend log exists:"
+                                    if [ -f "frontend-green.log" ]; then
+                                        echo "Frontend log exists, showing last 20 lines:"
+                                        tail -20 frontend-green.log
+                                    else
+                                        echo "No frontend log file found"
+                                    fi
                                     exit 1
                                 fi
                                 
