@@ -2739,6 +2739,32 @@ node {
                                 
                                 echo "Deploying to green environment..."
                                 
+                                # Check if MongoDB is running
+                                echo "Checking MongoDB connection..."
+                                if command -v mongosh >/dev/null 2>&1; then
+                                    if mongosh --eval "db.runCommand('ping')" "mongodb://localhost:27017/healthcare-app" --quiet >/dev/null 2>&1; then
+                                        echo "MongoDB is running and accessible"
+                                    else
+                                        echo "WARNING: MongoDB connection failed - server may not start properly"
+                                    fi
+                                elif command -v mongo >/dev/null 2>&1; then
+                                    if mongo --eval "db.runCommand('ping')" "mongodb://localhost:27017/healthcare-app" --quiet >/dev/null 2>&1; then
+                                        echo "MongoDB is running and accessible"
+                                    else
+                                        echo "WARNING: MongoDB connection failed - server may not start properly"
+                                    fi
+                                else
+                                    echo "WARNING: MongoDB client not found - cannot verify database connection"
+                                fi
+                                
+                                # Check if node_modules exists
+                                if [ ! -d "node_modules" ]; then
+                                    echo "Installing dependencies..."
+                                    npm install
+                                else
+                                    echo "Dependencies already installed"
+                                fi
+                                
                                 if command -v kubectl >/dev/null 2>&1; then
                                     # Deploy to green environment
                                     echo "Creating green deployment"
@@ -2753,42 +2779,102 @@ node {
                                     
                                     # Start backend server in background
                                     echo "Starting backend server on port 5001..."
-                                    cd server
-                                    if nohup node server.js > ../backend-green.log 2>&1 & then
-                                        BACKEND_PID=$!
-                                        echo "Backend started with PID: $BACKEND_PID"
-                                        cd ..
+                                    echo "Current directory: $(pwd)"
+                                    echo "Checking .env file:"
+                                    if [ -f ".env" ]; then
+                                        cat .env
+                                    else
+                                        echo "No .env file found"
+                                    fi
+                                    
+                                    # Set environment variables explicitly
+                                    export PORT=5001
+                                    export NODE_ENV=production
+                                    echo "Environment variables set: PORT=$PORT, NODE_ENV=$NODE_ENV"
+                                    
+                                    # Start the backend using npm script
+                                    echo "Starting backend with npm script..."
+                                    nohup npm run server > backend-green.log 2>&1 &
+                                    BACKEND_PID=$!
+                                    echo "Backend process started with PID: $BACKEND_PID"
+                                    
+                                    # Give it a moment to start
+                                    sleep 3
+                                    
+                                    # Check if process is still running
+                                    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+                                        echo "Backend process is running successfully"
                                         echo "$BACKEND_PID" > green-backend.pid
                                         echo "Backend PID file created: $(cat green-backend.pid)"
                                     else
-                                        echo "ERROR: Failed to start backend server"
-                                        cd ..
+                                        echo "ERROR: Backend process failed to start"
+                                        echo "Checking backend log for errors:"
+                                        if [ -f "backend-green.log" ]; then
+                                            tail -30 backend-green.log
+                                        fi
                                         exit 1
                                     fi
                                     
                                     # Start frontend using serve for production build
                                     echo "Starting frontend on port 3001 using production build..."
+                                    echo "Current directory: $(pwd)"
+                                    echo "Checking if build directory exists:"
+                                    if [ -d "build" ]; then
+                                        echo "Build directory exists"
+                                        ls -la build/ | head -10
+                                    else
+                                        echo "ERROR: Build directory not found - building frontend..."
+                                        npm run build
+                                        if [ ! -d "build" ]; then
+                                            echo "ERROR: Failed to build frontend"
+                                            exit 1
+                                        fi
+                                    fi
+                                    
                                     if command -v npx >/dev/null 2>&1; then
-                                        if nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 & then
-                                            FRONTEND_PID=$!
-                                            echo "Frontend started with PID: $FRONTEND_PID"
+                                        echo "Using npx to serve frontend..."
+                                        nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend process started with PID: $FRONTEND_PID"
+                                        
+                                        # Give it a moment to start
+                                        sleep 2
+                                        
+                                        # Check if process is still running
+                                        if ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                            echo "Frontend process is running successfully"
                                             echo "$FRONTEND_PID" > green-frontend.pid
                                             echo "Frontend PID file created: $(cat green-frontend.pid)"
                                         else
-                                            echo "ERROR: Failed to start frontend server with npx"
+                                            echo "ERROR: Frontend process failed to start with npx"
+                                            echo "Checking frontend log for errors:"
+                                            if [ -f "frontend-green.log" ]; then
+                                                tail -20 frontend-green.log
+                                            fi
                                             exit 1
                                         fi
                                     else
                                         echo "npx not available, trying python http server..."
                                         cd build
-                                        if nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 & then
-                                            FRONTEND_PID=$!
-                                            echo "Frontend started with PID: $FRONTEND_PID"
+                                        nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend process started with PID: $FRONTEND_PID"
+                                        
+                                        # Give it a moment to start
+                                        sleep 2
+                                        
+                                        # Check if process is still running
+                                        if ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                            echo "Frontend process is running successfully"
                                             cd ..
                                             echo "$FRONTEND_PID" > green-frontend.pid
                                             echo "Frontend PID file created: $(cat green-frontend.pid)"
                                         else
-                                            echo "ERROR: Failed to start frontend server with python"
+                                            echo "ERROR: Frontend process failed to start with python"
+                                            echo "Checking frontend log for errors:"
+                                            if [ -f "../frontend-green.log" ]; then
+                                                tail -20 ../frontend-green.log
+                                            fi
                                             cd ..
                                             exit 1
                                         fi
