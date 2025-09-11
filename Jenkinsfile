@@ -2792,15 +2792,128 @@ node {
                         stage('Deploy to Green Environment') {
                             echo 'Deploying new version to green environment'
                             sh '''
+                                set -x  # Enable debug output
                                 cd ${WORKSPACE}
                                 echo "=== DEPLOYMENT STAGE START ==="
                                 echo "Current working directory: $(pwd)"
                                 echo "Date and time: $(date)"
+                                echo "User: $(whoami)"
                                 echo "Available commands:"
                                 which kubectl || echo "kubectl not found"
                                 which node || echo "node not found"
                                 which npm || echo "npm not found"
                                 which npx || echo "npx not found"
+                                
+                                # Test basic shell functionality
+                                echo "Testing basic shell commands..."
+                                ls -la | head -3
+                                pwd
+                                echo "Basic shell test completed"
+                                
+                                # Test package.json accessibility
+                                echo "Testing package.json accessibility..."
+                                if [ -f "package.json" ]; then
+                                    echo "package.json exists"
+                                    head -5 package.json
+                                else
+                                    echo "ERROR: package.json not found in workspace"
+                                    ls -la *.json
+                                fi
+                                
+                                # Test npm command execution
+                                echo "Testing npm command execution..."
+                                npm --version || echo "npm --version failed"
+                                npm config list --json | head -10 || echo "npm config failed"
+                                
+                                # Test MongoDB availability
+                                echo "Testing MongoDB availability..."
+                                if pgrep mongod > /dev/null; then
+                                    echo "MongoDB process is running"
+                                else
+                                    echo "MongoDB process not found, attempting to start..."
+                                    # Try to start MongoDB if available
+                                    if command -v mongod >/dev/null 2>&1; then
+                                        mongod --dbpath /tmp/mongodb --logpath /tmp/mongodb.log --fork || echo "Failed to start MongoDB"
+                                    else
+                                        echo "mongod command not found"
+                                    fi
+                                fi
+                                
+                                # Test backend server startup
+                                echo "Testing backend server startup..."
+                                if [ -f "server/server.js" ]; then
+                                    echo "server/server.js exists"
+                                    timeout 10s node server/server.js > server_startup.log 2>&1 &
+                                    SERVER_PID=$!
+                                    sleep 3
+                                    if kill -0 $SERVER_PID 2>/dev/null; then
+                                        echo "Backend server started successfully (PID: $SERVER_PID)"
+                                        kill $SERVER_PID
+                                    else
+                                        echo "Backend server failed to start"
+                                        cat server_startup.log
+                                    fi
+                                else
+                                    echo "ERROR: server/server.js not found"
+                                fi
+                                
+                                # Test frontend build
+                                echo "Testing frontend build process..."
+                                if npm run build > build.log 2>&1; then
+                                    echo "Frontend build successful"
+                                    ls -la build/
+                                else
+                                    echo "Frontend build failed"
+                                    cat build.log
+                                fi
+                                
+                                # Test health check script
+                                echo "Testing health check script..."
+                                if [ -f "scripts/health-check.sh" ]; then
+                                    echo "scripts/health-check.sh exists"
+                                    bash -n scripts/health-check.sh && echo "Health check script syntax is valid" || echo "Health check script has syntax errors"
+                                else
+                                    echo "ERROR: scripts/health-check.sh not found"
+                                fi
+                                
+                                echo "=== DEBUGGING SUMMARY ==="
+                                echo "If any of the above tests fail, that's likely the root cause of the deployment failure."
+                                echo "Check the Jenkins logs for the specific error messages above."
+                                
+                                # Basic system check
+                                echo "System information:"
+                                uname -a
+                                echo "Disk space:"
+                                df -h .
+                                echo "Memory:"
+                                free -h 2>/dev/null || echo "free command not available"
+                                
+                                # Check if we're in the right directory
+                                if [ ! -f "package.json" ]; then
+                                    echo "ERROR: package.json not found in workspace"
+                                    ls -la
+                                    exit 1
+                                fi
+                                
+                                echo "Package.json found, continuing with deployment..."
+                                
+                                # Test basic npm functionality
+                                echo "Testing npm commands..."
+                                npm --version || echo "npm version check failed"
+                                node --version || echo "node version check failed"
+                                
+                                # Check if node_modules exists
+                                if [ ! -d "node_modules" ]; then
+                                    echo "Installing dependencies..."
+                                    npm install --verbose || {
+                                        echo "ERROR: npm install failed"
+                                        exit 1
+                                    }
+                                else
+                                    echo "Dependencies already installed"
+                                fi
+                                
+                                echo "Basic setup completed successfully"
                                 
                                 # Send green deployment start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
