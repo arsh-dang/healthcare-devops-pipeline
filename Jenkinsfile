@@ -2862,35 +2862,111 @@ node {
                                     echo "Starting MongoDB locally..."
                                     if command -v mongod >/dev/null 2>&1; then
                                         echo "MongoDB daemon found, starting MongoDB..."
+                                        echo "MongoDB version:"
+                                        mongod --version | head -1
+                                        
                                         mkdir -p mongodb-data
+                                        echo "Created MongoDB data directory"
+                                        
+                                        echo "Starting MongoDB with command: mongod --dbpath ./mongodb-data --port 27017 --logpath mongodb-green.log"
                                         nohup mongod --dbpath ./mongodb-data --port 27017 --logpath mongodb-green.log > /dev/null 2>&1 &
                                         MONGODB_PID=$!
-                                        echo "MongoDB started with PID: $MONGODB_PID"
+                                        echo "MongoDB process started with PID: $MONGODB_PID"
                                         
                                         # Give MongoDB time to start
-                                        sleep 5
+                                        echo "Waiting 10 seconds for MongoDB to start..."
+                                        sleep 10
                                         
                                         # Check if MongoDB is running
                                         if pgrep -f mongod > /dev/null; then
                                             echo "MongoDB is running successfully"
                                             echo "$MONGODB_PID" > green-mongodb.pid
                                             echo "MongoDB PID file created: $(cat green-mongodb.pid)"
+                                            
+                                            # Test MongoDB connection
+                                            echo "Testing MongoDB connection..."
+                                            if command -v mongosh >/dev/null 2>&1; then
+                                                mongosh --eval "db.adminCommand('ping')" --quiet localhost:27017 >/dev/null 2>&1 && echo "MongoDB connection test passed" || echo "MongoDB connection test failed"
+                                            else
+                                                echo "mongosh not available, skipping connection test"
+                                            fi
                                         else
-                                            echo "WARNING: MongoDB failed to start, but continuing with backend startup..."
-                                            echo "Backend will attempt to connect to external MongoDB or handle connection gracefully"
+                                            echo "ERROR: MongoDB failed to start"
+                                            echo "Checking MongoDB log for errors:"
+                                            if [ -f "mongodb-green.log" ]; then
+                                                echo "=== MongoDB Log Content ==="
+                                                tail -20 mongodb-green.log
+                                                echo "=== End MongoDB Log ==="
+                                            else
+                                                echo "No MongoDB log file found"
+                                            fi
+                                            
+                                            # Try to start MongoDB without authentication for testing
+                                            echo "Trying MongoDB startup without authentication..."
+                                            nohup mongod --dbpath ./mongodb-data --port 27017 --noauth --logpath mongodb-green-noauth.log > /dev/null 2>&1 &
+                                            MONGODB_PID=$!
+                                            echo "MongoDB (noauth) started with PID: $MONGODB_PID"
+                                            
+                                            sleep 5
+                                            
+                                            if pgrep -f mongod > /dev/null; then
+                                                echo "MongoDB (noauth) started successfully"
+                                                echo "$MONGODB_PID" > green-mongodb.pid
+                                            else
+                                                echo "WARNING: MongoDB failed to start even without authentication"
+                                                echo "Backend will attempt to connect to external MongoDB or handle connection gracefully"
+                                            fi
                                         fi
                                     else
                                         echo "MongoDB daemon not found, backend will attempt to connect to external MongoDB instance"
+                                        echo "Available commands in PATH:"
+                                        which mongo mongod mongosh 2>/dev/null || echo "No MongoDB commands found"
                                     fi
                                     
                                     # Start backend server in background
                                     echo "Starting backend server on port 5001..."
                                     echo "Current directory: $(pwd)"
+                                    echo "Checking server directory:"
+                                    if [ -d "server" ]; then
+                                        echo "Server directory exists"
+                                        ls -la server/ | head -5
+                                    else
+                                        echo "ERROR: Server directory not found"
+                                        exit 1
+                                    fi
+                                    
+                                    echo "Checking server.js file:"
+                                    if [ -f "server/server.js" ]; then
+                                        echo "server.js exists"
+                                        ls -la server/server.js
+                                    else
+                                        echo "ERROR: server/server.js not found"
+                                        exit 1
+                                    fi
+                                    
                                     echo "Checking .env file:"
                                     if [ -f ".env" ]; then
                                         cat .env
                                     else
                                         echo "No .env file found"
+                                    fi
+                                    
+                                    echo "Checking npm availability:"
+                                    if command -v npm >/dev/null 2>&1; then
+                                        echo "npm is available"
+                                        npm --version
+                                    else
+                                        echo "ERROR: npm not found"
+                                        exit 1
+                                    fi
+                                    
+                                    echo "Checking node availability:"
+                                    if command -v node >/dev/null 2>&1; then
+                                        echo "node is available"
+                                        node --version
+                                    else
+                                        echo "ERROR: node not found"
+                                        exit 1
                                     fi
                                     
                                     # Set environment variables explicitly
@@ -2899,29 +2975,74 @@ node {
                                     export MONGODB_HOST=localhost
                                     export MONGODB_PORT=27017
                                     export MONGODB_DATABASE=healthcare-app
-                                    echo "Environment variables set: PORT=$PORT, NODE_ENV=$NODE_ENV"
+                                    echo "Environment variables set: PORT=$PORT, NODE_ENV=$NODE_ENV, MONGODB_HOST=$MONGODB_HOST"
                                     
                                     # Start the backend using npm script
                                     echo "Starting backend with npm script..."
+                                    echo "Running command: npm run server"
+                                    
+                                    # Try to run npm run server directly first to see any immediate errors
+                                    echo "Testing npm run server command..."
+                                    timeout 10s npm run server 2>&1 || echo "npm run server test completed or timed out"
+                                    
+                                    # Now start it in background
+                                    echo "Starting backend in background..."
                                     nohup npm run server > backend-green.log 2>&1 &
                                     BACKEND_PID=$!
                                     echo "Backend process started with PID: $BACKEND_PID"
                                     
-                                    # Give it a moment to start
-                                    sleep 5
+                                    # Give it more time to start
+                                    echo "Waiting 10 seconds for backend to start..."
+                                    sleep 10
                                     
                                     # Check if process is still running
                                     if ps -p $BACKEND_PID > /dev/null 2>&1; then
                                         echo "Backend process is running successfully"
                                         echo "$BACKEND_PID" > green-backend.pid
                                         echo "Backend PID file created: $(cat green-backend.pid)"
+                                        
+                                        # Check if backend is responding
+                                        echo "Testing backend health endpoint..."
+                                        if curl -s --max-time 5 http://localhost:5001/health >/dev/null 2>&1; then
+                                            echo "Backend health check passed"
+                                        else
+                                            echo "WARNING: Backend health check failed, but process is running"
+                                        fi
                                     else
                                         echo "ERROR: Backend process failed to start"
                                         echo "Checking backend log for errors:"
                                         if [ -f "backend-green.log" ]; then
-                                            tail -30 backend-green.log
+                                            echo "=== Backend Log Content ==="
+                                            cat backend-green.log
+                                            echo "=== End Backend Log ==="
+                                        else
+                                            echo "No backend log file found - command may have failed immediately"
+                                            echo "Checking if npm run server works at all..."
+                                            npm run server 2>&1 || echo "npm run server failed with exit code: $?"
                                         fi
-                                        exit 1
+                                        
+                                        # Try alternative startup method
+                                        echo "Trying alternative startup method..."
+                                        echo "Starting backend directly with node..."
+                                        nohup node server/server.js > backend-green-direct.log 2>&1 &
+                                        BACKEND_PID=$!
+                                        echo "Backend started directly with PID: $BACKEND_PID"
+                                        
+                                        sleep 5
+                                        
+                                        if ps -p $BACKEND_PID > /dev/null 2>&1; then
+                                            echo "Direct node startup successful"
+                                            echo "$BACKEND_PID" > green-backend.pid
+                                            echo "Backend PID file created: $(cat green-backend.pid)"
+                                        else
+                                            echo "ERROR: Direct node startup also failed"
+                                            if [ -f "backend-green-direct.log" ]; then
+                                                echo "=== Direct Backend Log ==="
+                                                cat backend-green-direct.log
+                                                echo "=== End Direct Backend Log ==="
+                                            fi
+                                            exit 1
+                                        fi
                                     fi
                                     
                                     # Start frontend using serve for production build
