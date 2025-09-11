@@ -1014,7 +1014,7 @@ node {
                                 withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DD_API_KEY', required: false)]) {
                                     sh '''
                                         echo "Using Terraform deployment script..."
-                                        export TERRAFORM_STRATEGY=clean
+                                        export TERRAFORM_STRATEGY=import
                                         export BUILD_NUMBER=''' + BUILD_NUMBER + '''
                                         export TF_VAR_enable_datadog=''' + (env.DD_API_KEY ? 'true' : 'false') + '''
                                         export TF_VAR_datadog_api_key=''' + (env.DD_API_KEY ?: '') + '''
