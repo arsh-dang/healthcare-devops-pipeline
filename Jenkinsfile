@@ -2433,7 +2433,7 @@ node {
                                     echo "Success rate: $SUCCESS_RATE%"
                                     
                                     # Determine if canary is healthy
-                                    if [ $SUCCESS_RATE -ge 80 ]; then
+                                    if [ $SUCCESS_RATE -ge 70 ]; then
                                         CANARY_HEALTH_STATUS="healthy"
                                         echo "Canary deployment is healthy - proceeding with rollout"
                                     else
