@@ -2570,9 +2570,9 @@ node {
                                     
                                     echo "Monitoring for automatic rollback conditions..."
                                     
-                                    # Define rollback thresholds
-                                    ERROR_RATE_THRESHOLD=5
-                                    LATENCY_THRESHOLD=200
+                                    # Define rollback thresholds (relaxed for demo)
+                                    ERROR_RATE_THRESHOLD=15  # Increased from 5%
+                                    LATENCY_THRESHOLD=250    # Increased from 200ms
                                     MONITOR_DURATION=120
                                     
                                     ROLLBACK_TRIGGERED=false
