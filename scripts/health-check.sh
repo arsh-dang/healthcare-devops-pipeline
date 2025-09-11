@@ -37,46 +37,57 @@ CHECKS_PASSED=0
 CHECKS_FAILED=0
 TOTAL_CHECKS=0
 
-# Function to perform HTTP health check
+# Function to perform HTTP health check with retry
 check_http_endpoint() {
     local url="$1"
     local name="$2"
     local expected_status="${3:-200}"
+    local max_retries=3
+    local retry_count=0
 
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
     echo "Checking $name ($url)..."
 
     if command -v curl >/dev/null 2>&1; then
-        local response
-        local http_code
-        local response_time
+        while [ $retry_count -lt $max_retries ]; do
+            local response
+            local http_code
+            local response_time
 
-        # Use curl with proper error handling
-        if ! response=$(curl -s -w "HTTPSTATUS:%{http_code};TIME:%{time_total}" \
-                      --max-time "$TIMEOUT" \
-                      -H "User-Agent: Health-Check/1.0" \
-                      "$url" 2>/dev/null); then
-            print_error "$name check failed - connection error"
-            CHECKS_FAILED=$((CHECKS_FAILED + 1))
-            return 1
-        fi
+            # Use curl with proper error handling
+            if response=$(curl -s -w "HTTPSTATUS:%{http_code};TIME:%{time_total}" \
+                          --max-time "$TIMEOUT" \
+                          -H "User-Agent: Health-Check/1.0" \
+                          "$url" 2>/dev/null); then
+                
+                # Extract HTTP status code
+                http_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
 
-        # Extract HTTP status code
-        http_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
+                # Extract response time
+                response_time=$(echo "$response" | grep -o "TIME:[0-9.]*" | cut -d: -f2)
 
-        # Extract response time
-        response_time=$(echo "$response" | grep -o "TIME:[0-9.]*" | cut -d: -f2)
-
-        if [ "$http_code" = "$expected_status" ]; then
-            print_success "$name check passed (${http_code}) in ${response_time}s"
-            CHECKS_PASSED=$((CHECKS_PASSED + 1))
-            return 0
-        else
-            print_error "$name check failed - expected ${expected_status}, got ${http_code}"
-            CHECKS_FAILED=$((CHECKS_FAILED + 1))
-            return 1
-        fi
+                if [ "$http_code" = "$expected_status" ]; then
+                    print_success "$name check passed (${http_code}) in ${response_time}s"
+                    CHECKS_PASSED=$((CHECKS_PASSED + 1))
+                    return 0
+                else
+                    print_error "$name check failed - expected ${expected_status}, got ${http_code}"
+                    CHECKS_FAILED=$((CHECKS_FAILED + 1))
+                    return 1
+                fi
+            else
+                retry_count=$((retry_count + 1))
+                if [ $retry_count -lt $max_retries ]; then
+                    echo "Connection failed, retrying in 2 seconds... (attempt $retry_count/$max_retries)"
+                    sleep 2
+                else
+                    print_error "$name check failed - connection error after $max_retries attempts"
+                    CHECKS_FAILED=$((CHECKS_FAILED + 1))
+                    return 1
+                fi
+            fi
+        done
     else
         print_warning "$name check skipped - curl not available"
         return 0

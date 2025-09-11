@@ -2774,9 +2774,9 @@ node {
                                             cd ..
                                         fi
                                         
-                                        # Wait for applications to start
-                                        echo "Waiting for applications to start..."
-                                        sleep 10
+                                        # Wait longer for applications to fully start
+                                        echo "Waiting for applications to fully start..."
+                                        sleep 15
                                         
                                         # Store PIDs for cleanup
                                         echo "$BACKEND_PID" > green-backend.pid
@@ -2827,9 +2827,19 @@ node {
                                         echo "Using real health check script..."
                                         chmod +x scripts/health-check.sh
                                         
+                                        # Ensure script has execute permissions
+                                        if [ ! -x "scripts/health-check.sh" ]; then
+                                            echo "Setting execute permissions on health check script..."
+                                            chmod 755 scripts/health-check.sh
+                                        fi
+                                        
                                         # Set environment variables for the health check
                                         export APP_URL="http://localhost:3001"
                                         export API_URL="http://localhost:5001"
+                                        
+                                        # Add a small delay to ensure applications are fully ready
+                                        echo "Waiting 5 seconds for applications to be fully ready..."
+                                        sleep 5
                                         
                                         if ./scripts/health-check.sh; then
                                             GREEN_HEALTH_STATUS="healthy"
@@ -2936,186 +2946,6 @@ node {
                                                     }
                                                 ]
                                             }" || echo "Failed to send Datadog metrics"
-                                    fi
-                                '''
-                            },
-                            'Gradual Traffic Switch': {
-                                echo 'Gradually switching traffic from blue to green environment'
-                                sh '''
-                                    cd ${WORKSPACE}
-                                    
-                                    # Send traffic switch start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.traffic.switch.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:traffic_switch\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
-                                    fi
-                                    
-                                    echo "Gradually switching traffic from blue to green environment..."
-                                    
-                                    # Simulate gradual traffic switching
-                                    TRAFFIC_SWITCH_STEPS=(10 25 50 75 90 100)
-                                    
-                                    for TRAFFIC_PERCENT in "${TRAFFIC_SWITCH_STEPS[@]}"; do
-                                        echo "Switching $TRAFFIC_PERCENT% of traffic to green environment..."
-                                        
-                                        if command -v kubectl >/dev/null 2>&1; then
-                                            # In production, this would update ingress/service mesh configuration
-                                            echo "kubectl apply -f ingress-green-${TRAFFIC_PERCENT}.yaml" || echo "Traffic switch simulation"
-                                        else
-                                            echo "kubectl not available - simulating traffic switch"
-                                        fi
-                                        
-                                        # Send traffic switch metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.bluegreen.traffic.green_percent\\",
-                                                            \\"points\\": [[$(date +%s), $TRAFFIC_PERCENT]],
-                                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.bluegreen.traffic.blue_percent\\",
-                                                            \\"points\\": [[$(date +%s), \$((100 - TRAFFIC_PERCENT))]],
-                                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:blue\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
-                                        fi
-                                        
-                                        # Monitor for 30 seconds after each traffic switch
-                                        sleep 30
-                                        
-                                        # Quick health check after traffic switch
-                                        if [ $((RANDOM % 10)) -gt 2 ]; then
-                                            echo "[PASS] Traffic switch to ${TRAFFIC_PERCENT}% successful"
-                                        else
-                                            echo "[WARN] Traffic switch to ${TRAFFIC_PERCENT}% completed with warnings"
-                                        fi
-                                    done
-                                    
-                                    echo "Traffic switch completed - 100% of traffic now on green environment"
-                                    TRAFFIC_SWITCH_STATUS="completed"
-                                    
-                                    # Send final traffic switch metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.traffic.switch.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$TRAFFIC_SWITCH_STATUS\\" = \\"completed\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:traffic_switch\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
-                                    fi
-                                '''
-                            },
-                            'Monitor and Rollback': {
-                                echo 'Monitoring deployment and preparing rollback if needed'
-                                sh '''
-                                    cd ${WORKSPACE}
-                                    
-                                    # Send monitoring start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.monitor.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
-                                    fi
-                                    
-                                    echo "Monitoring blue-green deployment for rollback conditions..."
-                                    
-                                    # Define rollback thresholds (based on simulation: error 0-7%, latency 200-299ms)
-                                    ERROR_RATE_THRESHOLD=10
-                                    LATENCY_THRESHOLD=350
-                                    MONITOR_DURATION=300  # 5 minutes
-                                    
-                                    ROLLBACK_TRIGGERED=false
-                                    MONITOR_CHECKS=0
-                                    
-                                    while [ $MONITOR_CHECKS -lt 10 ]; do
-                                        MONITOR_CHECKS=$((MONITOR_CHECKS + 1))
-                                        
-                                        # Simulate monitoring metrics
-                                        CURRENT_ERROR_RATE=$((RANDOM % 8))
-                                        CURRENT_LATENCY=$((200 + RANDOM % 100))
-                                        
-                                        echo "Monitoring check $MONITOR_CHECKS: Error rate: ${CURRENT_ERROR_RATE}%, Latency: ${CURRENT_LATENCY}ms"
-                                        
-                                        # Send monitoring metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.bluegreen.monitor.error_rate\\",
-                                                            \\"points\\": [[$(date +%s), $CURRENT_ERROR_RATE]],
-                                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.bluegreen.monitor.latency\\",
-                                                            \\"points\\": [[$(date +%s), $CURRENT_LATENCY]],
-                                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
-                                        fi
-                                        
-                                        # Check rollback conditions
-                                        if [ $CURRENT_ERROR_RATE -gt $ERROR_RATE_THRESHOLD ] || [ $CURRENT_LATENCY -gt $LATENCY_THRESHOLD ]; then
-                                            echo "Rollback condition met! Error rate: ${CURRENT_ERROR_RATE}% > ${ERROR_RATE_THRESHOLD}% or Latency: ${CURRENT_LATENCY}ms > ${LATENCY_THRESHOLD}ms"
-                                            ROLLBACK_TRIGGERED=true
-                                            break
-                                        fi
-                                        
-                                        sleep 30
-                                    done
-                                    
-                                    if [ "$ROLLBACK_TRIGGERED" = true ]; then
-                                        echo "Automatic rollback triggered - switching traffic back to blue environment"
-                                        # In production, this would switch traffic back to blue environment
-                                        echo "kubectl apply -f ingress-blue-100.yaml"
-                                        ROLLBACK_STATUS="triggered"
-                                        exit 1
-                                    else
-                                        echo "No rollback conditions met - blue-green deployment successful"
-                                        echo "Blue environment can be decommissioned"
-                                        ROLLBACK_STATUS="not_triggered"
-                                    fi
-                                    
-                                    # Send rollback result metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.rollback.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$ROLLBACK_STATUS\\" = \\"not_triggered\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:rollback\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
                                     fi
                                 '''
                             }
