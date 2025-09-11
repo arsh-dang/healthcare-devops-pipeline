@@ -34,6 +34,22 @@ terraform/terraform.tfstate.d/
 .DS_Store
 Thumbs.db
 
+# Build artifacts
+frontend.tar
+
+# Backup files
+*.backup
+package.json.backup
+Jenkinsfile.backup
+Jenkinsfile.datadog.backup
+
+# Temporary Jenkins scripts
+jenkins-*.groovy
+
+# Terraform state (additional patterns)
+terraform.tfstate
+terraform.tfstate.backup
+
 # Test outputs
 test-results/
 *.log

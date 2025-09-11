@@ -9,13 +9,13 @@ This script performs comprehensive health checks for the Healthcare App deployme
 ./scripts/health-check.sh
 
 # Run with custom URLs
-APP_URL="http://your-frontend-url:3000" API_URL="http://your-api-url:5000" ./scripts/health-check.sh
+APP_URL="http://your-frontend-url:3001" API_URL="http://your-api-url:5001" ./scripts/health-check.sh
 ```
 
 ## Environment Variables
 
 - `APP_URL`: Frontend application URL (default: http://localhost:3000)
-- `API_URL`: Backend API URL (default: http://localhost:5000)
+- `API_URL`: Backend API URL (default: http://localhost:5001)
 - `TIMEOUT`: HTTP request timeout in seconds (default: 10)
 
 ## Health Checks Performed

@@ -43,7 +43,7 @@ Jenkins.instance.getAllItems().each { item ->
 - All 7 stages run seamlessly
 - Datadog monitoring active
 
-## 📞 IF STILL HAVING ISSUES:
+## IF STILL HAVING ISSUES:
 1. **Restart Jenkins** service
 2. **Clear browser cache**
 3. **Try a different browser**

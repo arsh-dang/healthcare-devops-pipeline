@@ -24,7 +24,7 @@ node {
         timestamps {
 
             stage('Force Pipeline Reload Check') {
-                echo '🔄 Checking if pipeline reload is needed...'
+                echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
                 echo "Current pipeline type: Scripted (no parameters required)"
             }

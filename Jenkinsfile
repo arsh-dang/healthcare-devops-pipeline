@@ -38,7 +38,7 @@ node {
         timestamps {
 
             stage('Force Pipeline Reload Check') {
-                echo '🔄 Checking if pipeline reload is needed...'
+                echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
                 echo "Current pipeline type: Scripted (no parameters required)"
                 echo "Build Number: ${BUILD_NUMBER}"
@@ -129,7 +129,7 @@ node {
                     // Send pipeline start event to Datadog
                     sh '''
                         if [ -n "$DATADOG_API_KEY" ]; then
-                            echo "📊 Sending pipeline start event to Datadog..."
+                            echo "Sending pipeline start event to Datadog..."
                             curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                 -H "Content-Type: application/json" \\
                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2818,40 +2818,40 @@ node {
                                         echo "Checking application health..."
                                         if [ $((RANDOM % 10)) -gt 7 ]; then
                                             HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "✗ Application health check failed"
+                                            echo "[FAIL] Application health check failed"
                                         else
                                             HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "✓ Application health check passed"
+                                            echo "[PASS] Application health check passed"
                                         fi
                                         
                                         # Database connectivity check
                                         echo "Checking database connectivity..."
                                         if [ $((RANDOM % 10)) -gt 7 ]; then
                                             HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "✗ Database connectivity check failed"
+                                            echo "[FAIL] Database connectivity check failed"
                                         else
                                             HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "✓ Database connectivity check passed"
+                                            echo "[PASS] Database connectivity check passed"
                                         fi
                                         
                                         # API endpoints check
                                         echo "Checking API endpoints..."
                                         if [ $((RANDOM % 10)) -gt 7 ]; then
                                             HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "✗ API endpoints check failed"
+                                            echo "[FAIL] API endpoints check failed"
                                         else
                                             HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "✓ API endpoints check passed"
+                                            echo "[PASS] API endpoints check passed"
                                         fi
                                         
                                         # Performance check
                                         echo "Checking performance metrics..."
                                         if [ $((RANDOM % 10)) -gt 7 ]; then
                                             HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "✗ Performance check failed"
+                                            echo "[FAIL] Performance check failed"
                                         else
                                             HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "✓ Performance check passed"
+                                            echo "[PASS] Performance check passed"
                                         fi
                                         
                                         # Calculate success rate
@@ -2967,9 +2967,9 @@ node {
                                         
                                         # Quick health check after traffic switch
                                         if [ $((RANDOM % 10)) -gt 2 ]; then
-                                            echo "✓ Traffic switch to ${TRAFFIC_PERCENT}% successful"
+                                            echo "[PASS] Traffic switch to ${TRAFFIC_PERCENT}% successful"
                                         else
-                                            echo "⚠ Traffic switch to ${TRAFFIC_PERCENT}% completed with warnings"
+                                            echo "[WARN] Traffic switch to ${TRAFFIC_PERCENT}% completed with warnings"
                                         fi
                                     done
                                     
@@ -3154,13 +3154,13 @@ node {
         echo "8-stage DevOps pipeline executed successfully"
         echo "All task requirements met for High HD grade"
         echo "Advanced optimizations implemented:"
-        echo "✓ Intelligent caching for unchanged components"
-        echo "✓ Security testing and contract testing"
-        echo "✓ Canary deployment with traffic splitting"
-        echo "✓ Blue-green deployment for zero-downtime releases"
-        echo "✓ Comprehensive Datadog monitoring and alerting"
-        echo "✓ Parallel execution across all stages"
-        echo "✓ Automated rollback protection"
+        echo "[PASS] Intelligent caching for unchanged components"
+        echo "[PASS] Security testing and contract testing"
+        echo "[PASS] Canary deployment with traffic splitting"
+        echo "[PASS] Blue-green deployment for zero-downtime releases"
+        echo "[PASS] Comprehensive Datadog monitoring and alerting"
+        echo "[PASS] Parallel execution across all stages"
+        echo "[PASS] Automated rollback protection"
         
         // Send pipeline success event to Datadog
         sh '''

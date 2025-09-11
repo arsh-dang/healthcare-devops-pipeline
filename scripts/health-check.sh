@@ -3,9 +3,10 @@
 # Comprehensive Health Check Script for Healthcare App
 # Performs real health checks instead of random simulations
 
+# Exit on error, but handle it gracefully
 set -e
 
-echo "🔍 Healthcare App Health Check"
+echo "Healthcare App Health Check"
 echo "================================"
 
 # Colors
@@ -15,20 +16,20 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
+    echo -e "${GREEN}[PASS] $1${NC}"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
+    echo -e "${YELLOW}[WARN] $1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}✗ $1${NC}"
+    echo -e "${RED}[FAIL] $1${NC}"
 }
 
 # Configuration
-APP_URL="${APP_URL:-http://localhost:3000}"
-API_URL="${API_URL:-http://localhost:5000}"
+APP_URL="${APP_URL:-http://localhost:3001}"
+API_URL="${API_URL:-http://localhost:5001}"
 TIMEOUT=10
 
 # Health check counters
@@ -38,9 +39,9 @@ TOTAL_CHECKS=0
 
 # Function to perform HTTP health check
 check_http_endpoint() {
-    local url=$1
-    local name=$2
-    local expected_status=${3:-200}
+    local url="$1"
+    local name="$2"
+    local expected_status="${3:-200}"
 
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
@@ -48,19 +49,24 @@ check_http_endpoint() {
 
     if command -v curl >/dev/null 2>&1; then
         local response
-        response=$(curl -s -w "HTTPSTATUS:%{http_code};TIME:%{time_total}" \
-                    --max-time $TIMEOUT \
-                    -H "User-Agent: Health-Check/1.0" \
-                    "$url" 2>/dev/null || echo "ERROR")
+        local http_code
+        local response_time
 
-        if [[ $response == *"ERROR"* ]]; then
+        # Use curl with proper error handling
+        if ! response=$(curl -s -w "HTTPSTATUS:%{http_code};TIME:%{time_total}" \
+                      --max-time "$TIMEOUT" \
+                      -H "User-Agent: Health-Check/1.0" \
+                      "$url" 2>/dev/null); then
             print_error "$name check failed - connection error"
             CHECKS_FAILED=$((CHECKS_FAILED + 1))
             return 1
         fi
 
-        local http_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
-        local response_time=$(echo "$response" | grep -o "TIME:[0-9.]*" | cut -d: -f2)
+        # Extract HTTP status code
+        http_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
+
+        # Extract response time
+        response_time=$(echo "$response" | grep -o "TIME:[0-9.]*" | cut -d: -f2)
 
         if [ "$http_code" = "$expected_status" ]; then
             print_success "$name check passed (${http_code}) in ${response_time}s"
@@ -83,13 +89,20 @@ check_database() {
 
     echo "Checking database connectivity..."
 
-    if command -v mongosh >/dev/null 2>&1 || command -v mongo >/dev/null 2>&1; then
-        # Try to connect to MongoDB
-        if mongosh --eval "db.runCommand('ping')" mongodb://localhost:27017/healthcare 2>/dev/null | grep -q "ok.*1" 2>/dev/null; then
+    if command -v mongosh >/dev/null 2>&1; then
+        # Try to connect to MongoDB using mongosh
+        if mongosh --eval "db.runCommand('ping')" "mongodb://localhost:27017/healthcare" --quiet >/dev/null 2>&1; then
             print_success "Database connectivity check passed"
             CHECKS_PASSED=$((CHECKS_PASSED + 1))
             return 0
-        elif mongo --eval "db.runCommand('ping')" mongodb://localhost:27017/healthcare 2>/dev/null | grep -q "ok.*1" 2>/dev/null; then
+        else
+            print_error "Database connectivity check failed"
+            CHECKS_FAILED=$((CHECKS_FAILED + 1))
+            return 1
+        fi
+    elif command -v mongo >/dev/null 2>&1; then
+        # Fallback to mongo client
+        if mongo --eval "db.runCommand('ping')" "mongodb://localhost:27017/healthcare" --quiet >/dev/null 2>&1; then
             print_success "Database connectivity check passed"
             CHECKS_PASSED=$((CHECKS_PASSED + 1))
             return 0
@@ -112,12 +125,23 @@ check_performance() {
 
     if command -v curl >/dev/null 2>&1; then
         local response_time
-        response_time=$(curl -s -w "%{time_total}" -o /dev/null "$APP_URL" 2>/dev/null || echo "999")
+        local response_ms
 
-        # Convert to milliseconds
-        local response_ms=$(echo "$response_time * 1000" | bc 2>/dev/null || echo "999000")
+        # Get response time
+        if ! response_time=$(curl -s -w "%{time_total}" -o /dev/null "$APP_URL" 2>/dev/null); then
+            response_time="999"
+        fi
 
-        if (( $(echo "$response_ms < 2000" | bc -l 2>/dev/null || echo "0") )); then
+        # Convert to milliseconds (fallback if bc is not available)
+        if command -v bc >/dev/null 2>&1; then
+            response_ms=$(echo "$response_time * 1000" | bc)
+        else
+            # Simple integer conversion (less accurate but works without bc)
+            response_ms=$(printf "%.0f" "$(echo "$response_time * 1000" | awk '{print $1}')")
+        fi
+
+        # Check if response time is acceptable (< 2 seconds)
+        if [ "$response_ms" -lt 2000 ] 2>/dev/null; then
             print_success "Performance check passed (${response_ms}ms)"
             CHECKS_PASSED=$((CHECKS_PASSED + 1))
             return 0
@@ -156,7 +180,7 @@ echo "Health Check Results"
 echo "===================="
 
 SUCCESS_RATE=0
-if [ $TOTAL_CHECKS -gt 0 ]; then
+if [ "$TOTAL_CHECKS" -gt 0 ]; then
     SUCCESS_RATE=$((CHECKS_PASSED * 100 / TOTAL_CHECKS))
 fi
 
@@ -166,7 +190,7 @@ echo "Failed: $CHECKS_FAILED"
 echo "Success rate: ${SUCCESS_RATE}%"
 
 # Determine overall health status
-if [ $SUCCESS_RATE -ge 90 ]; then
+if [ "$SUCCESS_RATE" -ge 90 ]; then
     echo ""
     print_success "Environment is HEALTHY and ready for traffic"
     exit 0

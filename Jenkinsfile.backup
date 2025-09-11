@@ -1056,7 +1056,7 @@ node {
                 '''
 
                 // Monitoring verification step (not a new stage)
-                echo '🔎 Verifying monitoring and service health with Datadog...'
+                echo 'Verifying monitoring and service health with Datadog...'
                 sh '''
                     set -e
                     
@@ -1098,7 +1098,7 @@ node {
                         fi
                     else
                         FRONTEND_STATUS=0
-                        echo "❌ Frontend service health check failed"
+                        echo "Frontend service health check failed"
                         
                         # Send frontend failure metric
                         if [ -n "$DATADOG_API_KEY" ]; then
@@ -1140,7 +1140,7 @@ node {
                         fi
                     else
                         BACKEND_STATUS=0
-                        echo "❌ Backend service health check failed"
+                        echo "Backend service health check failed"
                         
                         # Send backend failure metric
                         if [ -n "$DATADOG_API_KEY" ]; then
@@ -1228,7 +1228,7 @@ node {
         }
         
         // Success message
-        echo '🎉 Pipeline completed successfully!'
+        echo 'Pipeline completed successfully!'
         echo "7-stage DevOps pipeline executed successfully"
         echo "All task requirements met for High HD grade"
         
@@ -1270,9 +1270,9 @@ node {
         '''
         
     } catch (Exception e) {
-        echo '❌ Pipeline failed!'
-        echo "❌ Check logs for failure details"
-        echo "❌ Error: ${e.getMessage()}"
+        echo 'Pipeline failed!'
+        echo "Check logs for failure details"
+        echo "Error: ${e.getMessage()}"
         currentBuild.result = 'FAILURE'
         
         // Send pipeline failure event to Datadog

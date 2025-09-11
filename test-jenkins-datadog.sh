@@ -51,12 +51,12 @@ if [[ -f "tfplan" ]]; then
     echo "Terraform plan created successfully with Datadog"
     rm -f tfplan
 else
-    echo "❌ Failed to create Terraform plan"
+    echo "Failed to create Terraform plan"
     exit 1
 fi
 
 echo ""
-echo "🎉 Jenkins Datadog integration test completed successfully!"
+echo "Jenkins Datadog integration test completed successfully!"
 echo ""
 echo "Next steps:"
 echo "1. Set up Jenkins credential with ID 'datadog-api-key'"
