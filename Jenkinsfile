@@ -2790,68 +2790,89 @@ node {
                                     
                                     echo "Running health checks on green environment..."
                                     
-                                    # Simulate comprehensive health checks
-                                    HEALTH_CHECKS_PASSED=0
-                                    HEALTH_CHECKS_FAILED=0
-                                    
-                                    # Application health check
-                                    echo "Checking application health..."
-                                    if [ $((RANDOM % 10)) -gt 1 ]; then
-                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                        echo "✓ Application health check passed"
+                                    # Use real health check script if available, otherwise fallback to simulation
+                                    if [ -f "scripts/health-check.sh" ]; then
+                                        echo "Using real health check script..."
+                                        chmod +x scripts/health-check.sh
+                                        
+                                        # Set environment variables for the health check
+                                        export APP_URL="http://localhost:3000"
+                                        export API_URL="http://localhost:5000"
+                                        
+                                        if ./scripts/health-check.sh; then
+                                            GREEN_HEALTH_STATUS="healthy"
+                                            echo "Green environment health checks passed"
+                                        else
+                                            GREEN_HEALTH_STATUS="unhealthy"
+                                            echo "Green environment health checks failed"
+                                            exit 1
+                                        fi
                                     else
-                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                        echo "✗ Application health check failed"
-                                    fi
-                                    
-                                    # Database connectivity check
-                                    echo "Checking database connectivity..."
-                                    if [ $((RANDOM % 10)) -gt 1 ]; then
-                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                        echo "✓ Database connectivity check passed"
-                                    else
-                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                        echo "✗ Database connectivity check failed"
-                                    fi
-                                    
-                                    # API endpoints check
-                                    echo "Checking API endpoints..."
-                                    if [ $((RANDOM % 10)) -gt 1 ]; then
-                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                        echo "✓ API endpoints check passed"
-                                    else
-                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                        echo "✗ API endpoints check failed"
-                                    fi
-                                    
-                                    # Performance check
-                                    echo "Checking performance metrics..."
-                                    if [ $((RANDOM % 10)) -gt 1 ]; then
-                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                        echo "✓ Performance check passed"
-                                    else
-                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                        echo "✗ Performance check failed"
-                                    fi
-                                    
-                                    # Calculate success rate
-                                    TOTAL_CHECKS=$((HEALTH_CHECKS_PASSED + HEALTH_CHECKS_FAILED))
-                                    SUCCESS_RATE=$((HEALTH_CHECKS_PASSED * 100 / TOTAL_CHECKS))
-                                    
-                                    echo "Green environment health check results:"
-                                    echo "Total checks: $TOTAL_CHECKS"
-                                    echo "Passed: $HEALTH_CHECKS_PASSED"
-                                    echo "Failed: $HEALTH_CHECKS_FAILED"
-                                    echo "Success rate: $SUCCESS_RATE%"
-                                    
-                                    # Determine if green environment is healthy
-                                    if [ $SUCCESS_RATE -ge 90 ]; then
-                                        GREEN_HEALTH_STATUS="healthy"
-                                        echo "Green environment is healthy and ready for traffic"
-                                    else
-                                        GREEN_HEALTH_STATUS="unhealthy"
-                                        echo "Green environment is unhealthy - deployment failed"
-                                        exit 1
+                                        echo "Health check script not found, using simulation..."
+                                        
+                                        # Simulate comprehensive health checks
+                                        HEALTH_CHECKS_PASSED=0
+                                        HEALTH_CHECKS_FAILED=0
+                                        
+                                        # Application health check
+                                        echo "Checking application health..."
+                                        if [ $((RANDOM % 10)) -gt 7 ]; then
+                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                            echo "✗ Application health check failed"
+                                        else
+                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                            echo "✓ Application health check passed"
+                                        fi
+                                        
+                                        # Database connectivity check
+                                        echo "Checking database connectivity..."
+                                        if [ $((RANDOM % 10)) -gt 7 ]; then
+                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                            echo "✗ Database connectivity check failed"
+                                        else
+                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                            echo "✓ Database connectivity check passed"
+                                        fi
+                                        
+                                        # API endpoints check
+                                        echo "Checking API endpoints..."
+                                        if [ $((RANDOM % 10)) -gt 7 ]; then
+                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                            echo "✗ API endpoints check failed"
+                                        else
+                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                            echo "✓ API endpoints check passed"
+                                        fi
+                                        
+                                        # Performance check
+                                        echo "Checking performance metrics..."
+                                        if [ $((RANDOM % 10)) -gt 7 ]; then
+                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                            echo "✗ Performance check failed"
+                                        else
+                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                            echo "✓ Performance check passed"
+                                        fi
+                                        
+                                        # Calculate success rate
+                                        TOTAL_CHECKS=$((HEALTH_CHECKS_PASSED + HEALTH_CHECKS_FAILED))
+                                        SUCCESS_RATE=$((HEALTH_CHECKS_PASSED * 100 / TOTAL_CHECKS))
+                                        
+                                        echo "Green environment health check results:"
+                                        echo "Total checks: $TOTAL_CHECKS"
+                                        echo "Passed: $HEALTH_CHECKS_PASSED"
+                                        echo "Failed: $HEALTH_CHECKS_FAILED"
+                                        echo "Success rate: $SUCCESS_RATE%"
+                                        
+                                        # Determine if green environment is healthy
+                                        if [ $SUCCESS_RATE -ge 90 ]; then
+                                            GREEN_HEALTH_STATUS="healthy"
+                                            echo "Green environment is healthy and ready for traffic"
+                                        else
+                                            GREEN_HEALTH_STATUS="unhealthy"
+                                            echo "Green environment is unhealthy - deployment failed"
+                                            exit 1
+                                        fi
                                     fi
                                     
                                     # Send green health metrics
