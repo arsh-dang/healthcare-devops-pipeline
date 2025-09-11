@@ -1,0 +1,18 @@
+{
+  "project": "Healthcare DevOps Pipeline",
+  "timestamp": "2025-09-12T03:25:43+10:00",
+  "compliance_score": 40,
+  "standards_checked": 7,
+  "total_checks": 30,
+  "passed_checks": 12,
+  "failed_checks": 14,
+  "warning_checks": 4,
+  "standards": HIPAA SOC2 GDPR PCI-DSS ISO27001 NIST OWASP,
+  "recommendations": [
+    "Implement automated compliance scanning in CI/CD pipeline",
+    "Regular compliance audits and penetration testing",
+    "Employee training on security best practices",
+    "Continuous monitoring and alerting for compliance violations",
+    "Regular backup testing and disaster recovery drills"
+  ]
+}

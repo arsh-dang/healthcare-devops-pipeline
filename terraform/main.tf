@@ -60,6 +60,27 @@ variable "datadog_api_key" {
   sensitive   = true
 }
 
+variable "datadog_app_key" {
+  description = "Datadog Application key (optional, for enhanced features)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "datadog_rum_app_id" {
+  description = "Datadog RUM Application ID"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "datadog_rum_client_token" {
+  description = "Datadog RUM Client Token"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "mongodb_root_password" {
   description = "MongoDB root password (leave empty for auto-generation)"
   type        = string
@@ -369,7 +390,7 @@ resource "kubernetes_stateful_set" "mongodb" {
             value = "healthcare-app"
           }
 
-          # Datadog APM environment variables
+          # Datadog APM environment variables (Core APM available for free tier)
           env {
             name  = "DD_TRACE_ENABLED"
             value = var.enable_datadog ? "true" : "false"
@@ -384,6 +405,9 @@ resource "kubernetes_stateful_set" "mongodb" {
             name  = "DD_SERVICE"
             value = "healthcare-backend"
           }
+
+          # Note: Datadog RUM is not available for student accounts
+          # Using basic APM monitoring instead
 
           resources {
             requests = {
@@ -795,6 +819,9 @@ resource "kubernetes_deployment" "frontend" {
             name           = "http"
           }
 
+          # Note: Datadog RUM is not available for student accounts
+          # Frontend monitoring will use basic logging instead
+
           resources {
             requests = {
               cpu    = var.resource_limits.frontend.cpu_request
@@ -903,7 +930,7 @@ resource "kubernetes_service" "mongodb" {
   }
 }
 
-# Optional Datadog Agent via Helm (when enabled)
+# Enhanced Datadog Agent via Helm (when enabled)
 resource "helm_release" "datadog" {
   count      = var.enable_datadog ? 1 : 0
   name       = "datadog"
@@ -915,32 +942,163 @@ resource "helm_release" "datadog" {
     yamlencode({
       datadog = {
         apiKey    = var.datadog_api_key
-        hostname  = "healthcare-cluster"
+        appKey    = var.datadog_app_key != "" ? var.datadog_app_key : null
+        hostname  = "healthcare-cluster-${var.environment}"
         site      = "datadoghq.com"
+        env       = var.environment
+        service   = "healthcare-app"
+        version   = var.app_version
+
+        # Enhanced APM configuration
         apm = {
           enabled = true
+          port    = 8126
+          env     = var.environment
+          service = "healthcare-backend"
+          additionalEndpoints = [
+            {
+              host = "datadog-agent.datadog.svc.cluster.local"
+              port = 8126
+            }
+          ]
         }
+
+        # Enhanced logging configuration
         logs = {
           enabled = true
           containerCollectAll = true
+          containerCollectUsingFiles = true
+          autoMultiLineDetection = true
         }
-      }
-      agents = {
-        containerLogs = {
+
+        # System probe for network monitoring
+        systemProbe = {
           enabled = true
+          enableTCPQueueLength = true
+          enableOOMKill = true
+          collectDNSStats = true
         }
+
+        # Security monitoring
+        securityAgent = {
+          compliance = {
+            enabled = true
+          }
+          runtime = {
+            enabled = true
+          }
+        }
+
+        # Process monitoring
+        processAgent = {
+          enabled = true
+          processCollection = true
+        }
+
+        # Enhanced metrics collection
+        dogstatsd = {
+          useHostPort = true
+          useSocketVolume = true
+        }
+
+        # Tags for better organization
+        tags = [
+          "env:${var.environment}",
+          "service:healthcare-app",
+          "version:${var.app_version}",
+          "team:platform",
+          "component:monitoring"
+        ]
       }
+
+      # Cluster Agent configuration
       clusterAgent = {
         enabled = true
         metricsProvider = {
           enabled = true
         }
+        admissionController = {
+          enabled = true
+        }
+        clusterChecks = {
+          enabled = true
+        }
       }
+
+      # Node Agent configuration
+      agents = {
+        useHostNetwork = true
+        useHostPID     = true
+        useHostPort    = false
+
+        containers = {
+          agent = {
+            env = [
+              {
+                name  = "DD_PROCESS_AGENT_ENABLED"
+                value = "true"
+              },
+              {
+                name  = "DD_SYSTEM_PROBE_ENABLED"
+                value = "true"
+              },
+              {
+                name  = "DD_RUNTIME_SECURITY_CONFIG_ENABLED"
+                value = "true"
+              }
+            ]
+          }
+        }
+
+        # Volume mounts for enhanced monitoring
+        volumeMounts = [
+          {
+            name       = "hostroot"
+            mountPath  = "/host/root"
+            readOnly   = true
+          },
+          {
+            name       = "proc"
+            mountPath  = "/host/proc"
+            readOnly   = true
+          },
+          {
+            name       = "sys"
+            mountPath  = "/host/sys"
+            readOnly   = true
+          }
+        ]
+
+        volumes = [
+          {
+            name = "hostroot"
+            hostPath = {
+              path = "/"
+            }
+          },
+          {
+            name = "proc"
+            hostPath = {
+              path = "/proc"
+            }
+          },
+          {
+            name = "sys"
+            hostPath = {
+              path = "/sys"
+            }
+          }
+        ]
+      }
+
+      # Disable cluster checks runner to reduce complexity
       clusterChecksRunner = {
-        enabled = false  # Disable to reduce complexity
+        enabled = false
       }
+
+      # Disable kube-state-metrics as we have our own
       kubeStateMetricsCore = {
-        enabled = true
+        enabled = false
       }
     })
   ]

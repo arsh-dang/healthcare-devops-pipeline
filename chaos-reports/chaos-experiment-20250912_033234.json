@@ -1,0 +1,22 @@
+{
+  "experiment": {
+    "timestamp": "2025-09-12T03:32:34+10:00",
+    "namespace": "healthcare-staging",
+    "duration": 300,
+    "chaos_level": "moderate",
+    "configuration": {
+      "pod_kill_probability": 20,
+      "network_delay_probability": 10,
+      "resource_stress_probability": 10
+    }
+  },
+  "events": [],
+  "metrics": {
+    "pod_kills": 0,
+    "network_delays": 0,
+    "resource_stresses": 0,
+    "system_recoveries": 0,
+    "total_disruptions": 0
+  },
+  "observations": []
+}

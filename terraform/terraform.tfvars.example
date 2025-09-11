@@ -27,24 +27,20 @@ replica_count = {
   backend = 5
 }
 
-# Production resource limits
-resource_limits = {
-  frontend = {
-    cpu_request = "200m"
-    memory_request = "256Mi"
-    cpu_limit = "1000m"
-    memory_limit = "1Gi"
-  }
-  backend = {
-    cpu_request = "500m"
-    memory_request = "512Mi"
-    cpu_limit = "2000m"
-    memory_limit = "2Gi"
-  }
-  mongodb = {
-    cpu_request = "1000m"
-    memory_request = "2Gi"
-    cpu_limit = "4000m"
-    memory_limit = "8Gi"
-  }
-}
+# SMTP Email Configuration (REQUIRED for alerts)
+smtp_server = "smtp.gmail.com"
+smtp_port = "587"
+smtp_username = "your-email@gmail.com"  # Replace with your Gmail
+smtp_password = "your-app-password"     # Generate app password in Gmail settings
+smtp_from_email = "alerts@healthcare.company.com"
+
+# Alert Email Recipients
+alert_email_critical = "critical-alerts@healthcare.company.com"
+alert_email_warning = "alerts@healthcare.company.com"
+alert_email_team = "team@healthcare.company.com"
+
+# Slack Configuration (OPTIONAL - leave as default if not using Slack)
+slack_webhook_critical = "https://hooks.slack.com/services/YOUR/CRITICAL/WEBHOOK"
+slack_webhook_warning = "https://hooks.slack.com/services/YOUR/WARNING/WEBHOOK"
+slack_channel_critical = "#healthcare-critical"
+slack_channel_warning = "#healthcare-alerts"
