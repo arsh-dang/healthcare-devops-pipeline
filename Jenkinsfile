@@ -2858,6 +2858,31 @@ node {
                                 else
                                     echo "kubectl not available - starting applications locally for green environment"
                                     
+                                    # Start MongoDB locally first
+                                    echo "Starting MongoDB locally..."
+                                    if command -v mongod >/dev/null 2>&1; then
+                                        echo "MongoDB daemon found, starting MongoDB..."
+                                        mkdir -p mongodb-data
+                                        nohup mongod --dbpath ./mongodb-data --port 27017 --logpath mongodb-green.log > /dev/null 2>&1 &
+                                        MONGODB_PID=$!
+                                        echo "MongoDB started with PID: $MONGODB_PID"
+                                        
+                                        # Give MongoDB time to start
+                                        sleep 5
+                                        
+                                        # Check if MongoDB is running
+                                        if pgrep -f mongod > /dev/null; then
+                                            echo "MongoDB is running successfully"
+                                            echo "$MONGODB_PID" > green-mongodb.pid
+                                            echo "MongoDB PID file created: $(cat green-mongodb.pid)"
+                                        else
+                                            echo "WARNING: MongoDB failed to start, but continuing with backend startup..."
+                                            echo "Backend will attempt to connect to external MongoDB or handle connection gracefully"
+                                        fi
+                                    else
+                                        echo "MongoDB daemon not found, backend will attempt to connect to external MongoDB instance"
+                                    fi
+                                    
                                     # Start backend server in background
                                     echo "Starting backend server on port 5001..."
                                     echo "Current directory: $(pwd)"
@@ -2871,6 +2896,9 @@ node {
                                     # Set environment variables explicitly
                                     export PORT=5001
                                     export NODE_ENV=production
+                                    export MONGODB_HOST=localhost
+                                    export MONGODB_PORT=27017
+                                    export MONGODB_DATABASE=healthcare-app
                                     echo "Environment variables set: PORT=$PORT, NODE_ENV=$NODE_ENV"
                                     
                                     # Start the backend using npm script
@@ -2880,7 +2908,7 @@ node {
                                     echo "Backend process started with PID: $BACKEND_PID"
                                     
                                     # Give it a moment to start
-                                    sleep 3
+                                    sleep 5
                                     
                                     # Check if process is still running
                                     if ps -p $BACKEND_PID > /dev/null 2>&1; then
@@ -3031,10 +3059,27 @@ node {
                                     if [ -f "backend-green.log" ]; then
                                         echo "Backend log exists, showing last 20 lines:"
                                         tail -20 backend-green.log
+                                        echo "Checking if backend is actually running on port 5001..."
+                                        if curl -s --max-time 3 http://localhost:5001/health >/dev/null 2>&1; then
+                                            echo "Backend is responding on port 5001 despite missing PID file"
+                                            echo "Creating PID file for running process..."
+                                            # Try to find the process and create PID file
+                                            BACKEND_PID=$(ps aux | grep "node server/server.js" | grep -v grep | awk '{print $2}' | head -1)
+                                            if [ -n "$BACKEND_PID" ]; then
+                                                echo "$BACKEND_PID" > green-backend.pid
+                                                echo "Backend PID file created: $(cat green-backend.pid)"
+                                            else
+                                                echo "Could not find backend process PID"
+                                                exit 1
+                                            fi
+                                        else
+                                            echo "Backend is not responding on port 5001"
+                                            exit 1
+                                        fi
                                     else
                                         echo "No backend log file found"
+                                        exit 1
                                     fi
-                                    exit 1
                                 fi
                                 
                                 if [ -f "green-frontend.pid" ]; then
@@ -3058,10 +3103,27 @@ node {
                                     if [ -f "frontend-green.log" ]; then
                                         echo "Frontend log exists, showing last 20 lines:"
                                         tail -20 frontend-green.log
+                                        echo "Checking if frontend is actually running on port 3001..."
+                                        if curl -s --max-time 3 http://localhost:3001 >/dev/null 2>&1; then
+                                            echo "Frontend is responding on port 3001 despite missing PID file"
+                                            echo "Creating PID file for running process..."
+                                            # Try to find the process and create PID file
+                                            FRONTEND_PID=$(ps aux | grep "serve -s build -l 3001" | grep -v grep | awk '{print $2}' | head -1)
+                                            if [ -n "$FRONTEND_PID" ]; then
+                                                echo "$FRONTEND_PID" > green-frontend.pid
+                                                echo "Frontend PID file created: $(cat green-frontend.pid)"
+                                            else
+                                                echo "Could not find frontend process PID"
+                                                exit 1
+                                            fi
+                                        else
+                                            echo "Frontend is not responding on port 3001"
+                                            exit 1
+                                        fi
                                     else
                                         echo "No frontend log file found"
+                                        exit 1
                                     fi
-                                    exit 1
                                 fi
                                 
                                 echo "Applications are running - proceeding with health checks..."
@@ -3347,6 +3409,13 @@ node {
         
         // Clean up green environment processes
         sh '''
+            if [ -f "green-mongodb.pid" ]; then
+                MONGODB_PID=$(cat green-mongodb.pid)
+                echo "Stopping green MongoDB process (PID: $MONGODB_PID)..."
+                kill $MONGODB_PID 2>/dev/null || echo "MongoDB process already stopped"
+                rm -f green-mongodb.pid
+            fi
+            
             if [ -f "green-backend.pid" ]; then
                 BACKEND_PID=$(cat green-backend.pid)
                 echo "Stopping green backend process (PID: $BACKEND_PID)..."
@@ -3359,6 +3428,12 @@ node {
                 echo "Stopping green frontend process (PID: $FRONTEND_PID)..."
                 kill $FRONTEND_PID 2>/dev/null || echo "Frontend process already stopped"
                 rm -f green-frontend.pid
+            fi
+            
+            # Clean up MongoDB data directory
+            if [ -d "mongodb-data" ]; then
+                echo "Cleaning up MongoDB data directory..."
+                rm -rf mongodb-data
             fi
             
             echo "Green environment cleanup completed"
