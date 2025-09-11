@@ -2717,239 +2717,281 @@ node {
                             fi
                         '''
                         
-                        parallel(
-                            'Deploy to Green Environment': {
-                                echo 'Deploying new version to green environment'
-                                sh '''
-                                    cd ${WORKSPACE}
+                        // First, deploy to green environment
+                        stage('Deploy to Green Environment') {
+                            echo 'Deploying new version to green environment'
+                            sh '''
+                                cd ${WORKSPACE}
+                                
+                                # Send green deployment start metric
+                                if [ -n "$DATADOG_API_KEY" ]; then
+                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        -H "Content-Type: application/json" \\
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                        -d "{
+                                            \\"series\\": [{
+                                                \\"metric\\": \\"jenkins.bluegreen.green.deploy.start\\",
+                                                \\"points\\": [[$(date +%s), 1]],
+                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                            }]
+                                        }" || echo "Failed to send Datadog metric"
+                                fi
+                                
+                                echo "Deploying to green environment..."
+                                
+                                if command -v kubectl >/dev/null 2>&1; then
+                                    # Deploy to green environment
+                                    echo "Creating green deployment"
                                     
-                                    # Send green deployment start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.green.deploy.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
-                                    fi
+                                    # In production, you would deploy to a separate green environment/cluster
+                                    kubectl set image deployment/healthcare-app-green healthcare-app=healthcare-app:${BUILD_NUMBER} --record || echo "Green deployment simulation"
                                     
-                                    echo "Deploying to green environment..."
+                                    GREEN_DEPLOY_STATUS="success"
+                                    echo "Green environment deployment completed successfully"
+                                else
+                                    echo "kubectl not available - starting applications locally for green environment"
                                     
-                                    if command -v kubectl >/dev/null 2>&1; then
-                                        # Deploy to green environment
-                                        echo "Creating green deployment"
-                                        
-                                        # In production, you would deploy to a separate green environment/cluster
-                                        kubectl set image deployment/healthcare-app-green healthcare-app=healthcare-app:${BUILD_NUMBER} --record || echo "Green deployment simulation"
-                                        
-                                        GREEN_DEPLOY_STATUS="success"
-                                        echo "Green environment deployment completed successfully"
+                                    # Start backend server in background
+                                    echo "Starting backend server on port 5001..."
+                                    cd server
+                                    nohup node server.js > ../backend-green.log 2>&1 &
+                                    BACKEND_PID=$!
+                                    echo "Backend started with PID: $BACKEND_PID"
+                                    cd ..
+                                    
+                                    # Start frontend using serve for production build
+                                    echo "Starting frontend on port 3001 using production build..."
+                                    if command -v npx >/dev/null 2>&1; then
+                                        nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend started with PID: $FRONTEND_PID"
                                     else
-                                        echo "kubectl not available - starting applications locally for green environment"
-                                        
-                                        # Start backend server in background
-                                        echo "Starting backend server on port 5001..."
-                                        cd server
-                                        nohup node server.js > ../backend-green.log 2>&1 &
-                                        BACKEND_PID=$!
-                                        echo "Backend started with PID: $BACKEND_PID"
+                                        echo "npx not available, trying python http server..."
+                                        cd build
+                                        nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 &
+                                        FRONTEND_PID=$!
+                                        echo "Frontend started with PID: $FRONTEND_PID"
                                         cd ..
-                                        
-                                        # Start frontend using serve for production build
-                                        echo "Starting frontend on port 3001 using production build..."
-                                        if command -v npx >/dev/null 2>&1; then
-                                            nohup npx serve -s build -l 3001 > frontend-green.log 2>&1 &
-                                            FRONTEND_PID=$!
-                                            echo "Frontend started with PID: $FRONTEND_PID"
-                                        else
-                                            echo "npx not available, trying python http server..."
-                                            cd build
-                                            nohup python3 -m http.server 3001 > ../frontend-green.log 2>&1 &
-                                            FRONTEND_PID=$!
-                                            echo "Frontend started with PID: $FRONTEND_PID"
-                                            cd ..
-                                        fi
-                                        
-                                        # Wait longer for applications to fully start
-                                        echo "Waiting for applications to fully start..."
-                                        sleep 15
-                                        
-                                        # Store PIDs for cleanup
-                                        echo "$BACKEND_PID" > green-backend.pid
-                                        echo "$FRONTEND_PID" > green-frontend.pid
-                                        
-                                        GREEN_DEPLOY_STATUS="success"
-                                        echo "Green environment applications started successfully"
                                     fi
                                     
-                                    # Send green deployment metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.green.deploy.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$GREEN_DEPLOY_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metrics"
-                                    fi
-                                '''
-                            },
-                            'Health Check Green Environment': {
-                                echo 'Running comprehensive health checks on green environment'
-                                sh '''
-                                    cd ${WORKSPACE}
+                                    # Wait longer for applications to fully start
+                                    echo "Waiting for applications to fully start..."
+                                    sleep 20
                                     
-                                    # Send green health check start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.bluegreen.green.health.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
-                                    fi
-                                    
-                                    echo "Running health checks on green environment..."
-                                    
-                                    # Use real health check script if available, otherwise fallback to simulation
-                                    if [ -f "scripts/health-check.sh" ]; then
-                                        echo "Using real health check script..."
-                                        chmod +x scripts/health-check.sh
-                                        
-                                        # Ensure script has execute permissions
-                                        if [ ! -x "scripts/health-check.sh" ]; then
-                                            echo "Setting execute permissions on health check script..."
-                                            chmod 755 scripts/health-check.sh
-                                        fi
-                                        
-                                        # Set environment variables for the health check
-                                        export APP_URL="http://localhost:3001"
-                                        export API_URL="http://localhost:5001"
-                                        
-                                        # Add a small delay to ensure applications are fully ready
-                                        echo "Waiting 5 seconds for applications to be fully ready..."
-                                        sleep 5
-                                        
-                                        if ./scripts/health-check.sh; then
-                                            GREEN_HEALTH_STATUS="healthy"
-                                            echo "Green environment health checks passed"
-                                        else
-                                            GREEN_HEALTH_STATUS="unhealthy"
-                                            echo "Green environment health checks failed"
-                                            exit 1
-                                        fi
+                                    # Verify applications are running
+                                    echo "Verifying applications are running..."
+                                    if ps -p $BACKEND_PID > /dev/null 2>&1; then
+                                        echo "Backend process is running (PID: $BACKEND_PID)"
                                     else
-                                        echo "Health check script not found, using simulation..."
-                                        
-                                        # Simulate comprehensive health checks
-                                        HEALTH_CHECKS_PASSED=0
-                                        HEALTH_CHECKS_FAILED=0
-                                        
-                                        # Application health check
-                                        echo "Checking application health..."
-                                        if [ $((RANDOM % 10)) -gt 7 ]; then
-                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "[FAIL] Application health check failed"
-                                        else
-                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "[PASS] Application health check passed"
-                                        fi
-                                        
-                                        # Database connectivity check
-                                        echo "Checking database connectivity..."
-                                        if [ $((RANDOM % 10)) -gt 7 ]; then
-                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "[FAIL] Database connectivity check failed"
-                                        else
-                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "[PASS] Database connectivity check passed"
-                                        fi
-                                        
-                                        # API endpoints check
-                                        echo "Checking API endpoints..."
-                                        if [ $((RANDOM % 10)) -gt 7 ]; then
-                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "[FAIL] API endpoints check failed"
-                                        else
-                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "[PASS] API endpoints check passed"
-                                        fi
-                                        
-                                        # Performance check
-                                        echo "Checking performance metrics..."
-                                        if [ $((RANDOM % 10)) -gt 7 ]; then
-                                            HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
-                                            echo "[FAIL] Performance check failed"
-                                        else
-                                            HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
-                                            echo "[PASS] Performance check passed"
-                                        fi
-                                        
-                                        # Calculate success rate
-                                        TOTAL_CHECKS=$((HEALTH_CHECKS_PASSED + HEALTH_CHECKS_FAILED))
-                                        SUCCESS_RATE=$((HEALTH_CHECKS_PASSED * 100 / TOTAL_CHECKS))
-                                        
-                                        echo "Green environment health check results:"
-                                        echo "Total checks: $TOTAL_CHECKS"
-                                        echo "Passed: $HEALTH_CHECKS_PASSED"
-                                        echo "Failed: $HEALTH_CHECKS_FAILED"
-                                        echo "Success rate: $SUCCESS_RATE%"
-                                        
-                                        # Determine if green environment is healthy
-                                        if [ $SUCCESS_RATE -ge 90 ]; then
-                                            GREEN_HEALTH_STATUS="healthy"
-                                            echo "Green environment is healthy and ready for traffic"
-                                        else
-                                            GREEN_HEALTH_STATUS="unhealthy"
-                                            echo "Green environment is unhealthy - deployment failed"
-                                            exit 1
-                                        fi
+                                        echo "ERROR: Backend process failed to start"
+                                        exit 1
                                     fi
                                     
-                                    # Send green health metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.bluegreen.green.health.passed\\",
-                                                        \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.bluegreen.green.health.failed\\",
-                                                        \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.bluegreen.green.health.success_rate\\",
-                                                        \\"points\\": [[$(date +%s), $SUCCESS_RATE]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.bluegreen.green.health.status\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$GREEN_HEALTH_STATUS\\" = \\"healthy\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                    if ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                        echo "Frontend process is running (PID: $FRONTEND_PID)"
+                                    else
+                                        echo "ERROR: Frontend process failed to start"
+                                        exit 1
                                     fi
-                                '''
-                            }
-                        )
+                                    
+                                    # Store PIDs for cleanup
+                                    echo "$BACKEND_PID" > green-backend.pid
+                                    echo "$FRONTEND_PID" > green-frontend.pid
+                                    
+                                    GREEN_DEPLOY_STATUS="success"
+                                    echo "Green environment applications started successfully"
+                                fi
+                                
+                                # Send green deployment metrics
+                                if [ -n "$DATADOG_API_KEY" ]; then
+                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        -H "Content-Type: application/json" \\
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                        -d "{
+                                            \\"series\\": [{
+                                                \\"metric\\": \\"jenkins.bluegreen.green.deploy.result\\",
+                                                \\"points\\": [[$(date +%s), \$([ \\"$GREEN_DEPLOY_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
+                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                            }]
+                                        }" || echo "Failed to send Datadog metrics"
+                                fi
+                            '''
+                        }
+                        
+                        // Then, run health check after deployment is complete
+                        stage('Health Check Green Environment') {
+                            echo 'Running comprehensive health checks on green environment'
+                            sh '''
+                                cd ${WORKSPACE}
+                                
+                                # Send green health check start metric
+                                if [ -n "$DATADOG_API_KEY" ]; then
+                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        -H "Content-Type: application/json" \\
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                        -d "{
+                                            \\"series\\": [{
+                                                \\"metric\\": \\"jenkins.bluegreen.green.health.start\\",
+                                                \\"points\\": [[$(date +%s), 1]],
+                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                            }]
+                                        }" || echo "Failed to send Datadog metric"
+                                fi
+                                
+                                echo "Running health checks on green environment..."
+                                
+                                # Check if applications are still running
+                                if [ -f "green-backend.pid" ]; then
+                                    BACKEND_PID=$(cat green-backend.pid)
+                                    if ! ps -p $BACKEND_PID > /dev/null 2>&1; then
+                                        echo "ERROR: Backend process is not running"
+                                        exit 1
+                                    fi
+                                else
+                                    echo "ERROR: Backend PID file not found"
+                                    exit 1
+                                fi
+                                
+                                if [ -f "green-frontend.pid" ]; then
+                                    FRONTEND_PID=$(cat green-frontend.pid)
+                                    if ! ps -p $FRONTEND_PID > /dev/null 2>&1; then
+                                        echo "ERROR: Frontend process is not running"
+                                        exit 1
+                                    fi
+                                else
+                                    echo "ERROR: Frontend PID file not found"
+                                    exit 1
+                                fi
+                                
+                                echo "Applications are running - proceeding with health checks..."
+                                
+                                # Use real health check script if available, otherwise fallback to simulation
+                                if [ -f "scripts/health-check.sh" ]; then
+                                    echo "Using real health check script..."
+                                    chmod +x scripts/health-check.sh
+                                    
+                                    # Ensure script has execute permissions
+                                    if [ ! -x "scripts/health-check.sh" ]; then
+                                        echo "Setting execute permissions on health check script..."
+                                        chmod 755 scripts/health-check.sh
+                                    fi
+                                    
+                                    # Set environment variables for the health check
+                                    export APP_URL="http://localhost:3001"
+                                    export API_URL="http://localhost:5001"
+                                    
+                                    # Add a small delay to ensure applications are fully ready
+                                    echo "Waiting 3 seconds for applications to be fully ready..."
+                                    sleep 3
+                                    
+                                    if ./scripts/health-check.sh; then
+                                        GREEN_HEALTH_STATUS="healthy"
+                                        echo "Green environment health checks passed"
+                                    else
+                                        GREEN_HEALTH_STATUS="unhealthy"
+                                        echo "Green environment health checks failed"
+                                        exit 1
+                                    fi
+                                else
+                                    echo "Health check script not found, using simulation..."
+                                    
+                                    # Simulate comprehensive health checks
+                                    HEALTH_CHECKS_PASSED=0
+                                    HEALTH_CHECKS_FAILED=0
+                                    
+                                    # Application health check
+                                    echo "Checking application health..."
+                                    if [ $((RANDOM % 10)) -gt 7 ]; then
+                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                        echo "[FAIL] Application health check failed"
+                                    else
+                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                        echo "[PASS] Application health check passed"
+                                    fi
+                                    
+                                    # Database connectivity check
+                                    echo "Checking database connectivity..."
+                                    if [ $((RANDOM % 10)) -gt 7 ]; then
+                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                        echo "[FAIL] Database connectivity check failed"
+                                    else
+                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                        echo "[PASS] Database connectivity check passed"
+                                    fi
+                                    
+                                    # API endpoints check
+                                    echo "Checking API endpoints..."
+                                    if [ $((RANDOM % 10)) -gt 7 ]; then
+                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                        echo "[FAIL] API endpoints check failed"
+                                    else
+                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                        echo "[PASS] API endpoints check passed"
+                                    fi
+                                    
+                                    # Performance check
+                                    echo "Checking performance metrics..."
+                                    if [ $((RANDOM % 10)) -gt 7 ]; then
+                                        HEALTH_CHECKS_FAILED=$((HEALTH_CHECKS_FAILED + 1))
+                                        echo "[FAIL] Performance check failed"
+                                    else
+                                        HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
+                                        echo "[PASS] Performance check passed"
+                                    fi
+                                    
+                                    # Calculate success rate
+                                    TOTAL_CHECKS=$((HEALTH_CHECKS_PASSED + HEALTH_CHECKS_FAILED))
+                                    SUCCESS_RATE=$((HEALTH_CHECKS_PASSED * 100 / TOTAL_CHECKS))
+                                    
+                                    echo "Green environment health check results:"
+                                    echo "Total checks: $TOTAL_CHECKS"
+                                    echo "Passed: $HEALTH_CHECKS_PASSED"
+                                    echo "Failed: $HEALTH_CHECKS_FAILED"
+                                    echo "Success rate: $SUCCESS_RATE%"
+                                    
+                                    # Determine if green environment is healthy
+                                    if [ $SUCCESS_RATE -ge 90 ]; then
+                                        GREEN_HEALTH_STATUS="healthy"
+                                        echo "Green environment is healthy and ready for traffic"
+                                    else
+                                        GREEN_HEALTH_STATUS="unhealthy"
+                                        echo "Green environment is unhealthy - deployment failed"
+                                        exit 1
+                                    fi
+                                fi
+                                
+                                # Send green health metrics
+                                if [ -n "$DATADOG_API_KEY" ]; then
+                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        -H "Content-Type: application/json" \\
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                        -d "{
+                                            \\"series\\": [
+                                                {
+                                                    \\"metric\\": \\"jenkins.bluegreen.green.health.passed\\",
+                                                    \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                                },
+                                                {
+                                                    \\"metric\\": \\"jenkins.bluegreen.green.health.failed\\",
+                                                    \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                                },
+                                                {
+                                                    \\"metric\\": \\"jenkins.bluegreen.green.health.success_rate\\",
+                                                    \\"points\\": [[$(date +%s), $SUCCESS_RATE]],
+                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                                },
+                                                {
+                                                    \\"metric\\": \\"jenkins.bluegreen.green.health.status\\",
+                                                    \\"points\\": [[$(date +%s), \$([ \\"$GREEN_HEALTH_STATUS\\" = \\"healthy\\" ] && echo 1 || echo 0)]],
+                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
+                                                }
+                                            ]
+                                        }" || echo "Failed to send Datadog metrics"
+                                fi
+                            '''
+                        }
                         
                         def blueGreenDuration = System.currentTimeMillis() - blueGreenStartTime
                         
