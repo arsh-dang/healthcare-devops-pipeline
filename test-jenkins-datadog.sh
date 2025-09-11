@@ -9,12 +9,12 @@ echo "=== Testing Jenkins Datadog Integration ==="
 
 # Check if DATADOG_API_KEY is set
 if [[ -z "$DATADOG_API_KEY" ]]; then
-    echo "❌ DATADOG_API_KEY environment variable is not set"
+    echo "DATADOG_API_KEY environment variable is not set"
     echo "Please set it with: export DATADOG_API_KEY='your-api-key'"
     exit 1
 fi
 
-echo "✅ DATADOG_API_KEY is set"
+echo "DATADOG_API_KEY is set"
 
 # Test deployment script with Datadog enabled
 echo "=== Testing Deployment Script ==="
@@ -33,7 +33,7 @@ echo "=== Validating Terraform Configuration ==="
 terraform init -upgrade
 terraform validate
 
-echo "✅ Terraform validation passed"
+echo "Terraform validation passed"
 
 # Check if Datadog variables are properly configured
 echo "=== Checking Datadog Configuration ==="
@@ -48,7 +48,7 @@ terraform plan \
     -out=tfplan 2>/dev/null || true
 
 if [[ -f "tfplan" ]]; then
-    echo "✅ Terraform plan created successfully with Datadog"
+    echo "Terraform plan created successfully with Datadog"
     rm -f tfplan
 else
     echo "❌ Failed to create Terraform plan"

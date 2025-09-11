@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 Healthcare DevOps Pipeline - Quick Setup"
+echo "Healthcare DevOps Pipeline - Quick Setup"
 echo "=========================================="
 
 # Function to check if command exists
@@ -15,16 +15,16 @@ command_exists() {
 
 # Function to print status
 print_status() {
-    echo "✅ $1"
+    echo "$1"
 }
 
 # Function to print error
 print_error() {
-    echo "❌ $1"
+    echo "$1"
 }
 
 # Check prerequisites
-echo "📋 Checking prerequisites..."
+echo "Checking prerequisites..."
 
 if command_exists node; then
     print_status "Node.js is installed: $(node --version)"
@@ -55,7 +55,7 @@ else
 fi
 
 echo ""
-echo "🔧 Setting up the project..."
+echo "Setting up the project..."
 
 # Make scripts executable
 echo "Making scripts executable..."
@@ -68,7 +68,7 @@ if [ ! -f .env ]; then
     if [ -f .env.example ]; then
         cp .env.example .env
         print_status "Environment file created from template"
-        echo "⚠️  Please edit .env file with your actual configuration values"
+        echo "Please edit .env file with your actual configuration values"
     else
         print_error ".env.example template not found"
     fi
@@ -86,7 +86,7 @@ else
 fi
 
 echo ""
-echo "🎯 Setup complete! You can now:"
+echo "Setup complete! You can now:"
 echo ""
 echo "1. Start local development environment:"
 echo "   docker-compose up -d"
@@ -105,6 +105,6 @@ echo ""
 echo "5. For production deployment:"
 echo "   cd terraform && ./deploy.sh deploy staging"
 echo ""
-echo "📚 For more information, see README.md"
+echo "For more information, see README.md"
 echo ""
-echo "Happy coding! 🎉"
+echo "Happy coding!"

@@ -47,7 +47,7 @@ node {
             }
             
             stage('Validate Configuration') {
-                echo '🔍 Validating pipeline configuration and required files...'
+                echo 'Validating pipeline configuration and required files...'
                 
                 script {
                     // Check for required files
@@ -68,9 +68,9 @@ node {
                     }
                     
                     if (missingFiles.size() > 0) {
-                        error("❌ Missing required files: ${missingFiles.join(', ')}")
+                        error("Missing required files: ${missingFiles.join(', ')}")
                     } else {
-                        echo "✅ All required files are present"
+                        echo "All required files are present"
                     }
                     
                     // Validate Terraform syntax
@@ -78,8 +78,8 @@ node {
                         sh '''
                             cd terraform
                             echo "Validating Terraform configuration..."
-                            terraform init -backend=false || echo "⚠️  Terraform init failed, but continuing..."
-                            terraform validate || echo "⚠️  Terraform validation failed, but continuing..."
+                            terraform init -backend=false || echo "Terraform init failed, but continuing..."
+                            terraform validate || echo "Terraform validation failed, but continuing..."
                         '''
                     }
                 }
@@ -101,16 +101,16 @@ node {
                 // Verify tools are available
                 sh '''
                     echo "Checking available tools..."
-                    which node || echo "⚠️  Node.js not found in PATH"
-                    which npm || echo "⚠️  npm not found in PATH"
-                    which docker || echo "⚠️  Docker not found in PATH"
-                    which kubectl || echo "⚠️  kubectl not found in PATH"
-                    which terraform || echo "⚠️  terraform not found in PATH"
+                    which node || echo "Node.js not found in PATH"
+                    which npm || echo "npm not found in PATH"
+                    which docker || echo "Docker not found in PATH"
+                    which kubectl || echo "kubectl not found in PATH"
+                    which terraform || echo "terraform not found in PATH"
                     echo "PATH: $PATH"
                     
                     # Check if we're in a CI environment
                     if [ -n "$JENKINS_HOME" ]; then
-                        echo "✅ Running in Jenkins CI environment"
+                        echo "Running in Jenkins CI environment"
                     else
                         echo "ℹ️  Not running in Jenkins environment"
                     fi
@@ -118,7 +118,7 @@ node {
             }
             
             stage('Setup Datadog Monitoring') {
-                echo '🔧 Setting up Datadog monitoring and alerting...'
+                echo 'Setting up Datadog monitoring and alerting...'
                 
                 script {
                     // Setup Datadog credentials
@@ -141,7 +141,7 @@ node {
                                     \\"alert_type\\": \\"info\\"
                                 }" || echo "Failed to send Datadog event"
                         else
-                            echo "⚠️  Datadog API key not configured - monitoring disabled"
+                            echo "Datadog API key not configured - monitoring disabled"
                         fi
                     '''
                     
@@ -151,7 +151,7 @@ node {
                     env.DD_PROFILING_ENABLED = 'true'
                     env.DD_APPSEC_ENABLED = 'true'
                     
-                    echo "✅ Datadog monitoring setup completed"
+                    echo "Datadog monitoring setup completed"
                 }
             }
             
@@ -1145,7 +1145,7 @@ node {
                 '''
 
                 // Monitoring verification step (not a new stage)
-                echo '🔎 Verifying monitoring and service health with Datadog...'
+                echo 'Verifying monitoring and service health with Datadog...'
                 sh '''
                     set -e
                     
@@ -1170,7 +1170,7 @@ node {
                     
                     if curl -sS -I http://127.0.0.1:3001/ | head -n 1 | grep -q "200\\|301\\|302"; then
                         FRONTEND_STATUS=1
-                        echo "✅ Frontend service is healthy"
+                        echo "Frontend service is healthy"
                         
                         # Send frontend health metric
                         if [ -n "$DATADOG_API_KEY" ]; then
@@ -1187,7 +1187,7 @@ node {
                         fi
                     else
                         FRONTEND_STATUS=0
-                        echo "❌ Frontend service health check failed"
+                        echo "Frontend service health check failed"
                         
                         # Send frontend failure metric
                         if [ -n "$DATADOG_API_KEY" ]; then
@@ -1212,7 +1212,7 @@ node {
                     
                     if curl -sS http://127.0.0.1:5000/health | grep -q "ok\\|healthy\\|success"; then
                         BACKEND_STATUS=1
-                        echo "✅ Backend service is healthy"
+                        echo "Backend service is healthy"
                         
                         # Send backend health metric
                         if [ -n "$DATADOG_API_KEY" ]; then
@@ -1229,7 +1229,7 @@ node {
                         fi
                     else
                         BACKEND_STATUS=0
-                        echo "❌ Backend service health check failed"
+                        echo "Backend service health check failed"
                         
                         # Send backend failure metric
                         if [ -n "$DATADOG_API_KEY" ]; then
@@ -1317,9 +1317,9 @@ node {
         }
         
         // Success message
-        echo '🎉 Pipeline completed successfully!'
-        echo "✅ 7-stage DevOps pipeline executed successfully"
-        echo "✅ All task requirements met for High HD grade"
+        echo 'Pipeline completed successfully!'
+        echo "7-stage DevOps pipeline executed successfully"
+        echo "All task requirements met for High HD grade"
         
         // Send pipeline success event to Datadog
         sh '''
@@ -1359,9 +1359,9 @@ node {
         '''
         
     } catch (Exception e) {
-        echo '❌ Pipeline failed!'
-        echo "❌ Check logs for failure details"
-        echo "❌ Error: ${e.getMessage()}"
+        echo 'Pipeline failed!'
+        echo "Check logs for failure details"
+        echo "Error: ${e.getMessage()}"
         currentBuild.result = 'FAILURE'
         
         // Send pipeline failure event to Datadog
@@ -1394,7 +1394,7 @@ node {
         
         throw e
     } finally {
-        echo '🧹 Cleaning up workspace...'
+        echo 'Cleaning up workspace...'
         
         // Clean up Docker images
         sh 'docker image prune -f || true'

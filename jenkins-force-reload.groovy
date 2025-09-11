@@ -8,9 +8,9 @@ Jenkins.instance.getAllItems().each { item ->
         try {
             item.setDefinition(null)
             item.save()
-            println "✅ Successfully cleared cache for: ${item.name}"
+            println "Successfully cleared cache for: ${item.name}"
         } catch (Exception e) {
-            println "❌ Failed to clear cache for ${item.name}: ${e.message}"
+            println "Failed to clear cache for ${item.name}: ${e.message}"
         }
     }
 }
@@ -23,15 +23,15 @@ if (job && job instanceof org.jenkinsci.plugins.workflow.job.WorkflowJob) {
     try {
         job.setDefinition(null)
         job.save()
-        println "✅ Successfully forced reload for: ${jobName}"
+        println "Successfully forced reload for: ${jobName}"
     } catch (Exception e) {
-        println "❌ Failed to reload ${jobName}: ${e.message}"
+        println "Failed to reload ${jobName}: ${e.message}"
     }
 } else {
-    println "❌ Job '${jobName}' not found or not a pipeline job"
+    println "Job '${jobName}' not found or not a pipeline job"
 }
 
-println "\\n🎉 Cache clearing completed!"
+println "\\nCache clearing completed!"
 println "Now reconfigure your pipeline job:"
 println "1. Go to job → Configure"
 println "2. Under Pipeline section:"
