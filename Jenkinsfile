@@ -10,13 +10,12 @@ properties([
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
         booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
         booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: false, description: 'Deploy to Kubernetes'),
-        // Slack parameters
-        string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications'),
-        string(name: 'SLACK_WEBHOOK_URL_FAILURE', defaultValue: '', description: 'Slack webhook URL for failure notifications'),
-        string(name: 'SLACK_CHANNEL', defaultValue: '#jenkins-notifications', description: 'Slack channel for notifications'),
+        // Slack parameters (webhooks include channel info)
+        string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications (optional - will use credentials if empty)'),
+        string(name: 'SLACK_WEBHOOK_URL_FAILURE', defaultValue: '', description: 'Slack webhook URL for failure notifications (optional - will use credentials if empty)'),
         // SMTP parameters
-        string(name: 'SMTP_USERNAME', defaultValue: '', description: 'SMTP username for email notifications'),
-        password(name: 'SMTP_PASSWORD', defaultValue: '', description: 'SMTP password for email notifications'),
+        string(name: 'SMTP_USERNAME', defaultValue: '', description: 'SMTP username for email notifications (optional - will use credentials if empty)'),
+        password(name: 'SMTP_PASSWORD', defaultValue: '', description: 'SMTP password for email notifications (optional - will use credentials if empty)'),
         string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)'),
         booleanParam(name: 'SEND_EMAIL', defaultValue: false, description: 'Send email notifications')
     ]),
@@ -40,24 +39,28 @@ def sendSlackNotification(String message, String color = 'good') {
 
             // Choose webhook URL based on notification type
             if (color == 'good' || color == 'warning') {
-                webhookUrl = params.SLACK_WEBHOOK_URL_SUCCESS ?: params.SLACK_WEBHOOK_URL_FAILURE
+                // Use parameter first, then fallback to credentials
+                webhookUrl = params.SLACK_WEBHOOK_URL_SUCCESS
+                if (!webhookUrl) {
+                    withCredentials([string(credentialsId: 'slack-webhook-success', variable: 'SLACK_WEBHOOK_SUCCESS')]) {
+                        webhookUrl = SLACK_WEBHOOK_SUCCESS
+                    }
+                }
             } else {
-                webhookUrl = params.SLACK_WEBHOOK_URL_FAILURE ?: params.SLACK_WEBHOOK_URL_SUCCESS
-            }
-
-            // Fallback to Jenkins credentials if parameters are empty
-            if (!webhookUrl) {
-                withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_WEBHOOK')]) {
-                    webhookUrl = SLACK_WEBHOOK
+                // Use parameter first, then fallback to credentials
+                webhookUrl = params.SLACK_WEBHOOK_URL_FAILURE
+                if (!webhookUrl) {
+                    withCredentials([string(credentialsId: 'slack-webhook-failure', variable: 'SLACK_WEBHOOK_FAILURE')]) {
+                        webhookUrl = SLACK_WEBHOOK_FAILURE
+                    }
                 }
             }
 
-            if (webhookUrl && params.SLACK_CHANNEL) {
+            if (webhookUrl) {
                 def payload = [
-                    channel: params.SLACK_CHANNEL,
+                    text: message,
                     attachments: [[
                         color: color,
-                        text: message,
                         fields: [
                             [title: 'Build', value: "#${BUILD_NUMBER}", short: true],
                             [title: 'Environment', value: params.ENVIRONMENT, short: true],
@@ -89,9 +92,10 @@ def sendEmailNotification(String subject, String body, String status = 'INFO') {
                 def smtpUser = params.SMTP_USERNAME
                 def smtpPass = params.SMTP_PASSWORD
 
+                // Use credentials if parameters are empty
                 if (!smtpUser || !smtpPass) {
                     withCredentials([
-                        usernamePassword(credentialsId: 'google-smtp-credentials',
+                        usernamePassword(credentialsId: 'smtp-credentials',
                                        usernameVariable: 'SMTP_USER',
                                        passwordVariable: 'SMTP_PASS')
                     ]) {
