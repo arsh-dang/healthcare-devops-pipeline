@@ -353,7 +353,7 @@ resource "kubernetes_service" "alertmanager" {
 # MongoDB Exporter Secret (copy from healthcare namespace)
 resource "kubernetes_secret" "mongodb_exporter_secret" {
   metadata {
-    name      = "healthcare-app-secrets"
+    name      = "mongodb-exporter-secrets"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "mongodb-exporter" })
   }
