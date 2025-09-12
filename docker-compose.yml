@@ -32,7 +32,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: 5000
+      PORT: 5001
       MONGODB_HOST: mongodb
       MONGODB_PORT: 27017
       MONGODB_USERNAME: ${MONGODB_USERNAME:-admin}
@@ -43,8 +43,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-debug}
       DD_TRACE_ENABLED: ${DD_TRACE_ENABLED:-false}
     ports:
-      - "5000:5000"
-      - "5001:5000"  # Alternative port for CI/CD
+      - "5001:5001"
+      - "5000:5001"  # Alternative port for CI/CD
     depends_on:
       mongodb:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
       - ./server:/app/server:ro
       - /app/node_modules
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,7 +67,7 @@ services:
     container_name: healthcare-frontend
     restart: unless-stopped
     environment:
-      REACT_APP_API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
+      REACT_APP_API_BASE_URL: ${API_BASE_URL:-http://localhost:5001}
       REACT_APP_VERSION: ${REACT_APP_VERSION:-1.0.0}
       DD_RUM_ENABLED: ${DD_RUM_ENABLED:-false}
       DD_RUM_APPLICATION_ID: ${DD_RUM_APPLICATION_ID}

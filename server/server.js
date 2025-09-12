@@ -105,7 +105,7 @@ app.get("/health", (req, res) => {
 });
 
 // Connect to MongoDB
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Construct MongoDB URI from environment variables
 const MONGODB_HOST = process.env.MONGODB_HOST || "localhost";

@@ -415,7 +415,7 @@ resource "kubernetes_stateful_set" "mongodb" {
           image_pull_policy = "IfNotPresent"
 
           port {
-            container_port = 5000
+            container_port = 5001
             name           = "http"
           }
 
@@ -1185,7 +1185,7 @@ resource "kubernetes_service" "backend" {
     labels    = local.backend_labels
     annotations = {
       "prometheus.io/scrape" = "true"
-      "prometheus.io/port"   = "5000"
+      "prometheus.io/port"   = "5001"
     }
   }
 
@@ -1193,7 +1193,7 @@ resource "kubernetes_service" "backend" {
     selector = local.mongodb_labels  # Point to MongoDB pod which contains backend
 
     port {
-      port        = 5000
+      port        = 5001
       target_port = "http"
       protocol    = "TCP"
     }
@@ -1424,7 +1424,7 @@ resource "kubernetes_network_policy" "backend_security" {
         }
       }
       ports {
-        port     = "5000"
+        port     = "5001"
         protocol = "TCP"
       }
     }
@@ -1439,7 +1439,7 @@ resource "kubernetes_network_policy" "backend_security" {
         }
       }
       ports {
-        port     = "5000"
+        port     = "5001"
         protocol = "TCP"
       }
     }

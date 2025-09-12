@@ -37,7 +37,7 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
     }
 
     rule {
-      host = var.environment == "production" ? "healthcare.company.com" : "healthcare-staging.local"
+      host = var.environment == "production" ? "healthcare.company.com" : "127.0.0.1"
 
       http {
         path {
@@ -48,7 +48,7 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
             service {
               name = kubernetes_service.backend.metadata[0].name
               port {
-                number = 5000
+                number = 5001
               }
             }
           }
@@ -96,7 +96,7 @@ resource "kubernetes_ingress_v1" "monitoring" {
     }
 
     rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
+      host = var.environment == "production" ? "monitoring.company.com" : "127.0.0.1"
 
       http {
         path {
@@ -180,15 +180,15 @@ resource "kubernetes_secret" "monitoring_auth" {
 # Outputs for ingress
 output "app_ingress_host" {
   description = "Application ingress hostname"
-  value       = var.environment == "production" ? "healthcare.company.com" : "healthcare-staging.local"
+  value       = var.environment == "production" ? "healthcare.company.com" : "127.0.0.1"
 }
 
 output "monitoring_ingress_host" {
   description = "Monitoring ingress hostname"
-  value       = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
+  value       = var.environment == "production" ? "monitoring.company.com" : "127.0.0.1"
 }
 
 output "grafana_external_url" {
   description = "External Grafana URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://monitoring-staging.local/grafana"
+  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://127.0.0.1/grafana"
 }

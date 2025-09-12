@@ -123,12 +123,12 @@ test_api_endpoints() {
     echo "Testing API Endpoints..."
     
     # Test if backend is accessible
-    BACKEND_URL="http://localhost:5000"
+    BACKEND_URL="http://localhost:5001"
     if curl -s "${BACKEND_URL}/health" | grep -q "ok"; then
         print_status "Backend health endpoint is working"
     else
         print_warning "Backend health endpoint not accessible"
-        echo "Try port forwarding: kubectl port-forward svc/backend 5000:5000"
+        echo "Try port forwarding: kubectl port-forward svc/backend 5001:5001"
     fi
 }
 
