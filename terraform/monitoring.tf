@@ -2409,7 +2409,7 @@ resource "kubernetes_deployment" "synthetic_monitoring" {
               if [ -f /etc/synthetic-monitoring/synthetic-tests.json ]; then
                 # Run health check synthetic test
                 START_TIME=$(date +%s%N)
-                if curl -s --max-time 10 -o /dev/null -w "%{http_code}" \
+                if curl -s --max-time 10 -o /dev/null -w "%%{http_code}" \
                   http://healthcare-backend.${var.namespace}-${var.environment}.svc.cluster.local:5001/health > /tmp/health_status; then
 
                   HTTP_CODE=$(cat /tmp/health_status)
@@ -2430,7 +2430,7 @@ resource "kubernetes_deployment" "synthetic_monitoring" {
 
                 # Run frontend availability test
                 START_TIME=$(date +%s%N)
-                if curl -s --max-time 10 -o /dev/null -w "%{http_code}" \
+                if curl -s --max-time 10 -o /dev/null -w "%%{http_code}" \
                   http://healthcare-frontend.${var.namespace}-${var.environment}.svc.cluster.local:3001 > /tmp/frontend_status; then
 
                   HTTP_CODE=$(cat /tmp/frontend_status)
