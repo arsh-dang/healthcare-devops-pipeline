@@ -37,7 +37,7 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
     }
 
     rule {
-      host = var.environment == "production" ? "healthcare.company.com" : "127.0.0.1"
+      host = var.environment == "production" ? "healthcare.company.com" : "localhost"
 
       http {
         path {
@@ -96,7 +96,7 @@ resource "kubernetes_ingress_v1" "monitoring" {
     }
 
     rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "127.0.0.1"
+      host = var.environment == "production" ? "monitoring.company.com" : "localhost"
 
       http {
         path {
@@ -180,15 +180,15 @@ resource "kubernetes_secret" "monitoring_auth" {
 # Outputs for ingress
 output "app_ingress_host" {
   description = "Application ingress hostname"
-  value       = var.environment == "production" ? "healthcare.company.com" : "127.0.0.1"
+  value       = var.environment == "production" ? "healthcare.company.com" : "localhost"
 }
 
 output "monitoring_ingress_host" {
   description = "Monitoring ingress hostname"
-  value       = var.environment == "production" ? "monitoring.company.com" : "127.0.0.1"
+  value       = var.environment == "production" ? "monitoring.company.com" : "localhost"
 }
 
 output "grafana_external_url" {
   description = "External Grafana URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://127.0.0.1/grafana"
+  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://localhost/grafana"
 }
