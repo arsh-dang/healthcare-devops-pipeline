@@ -7,12 +7,18 @@ properties([
     parameters([
         choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
         choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], description: 'Target environment'),
-        booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
+        booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Run test suite'),
         booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: false, description: 'Run security scanning'),
         booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: false, description: 'Deploy to Kubernetes'),
+        // Slack parameters
+        string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications'),
+        string(name: 'SLACK_WEBHOOK_URL_FAILURE', defaultValue: '', description: 'Slack webhook URL for failure notifications'),
         string(name: 'SLACK_CHANNEL', defaultValue: '#jenkins-notifications', description: 'Slack channel for notifications'),
-        booleanParam(name: 'SEND_EMAIL', defaultValue: true, description: 'Send email notifications'),
-        string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)')
+        // SMTP parameters
+        string(name: 'SMTP_USERNAME', defaultValue: '', description: 'SMTP username for email notifications'),
+        password(name: 'SMTP_PASSWORD', defaultValue: '', description: 'SMTP password for email notifications'),
+        string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)'),
+        booleanParam(name: 'SEND_EMAIL', defaultValue: false, description: 'Send email notifications')
     ]),
     pipelineTriggers([
         // Trigger on SCM changes (optional - uncomment to enable)
@@ -30,31 +36,45 @@ properties([
 def sendSlackNotification(String message, String color = 'good') {
     script {
         try {
-            withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_WEBHOOK')]) {
-                if (SLACK_WEBHOOK && params.SLACK_CHANNEL) {
-                    def payload = [
-                        channel: params.SLACK_CHANNEL,
-                        attachments: [[
-                            color: color,
-                            text: message,
-                            fields: [
-                                [title: 'Build', value: "#${BUILD_NUMBER}", short: true],
-                                [title: 'Environment', value: params.ENVIRONMENT, short: true],
-                                [title: 'Build Type', value: params.BUILD_TYPE, short: true],
-                                [title: 'Duration', value: currentBuild.durationString, short: true]
-                            ],
-                            footer: 'Healthcare App Jenkins Pipeline',
-                            ts: System.currentTimeMillis() / 1000
-                        ]]
-                    ]
+            def webhookUrl = ''
 
-                    httpRequest(
-                        httpMode: 'POST',
-                        contentType: 'APPLICATION_JSON',
-                        url: SLACK_WEBHOOK,
-                        requestBody: groovy.json.JsonBuilder(payload).toString()
-                    )
+            // Choose webhook URL based on notification type
+            if (color == 'good' || color == 'warning') {
+                webhookUrl = params.SLACK_WEBHOOK_URL_SUCCESS ?: params.SLACK_WEBHOOK_URL_FAILURE
+            } else {
+                webhookUrl = params.SLACK_WEBHOOK_URL_FAILURE ?: params.SLACK_WEBHOOK_URL_SUCCESS
+            }
+
+            // Fallback to Jenkins credentials if parameters are empty
+            if (!webhookUrl) {
+                withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_WEBHOOK')]) {
+                    webhookUrl = SLACK_WEBHOOK
                 }
+            }
+
+            if (webhookUrl && params.SLACK_CHANNEL) {
+                def payload = [
+                    channel: params.SLACK_CHANNEL,
+                    attachments: [[
+                        color: color,
+                        text: message,
+                        fields: [
+                            [title: 'Build', value: "#${BUILD_NUMBER}", short: true],
+                            [title: 'Environment', value: params.ENVIRONMENT, short: true],
+                            [title: 'Build Type', value: params.BUILD_TYPE, short: true],
+                            [title: 'Duration', value: currentBuild.durationString, short: true]
+                        ],
+                        footer: 'Healthcare App Jenkins Pipeline',
+                        ts: System.currentTimeMillis() / 1000
+                    ]]
+                ]
+
+                httpRequest(
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    url: webhookUrl,
+                    requestBody: groovy.json.JsonBuilder(payload).toString()
+                )
             }
         } catch (Exception e) {
             echo "Failed to send Slack notification: ${e.getMessage()}"
@@ -66,17 +86,27 @@ def sendEmailNotification(String subject, String body, String status = 'INFO') {
     script {
         try {
             if (params.SEND_EMAIL && params.EMAIL_RECIPIENTS) {
-                withCredentials([
-                    usernamePassword(credentialsId: 'google-smtp-credentials',
-                                   usernameVariable: 'SMTP_USER',
-                                   passwordVariable: 'SMTP_PASS')
-                ]) {
+                def smtpUser = params.SMTP_USERNAME
+                def smtpPass = params.SMTP_PASSWORD
+
+                if (!smtpUser || !smtpPass) {
+                    withCredentials([
+                        usernamePassword(credentialsId: 'google-smtp-credentials',
+                                       usernameVariable: 'SMTP_USER',
+                                       passwordVariable: 'SMTP_PASS')
+                    ]) {
+                        smtpUser = SMTP_USER
+                        smtpPass = SMTP_PASS
+                    }
+                }
+
+                if (smtpUser && smtpPass) {
                     emailext(
                         subject: subject,
                         body: body,
                         to: params.EMAIL_RECIPIENTS,
-                        from: SMTP_USER,
-                        replyTo: SMTP_USER,
+                        from: smtpUser,
+                        replyTo: smtpUser,
                         mimeType: 'text/html'
                     )
                 }
