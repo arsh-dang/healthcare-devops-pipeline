@@ -350,7 +350,28 @@ resource "kubernetes_service" "alertmanager" {
   }
 }
 
-# MongoDB Exporter ConfigMap
+# MongoDB Exporter Secret (copy from healthcare namespace)
+resource "kubernetes_secret" "mongodb_exporter_secret" {
+  metadata {
+    name      = "healthcare-app-secrets"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "mongodb-exporter" })
+  }
+
+  type = "Opaque"
+
+  data = {
+    "mongodb-root-password" = data.kubernetes_secret.healthcare_app_secrets.data["mongodb-root-password"]
+  }
+}
+
+# Data source to read the secret from healthcare namespace
+data "kubernetes_secret" "healthcare_app_secrets" {
+  metadata {
+    name      = "healthcare-app-secrets"
+    namespace = "${var.namespace}-${var.environment}"
+  }
+}
 resource "kubernetes_config_map" "mongodb_exporter_config" {
   metadata {
     name      = "mongodb-exporter-config"
@@ -406,7 +427,7 @@ resource "kubernetes_deployment" "mongodb_exporter" {
             name = "MONGODB_PASSWORD"
             value_from {
               secret_key_ref {
-                name = "healthcare-app-secrets"
+                name = kubernetes_secret.mongodb_exporter_secret.metadata[0].name
                 key  = "mongodb-root-password"
               }
             }
