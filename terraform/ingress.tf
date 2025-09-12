@@ -37,7 +37,7 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
     }
 
     rule {
-      host = var.environment == "production" ? "healthcare.company.com" : "127.0.0.1"
+      host = var.environment == "production" ? "healthcare.company.com" : "healthcare-staging.local"
 
       http {
         path {
@@ -46,8 +46,7 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
 
           backend {
             service {
-              # name = kubernetes_service.backend.metadata[0].name
-              name = "backend"
+              name = kubernetes_service.backend.metadata[0].name
               port {
                 number = 5000
               }
@@ -97,12 +96,11 @@ resource "kubernetes_ingress_v1" "monitoring" {
     }
 
     rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "127.0.0.1"
+      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
 
-      # Grafana on port 3000
       http {
         path {
-          path      = "/"
+          path      = "/grafana"
           path_type = "Prefix"
 
           backend {
@@ -110,123 +108,6 @@ resource "kubernetes_ingress_v1" "monitoring" {
               name = kubernetes_service.grafana.metadata[0].name
               port {
                 number = 3000
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# Separate ingress for Prometheus on port 9090
-resource "kubernetes_ingress_v1" "prometheus" {
-  count = var.environment == "staging" ? 1 : 0
-
-  metadata {
-    name      = "prometheus-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "prometheus" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-      "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
-    }
-  }
-
-  spec {
-    rule {
-      host = "127.0.0.1"
-
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.prometheus.metadata[0].name
-              port {
-                number = 9090
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# Separate ingress for Alertmanager on port 9093
-resource "kubernetes_ingress_v1" "alertmanager" {
-  count = var.environment == "staging" ? 1 : 0
-
-  metadata {
-    name      = "alertmanager-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "alertmanager" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-      "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
-    }
-  }
-
-  spec {
-    rule {
-      host = "127.0.0.1"
-
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.alertmanager.metadata[0].name
-              port {
-                number = 9093
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# Separate ingress for MongoDB Exporter on port 9216
-resource "kubernetes_ingress_v1" "mongodb_exporter" {
-  count = var.environment == "staging" ? 1 : 0
-
-  metadata {
-    name      = "mongodb-exporter-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "mongodb-exporter" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-      "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
-    }
-  }
-
-  spec {
-    rule {
-      host = "127.0.0.1"
-
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.mongodb_exporter.metadata[0].name
-              port {
-                number = 9216
               }
             }
           }
@@ -257,30 +138,15 @@ resource "kubernetes_secret" "monitoring_auth" {
 # Outputs for ingress
 output "app_ingress_host" {
   description = "Application ingress hostname"
-  value       = var.environment == "production" ? "healthcare.company.com" : "127.0.0.1"
+  value       = var.environment == "production" ? "healthcare.company.com" : "healthcare-staging.local"
 }
 
 output "monitoring_ingress_host" {
   description = "Monitoring ingress hostname"
-  value       = var.environment == "production" ? "monitoring.company.com" : "127.0.0.1"
+  value       = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
 }
 
 output "grafana_external_url" {
   description = "External Grafana URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://127.0.0.1:3000"
-}
-
-output "prometheus_external_url" {
-  description = "External Prometheus URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/prometheus" : "http://127.0.0.1:9090"
-}
-
-output "alertmanager_external_url" {
-  description = "External Alertmanager URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/alertmanager" : "http://127.0.0.1:9093"
-}
-
-output "mongodb_exporter_external_url" {
-  description = "External MongoDB Exporter URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/mongodb-exporter" : "http://127.0.0.1:9216"
+  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://monitoring-staging.local/grafana"
 }

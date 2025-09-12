@@ -125,9 +125,9 @@ variable "resource_limits" {
 }
 
 variable "enable_encryption" {
-  description = "Enable data encryption at rest"
+  description = "Enable data encryption at rest (requires AWS KMS when enabled without external key)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "kms_key_id" {
@@ -429,7 +429,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           env {
             name  = "MONGODB_HOST"
-            value = "127.0.0.1"
+            value = "localhost"
           }
 
           env {

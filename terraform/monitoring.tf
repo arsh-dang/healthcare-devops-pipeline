@@ -79,7 +79,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
                 <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
                 <p><strong>Environment:</strong> ${var.environment}</p>
                 <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-                <p><a href="http://127.0.0.1:3000">View in Grafana</a></p>
+                <p><a href="http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana">View in Grafana</a></p>
               EOT
             }
           ] : []
@@ -95,7 +95,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
                 *Description:* {{ .CommonAnnotations.description }}
                 *Environment:* ${var.environment}
                 *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-                <http://127.0.0.1:3000|View in Grafana>
+                <http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana|View in Grafana>
               EOT
             }
           ] : []
@@ -116,7 +116,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
                 <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
                 <p><strong>Environment:</strong> ${var.environment}</p>
                 <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-                <p><a href="http://127.0.0.1:3000">View in Grafana</a></p>
+                <p><a href="http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana">View in Grafana</a></p>
               EOT
             }
           ] : []
@@ -132,7 +132,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
                 *Description:* {{ .CommonAnnotations.description }}
                 *Environment:* ${var.environment}
                 *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-                <http://127.0.0.1:3000|View in Grafana>
+                <http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana|View in Grafana>
               EOT
             }
           ] : []
@@ -153,7 +153,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
                 <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
                 <p><strong>Environment:</strong> ${var.environment}</p>
                 <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-                <p><a href="http://127.0.0.1:3000">View in Grafana</a></p>
+                <p><a href="http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana">View in Grafana</a></p>
               EOT
             }
           ] : []
@@ -169,7 +169,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
                 *Description:* {{ .CommonAnnotations.description }}
                 *Environment:* ${var.environment}
                 *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-                <http://127.0.0.1:3000|View in Grafana>
+                <http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana|View in Grafana>
               EOT
             }
           ] : []
@@ -1215,7 +1215,7 @@ resource "kubernetes_config_map" "grafana_config" {
     "grafana.ini" = <<-EOT
       [server]
       http_port = 3000
-      root_url = http://127.0.0.1:3000/
+      root_url = http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana/
 
       [database]
       type = sqlite3
@@ -2905,6 +2905,162 @@ resource "kubernetes_config_map" "enhanced_grafana_dashboards" {
       }
     })
   }
+}
+
+# =============================================================================
+# MONITORING INGRESS RESOURCES
+# =============================================================================
+
+# Alertmanager Ingress
+resource "kubernetes_ingress_v1" "alertmanager" {
+  metadata {
+    name      = "alertmanager-ingress"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "alertmanager" })
+    annotations = {
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/auth-secret"    = ""
+      "nginx.ingress.kubernetes.io/auth-type"      = ""
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
+
+      http {
+        path {
+          path      = "/alertmanager"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.alertmanager.metadata[0].name
+              port {
+                number = 9093
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# Prometheus Ingress
+resource "kubernetes_ingress_v1" "prometheus" {
+  metadata {
+    name      = "prometheus-ingress"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "prometheus" })
+    annotations = {
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/auth-secret"    = ""
+      "nginx.ingress.kubernetes.io/auth-type"      = ""
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
+
+      http {
+        path {
+          path      = "/prometheus"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.prometheus.metadata[0].name
+              port {
+                number = 9090
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# MongoDB Exporter Ingress
+resource "kubernetes_ingress_v1" "mongodb_exporter" {
+  metadata {
+    name      = "mongodb-exporter-ingress"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "mongodb-exporter" })
+    annotations = {
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/auth-secret"    = ""
+      "nginx.ingress.kubernetes.io/auth-type"      = ""
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
+    }
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
+
+      http {
+        path {
+          path      = "/mongodb-exporter"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.mongodb_exporter.metadata[0].name
+              port {
+                number = 9216
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+output "alertmanager_external_url" {
+  description = "External Alertmanager URL"
+  value       = var.environment == "production" ? "https://monitoring.company.com/alertmanager" : "http://monitoring-staging.local/alertmanager"
+}
+
+output "prometheus_external_url" {
+  description = "External Prometheus URL"
+  value       = var.environment == "production" ? "https://monitoring.company.com/prometheus" : "http://monitoring-staging.local/prometheus"
+}
+
+output "mongodb_exporter_external_url" {
+  description = "External MongoDB Exporter URL"
+  value       = var.environment == "production" ? "https://monitoring.company.com/mongodb-exporter" : "http://monitoring-staging.local/mongodb-exporter"
+}
+
+output "alertmanager_service" {
+  description = "Alertmanager service name"
+  value       = kubernetes_service.alertmanager.metadata[0].name
+}
+
+output "mongodb_exporter_service" {
+  description = "MongoDB Exporter service name"
+  value       = kubernetes_service.mongodb_exporter.metadata[0].name
+}
+
+output "alertmanager_url" {
+  description = "Internal Alertmanager URL"
+  value       = "http://${kubernetes_service.alertmanager.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9093"
+}
+
+output "mongodb_exporter_url" {
+  description = "Internal MongoDB Exporter URL"
+  value       = "http://${kubernetes_service.mongodb_exporter.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9216"
 }
 
 # =============================================================================
