@@ -23,6 +23,7 @@ terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/*.tfplan
 terraform/terraform.tfstate.d/
+terraform/.terraform.tfstate.lock.info
 *.tfstate
 *.tfstate.backup
 
@@ -33,23 +34,6 @@ terraform/terraform.tfstate.d/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Build artifacts
-frontend.tar
-
-# Backup files
-*.backup
-package.json.backup
-Jenkinsfile.backup
-Jenkinsfile.datadog.backup
-Jenkinsfile.new
-
-# Temporary Jenkins scripts
-jenkins-*.groovy
-
-# Terraform state (additional patterns)
-terraform.tfstate
-terraform.tfstate.backup
 
 # Test outputs
 test-results/
@@ -64,11 +48,6 @@ lint-results.json
 # Generated reports
 reports/
 security-reports/
-
-# Demo and documentation files (not needed in version control)
-DEMO_VIDEO_SCRIPT.md
-HIGH_HD_ACHIEVEMENT.md
-PIPELINE_READY.md
 
 # Temporary development scripts
 fix-*.js
