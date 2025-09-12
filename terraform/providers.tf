@@ -1,7 +1,9 @@
 # Terraform Providers Configuration
-# Configures providers for Kubernetes, Helm, and other infrastructure components
+# This file defines the providers used in the infrastructure
 
 terraform {
+  required_version = ">= 1.0"
+
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -16,24 +18,19 @@ terraform {
       version = "~> 3.7"
     }
   }
-  required_version = ">= 1.0"
 }
 
-# Kubernetes Provider Configuration
-# Uses kubeconfig for cluster authentication
+# Kubernetes Provider
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-# Helm Provider Configuration
-# Uses the same Kubernetes configuration as the kubernetes provider
+# Helm Provider
 provider "helm" {
-  kubernetes = {
-    config_path = "~/.kube/config"
-  }
+  # Kubernetes configuration will be inherited from environment
 }
 
-# Random Provider (no configuration needed)
+# Random Provider
 provider "random" {
-  # No configuration required
+  # No configuration needed
 }

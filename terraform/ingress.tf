@@ -112,6 +112,48 @@ resource "kubernetes_ingress_v1" "monitoring" {
             }
           }
         }
+
+        path {
+          path      = "/prometheus"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.prometheus.metadata[0].name
+              port {
+                number = 9090
+              }
+            }
+          }
+        }
+
+        path {
+          path      = "/alertmanager"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.alertmanager.metadata[0].name
+              port {
+                number = 9093
+              }
+            }
+          }
+        }
+
+        path {
+          path      = "/mongodb-exporter"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = kubernetes_service.mongodb_exporter.metadata[0].name
+              port {
+                number = 9216
+              }
+            }
+          }
+        }
       }
     }
   }

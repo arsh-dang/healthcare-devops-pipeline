@@ -38,7 +38,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
         group_wait      = "10s"
         group_interval  = "10s"
         repeat_interval = "1h"
-        receiver        = "healthcare-team"
+        receiver        = "healthcare-info"
 
         routes = [
           {
@@ -201,6 +201,7 @@ resource "kubernetes_deployment" "alertmanager" {
 
   spec {
     replicas = 1
+    progress_deadline_seconds = 900  # 15 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "alertmanager" })
@@ -375,6 +376,7 @@ resource "kubernetes_deployment" "mongodb_exporter" {
 
   spec {
     replicas = 1
+    progress_deadline_seconds = 900  # 15 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "mongodb-exporter" })
@@ -2908,125 +2910,8 @@ resource "kubernetes_config_map" "enhanced_grafana_dashboards" {
 }
 
 # =============================================================================
-# MONITORING INGRESS RESOURCES
+# MONITORING INGRESS RESOURCES - Consolidated in ingress.tf
 # =============================================================================
-
-# Alertmanager Ingress
-resource "kubernetes_ingress_v1" "alertmanager" {
-  metadata {
-    name      = "alertmanager-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "alertmanager" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/auth-secret"    = ""
-      "nginx.ingress.kubernetes.io/auth-type"      = ""
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-    }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-
-    rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
-
-      http {
-        path {
-          path      = "/alertmanager"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.alertmanager.metadata[0].name
-              port {
-                number = 9093
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# Prometheus Ingress
-resource "kubernetes_ingress_v1" "prometheus" {
-  metadata {
-    name      = "prometheus-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "prometheus" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/auth-secret"    = ""
-      "nginx.ingress.kubernetes.io/auth-type"      = ""
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-    }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-
-    rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
-
-      http {
-        path {
-          path      = "/prometheus"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.prometheus.metadata[0].name
-              port {
-                number = 9090
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-# MongoDB Exporter Ingress
-resource "kubernetes_ingress_v1" "mongodb_exporter" {
-  metadata {
-    name      = "mongodb-exporter-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "mongodb-exporter" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/auth-secret"    = ""
-      "nginx.ingress.kubernetes.io/auth-type"      = ""
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-    }
-  }
-
-  spec {
-    ingress_class_name = "nginx"
-
-    rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.local"
-
-      http {
-        path {
-          path      = "/mongodb-exporter"
-          path_type = "Prefix"
-
-          backend {
-            service {
-              name = kubernetes_service.mongodb_exporter.metadata[0].name
-              port {
-                number = 9216
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
 output "alertmanager_external_url" {
   description = "External Alertmanager URL"
