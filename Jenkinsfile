@@ -3,6 +3,17 @@ def forcePipelineReload = true
 
 // Pipeline properties for automatic builds
 properties([
+    // Build parameters
+    parameters([
+        choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
+        choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], description: 'Target environment'),
+        booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
+        booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: false, description: 'Run security scanning'),
+        booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: false, description: 'Deploy to Kubernetes'),
+        string(name: 'SLACK_CHANNEL', defaultValue: '#jenkins-notifications', description: 'Slack channel for notifications'),
+        booleanParam(name: 'SEND_EMAIL', defaultValue: true, description: 'Send email notifications'),
+        string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)')
+    ]),
     pipelineTriggers([
         // Trigger on SCM changes (optional - uncomment to enable)
         // scm('H/5 * * * *'),
@@ -15,21 +26,83 @@ properties([
     buildDiscarder(logRotator(numToKeepStr: '10'))
 ])
 
+// Notification functions
+def sendSlackNotification(String message, String color = 'good') {
+    script {
+        try {
+            withCredentials([string(credentialsId: 'slack-webhook-url', variable: 'SLACK_WEBHOOK')]) {
+                if (SLACK_WEBHOOK && params.SLACK_CHANNEL) {
+                    def payload = [
+                        channel: params.SLACK_CHANNEL,
+                        attachments: [[
+                            color: color,
+                            text: message,
+                            fields: [
+                                [title: 'Build', value: "#${BUILD_NUMBER}", short: true],
+                                [title: 'Environment', value: params.ENVIRONMENT, short: true],
+                                [title: 'Build Type', value: params.BUILD_TYPE, short: true],
+                                [title: 'Duration', value: currentBuild.durationString, short: true]
+                            ],
+                            footer: 'Healthcare App Jenkins Pipeline',
+                            ts: System.currentTimeMillis() / 1000
+                        ]]
+                    ]
+
+                    httpRequest(
+                        httpMode: 'POST',
+                        contentType: 'APPLICATION_JSON',
+                        url: SLACK_WEBHOOK,
+                        requestBody: groovy.json.JsonBuilder(payload).toString()
+                    )
+                }
+            }
+        } catch (Exception e) {
+            echo "Failed to send Slack notification: ${e.getMessage()}"
+        }
+    }
+}
+
+def sendEmailNotification(String subject, String body, String status = 'INFO') {
+    script {
+        try {
+            if (params.SEND_EMAIL && params.EMAIL_RECIPIENTS) {
+                withCredentials([
+                    usernamePassword(credentialsId: 'google-smtp-credentials',
+                                   usernameVariable: 'SMTP_USER',
+                                   passwordVariable: 'SMTP_PASS')
+                ]) {
+                    emailext(
+                        subject: subject,
+                        body: body,
+                        to: params.EMAIL_RECIPIENTS,
+                        from: SMTP_USER,
+                        replyTo: SMTP_USER,
+                        mimeType: 'text/html'
+                    )
+                }
+            }
+        } catch (Exception e) {
+            echo "Failed to send email notification: ${e.getMessage()}"
+        }
+    }
+}
+
 node {
     try {
-        // Environment variables setup
+        // Environment variables setup based on parameters
         env.DOCKER_REGISTRY = 'docker.io'
         env.DOCKER_REPO = 'yourusername/healthcare-app'
         env.APP_NAME = 'healthcare-app'
-        env.NAMESPACE = 'healthcare-staging'
-        env.TF_ENVIRONMENT = 'staging'
+        env.NAMESPACE = "healthcare-${params.ENVIRONMENT}"
+        env.TF_ENVIRONMENT = params.ENVIRONMENT
         env.ENABLE_PERSISTENT_STORAGE = 'true'
+        env.BUILD_TYPE = params.BUILD_TYPE
 
         // Datadog configuration
-        env.DD_ENV = 'staging'
+        env.DD_ENV = params.ENVIRONMENT
         env.DD_SERVICE = 'healthcare-app'
         env.DD_VERSION = "${BUILD_NUMBER}"
-        env.DD_TAGS = "env:${env.DD_ENV},service:${env.DD_SERVICE},version:${env.DD_VERSION},pipeline:jenkins"
+        env.DD_TAGS = "env:${env.DD_ENV},service:${env.DD_SERVICE},version:${env.DD_VERSION},pipeline:jenkins,build_type:${params.BUILD_TYPE}"
 
         // Configure tool paths for macOS environment
         env.PATH = "${env.PATH}:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin"
@@ -40,10 +113,27 @@ node {
             stage('Force Pipeline Reload Check') {
                 echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
-                echo "Current pipeline type: Scripted (no parameters required)"
+                echo "Current pipeline type: Scripted with parameters"
                 echo "Build Number: ${BUILD_NUMBER}"
                 echo "Job Name: ${JOB_NAME}"
                 echo "Node Name: ${NODE_NAME}"
+                echo "Build Type: ${params.BUILD_TYPE}"
+                echo "Environment: ${params.ENVIRONMENT}"
+
+                // Send start notifications
+                sendSlackNotification("🚀 Pipeline Started - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}", 'good')
+                sendEmailNotification(
+                    "Jenkins Pipeline Started - Build #${BUILD_NUMBER}",
+                    """
+                    <h2>Jenkins Pipeline Started</h2>
+                    <p><strong>Build:</strong> #${BUILD_NUMBER}</p>
+                    <p><strong>Build Type:</strong> ${params.BUILD_TYPE}</p>
+                    <p><strong>Environment:</strong> ${params.ENVIRONMENT}</p>
+                    <p><strong>Job:</strong> ${JOB_NAME}</p>
+                    <p><strong>Started by:</strong> ${currentBuild.getBuildCauses()[0]?.userId ?: 'Automated'}</p>
+                    """,
+                    'INFO'
+                )
             }
             
             stage('Validate Configuration') {
