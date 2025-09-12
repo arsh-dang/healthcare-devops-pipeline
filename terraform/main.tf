@@ -212,7 +212,7 @@ resource "random_password" "mongodb_password" {
   count = var.mongodb_root_password == "" ? 1 : 0
   
   length  = 32
-  special = true
+  special = false  # Changed to false to avoid special characters like % that can cause issues
   upper   = true
   lower   = true
   numeric = true
@@ -296,7 +296,7 @@ resource "random_password" "encryption_key" {
   count = var.enable_encryption ? 1 : 0
   
   length  = 32
-  special = true
+  special = false  # Changed to false to avoid special characters
   upper   = true
   lower   = true
   numeric = true
