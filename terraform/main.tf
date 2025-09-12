@@ -125,17 +125,18 @@ variable "resource_limits" {
 }
 
 variable "enable_encryption" {
-  description = "Enable data encryption at rest (requires AWS KMS when enabled without external key)"
+  description = "Enable data encryption at rest (local encryption only)"
   type        = bool
   default     = false
 }
 
-variable "kms_key_id" {
-  description = "KMS key ID for encryption (leave empty for auto-generation)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
+# Removed AWS KMS key ID variable - using local encryption instead
+# variable "kms_key_id" {
+#   description = "KMS key ID for encryption (leave empty for auto-generation)"
+#   type        = string
+#   default     = ""
+#   sensitive   = true
+# }
 
 variable "enable_network_policies" {
   description = "Enable comprehensive network policies"
@@ -201,9 +202,9 @@ locals {
   # Use provided password or generate random one
   mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
   
-  # Encryption configuration
+  # Encryption configuration (simplified without AWS KMS)
   encryption_enabled = var.enable_encryption
-  kms_key_arn = var.kms_key_id != "" ? var.kms_key_id : (var.enable_encryption ? aws_kms_key.healthcare_encryption[0].arn : "")
+  kms_key_arn = var.enable_encryption ? "local-encryption-key" : ""
 }
 
 # Random password for MongoDB (only if not provided via variable)
@@ -217,27 +218,27 @@ resource "random_password" "mongodb_password" {
   numeric = true
 }
 
-# KMS Key for data encryption at rest
-resource "aws_kms_key" "healthcare_encryption" {
-  count = var.enable_encryption && var.kms_key_id == "" ? 1 : 0
-  
-  description             = "KMS key for healthcare application data encryption"
-  deletion_window_in_days = 30
-  enable_key_rotation     = true
-  
-  tags = {
-    Name        = "healthcare-encryption-key"
-    Environment = var.environment
-    Purpose     = "data-encryption"
-  }
-}
+# KMS Key for data encryption at rest (removed - using local encryption instead)
+# resource "aws_kms_key" "healthcare_encryption" {
+#   count = var.enable_encryption && var.kms_key_id == "" ? 1 : 0
+#   
+#   description             = "KMS key for healthcare application data encryption"
+#   deletion_window_in_days = 30
+#   enable_key_rotation     = true
+#   
+#   tags = {
+#     Name        = "healthcare-encryption-key"
+#     Environment = var.environment
+#     Purpose     = "data-encryption"
+#   }
+# }
 
-resource "aws_kms_alias" "healthcare_encryption" {
-  count = var.enable_encryption && var.kms_key_id == "" ? 1 : 0
-  
-  name          = "alias/healthcare-encryption-${var.environment}"
-  target_key_id = aws_kms_key.healthcare_encryption[0].key_id
-}
+# resource "aws_kms_alias" "healthcare_encryption" {
+#   count = var.enable_encryption && var.kms_key_id == "" ? 1 : 0
+#   
+#   name          = "alias/healthcare-encryption-${var.environment}"
+#   target_key_id = aws_kms_key.healthcare_encryption[0].key_id
+# }
 
 # Kubernetes Namespace for application
 resource "kubernetes_namespace" "healthcare" {
@@ -278,10 +279,7 @@ resource "kubernetes_secret" "app_secrets" {
     name      = "healthcare-app-secrets"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.common_labels
-    annotations = var.enable_encryption ? {
-      "encryption.kubernetes.io/encrypted" = "true"
-      "kms-key-id" = local.kms_key_arn
-    } : {}
+    # Removed AWS KMS encryption annotation
   }
 
   type = "Opaque"
