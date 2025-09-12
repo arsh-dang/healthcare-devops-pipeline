@@ -3043,26 +3043,6 @@ output "mongodb_exporter_external_url" {
   value       = var.environment == "production" ? "https://monitoring.company.com/mongodb-exporter" : "http://monitoring-staging.local/mongodb-exporter"
 }
 
-output "alertmanager_service" {
-  description = "Alertmanager service name"
-  value       = kubernetes_service.alertmanager.metadata[0].name
-}
-
-output "mongodb_exporter_service" {
-  description = "MongoDB Exporter service name"
-  value       = kubernetes_service.mongodb_exporter.metadata[0].name
-}
-
-output "alertmanager_url" {
-  description = "Internal Alertmanager URL"
-  value       = "http://${kubernetes_service.alertmanager.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9093"
-}
-
-output "mongodb_exporter_url" {
-  description = "Internal MongoDB Exporter URL"
-  value       = "http://${kubernetes_service.mongodb_exporter.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9216"
-}
-
 # =============================================================================
 # ENHANCEMENT OUTPUTS
 # =============================================================================
