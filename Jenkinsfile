@@ -3071,67 +3071,81 @@ node {
                                     echo "Applying Terraform configuration..."
                                     
                                     if command -v terraform >/dev/null 2>&1; then
-                                        # Initialize Terraform
-                                        terraform init
-                                        
-                                        # Function to handle Terraform apply with retry logic
-                                        apply_terraform() {
-                                            local max_attempts=3
-                                            local attempt=1
-                                            local lock_wait_time=30
+                                        # Use the updated deploy.sh script instead of direct terraform apply
+                                        if [ -f "./deploy.sh" ]; then
+                                            echo "Using deploy.sh script for infrastructure deployment..."
+                                            chmod +x ./deploy.sh
                                             
-                                            while [ $attempt -le $max_attempts ]; do
-                                                echo "Terraform apply attempt $attempt of $max_attempts"
+                                            # Run the deploy script which handles existing resources
+                                            if ./deploy.sh; then
+                                                APPLICATION_STATUS="success"
+                                                echo "Infrastructure deployment completed successfully"
+                                            else
+                                                APPLICATION_STATUS="failure"
+                                                echo "Infrastructure deployment failed"
+                                                exit 1
+                                            fi
+                                        else
+                                            echo "deploy.sh script not found, falling back to direct terraform apply..."
+                                            # Fallback to original function if deploy.sh doesn't exist
+                                            apply_terraform() {
+                                                local max_attempts=3
+                                                local attempt=1
+                                                local lock_wait_time=30
                                                 
-                                                # Check for existing lock and try to unlock if needed
-                                                if [ $attempt -gt 1 ]; then
-                                                    echo "Checking for stale Terraform locks..."
-                                                    # For local state, remove any stale lock files
-                                                    find .terraform -name "*.lock*" -type f -delete 2>/dev/null || true
-                                                    echo "Cleaned up any stale lock files"
+                                                while [ $attempt -le $max_attempts ]; do
+                                                    echo "Terraform apply attempt $attempt of $max_attempts"
                                                     
-                                                    # Wait a bit before retrying
-                                                    echo "Waiting ${lock_wait_time}s before retry..."
-                                                    sleep $lock_wait_time
-                                                fi
-                                                
-                                                # Attempt terraform apply
-                                                if terraform apply -auto-approve -no-color; then
-                                                    echo "Terraform apply succeeded on attempt $attempt"
-                                                    return 0
-                                                else
-                                                    local exit_code=$?
-                                                    echo "Terraform apply failed on attempt $attempt with exit code $exit_code"
+                                                    # Check for existing lock and try to unlock if needed
+                                                    if [ $attempt -gt 1 ]; then
+                                                        echo "Checking for stale Terraform locks..."
+                                                        # For local state, remove any stale lock files
+                                                        find .terraform -name "*.lock*" -type f -delete 2>/dev/null || true
+                                                        echo "Cleaned up any stale lock files"
+                                                        
+                                                        # Wait a bit before retrying
+                                                        echo "Waiting ${lock_wait_time}s before retry..."
+                                                        sleep $lock_wait_time
+                                                    fi
                                                     
-                                                    # Check if it's a lock-related error
-                                                    if terraform apply -auto-approve -no-color 2>&1 | grep -q "state lock"; then
-                                                        echo "Detected state lock error, will retry..."
-                                                        if [ $attempt -eq $max_attempts ]; then
-                                                            echo "Max retry attempts reached for state lock error"
+                                                    # Attempt terraform apply
+                                                    if terraform apply -auto-approve -no-color; then
+                                                        echo "Terraform apply succeeded on attempt $attempt"
+                                                        return 0
+                                                    else
+                                                        local exit_code=$?
+                                                        echo "Terraform apply failed on attempt $attempt with exit code $exit_code"
+                                                        
+                                                        # Check if it's a lock-related error
+                                                        if terraform apply -auto-approve -no-color 2>&1 | grep -q "state lock"; then
+                                                            echo "Detected state lock error, will retry..."
+                                                            if [ $attempt -eq $max_attempts ]; then
+                                                                echo "Max retry attempts reached for state lock error"
+                                                                return $exit_code
+                                                            fi
+                                                        else
+                                                            # Not a lock error, don't retry
+                                                            echo "Non-lock error detected, not retrying"
                                                             return $exit_code
                                                         fi
-                                                    else
-                                                        # Not a lock error, don't retry
-                                                        echo "Non-lock error detected, not retrying"
-                                                        return $exit_code
                                                     fi
-                                                fi
+                                                    
+                                                    attempt=$((attempt + 1))
+                                                done
                                                 
-                                                attempt=$((attempt + 1))
-                                            done
+                                                echo "All retry attempts exhausted"
+                                                return 1
+                                            }
                                             
-                                            echo "All retry attempts exhausted"
-                                            return 1
-                                        }
-                                        
-                                        # Apply configuration with retry logic
-                                        if apply_terraform; then
-                                            APPLICATION_STATUS="success"
-                                            echo "Terraform application completed successfully"
-                                        else
-                                            APPLICATION_STATUS="failure"
-                                            echo "Terraform application failed after retries"
-                                            exit 1
+                                            # Apply configuration with retry logic
+                                            if apply_terraform; then
+                                                APPLICATION_STATUS="success"
+                                                echo "Terraform application completed successfully"
+                                            else
+                                                APPLICATION_STATUS="failure"
+                                                echo "Terraform application failed after retries"
+                                                exit 1
+                                            fi
                                         fi
                                         
                                         # Send application metrics
