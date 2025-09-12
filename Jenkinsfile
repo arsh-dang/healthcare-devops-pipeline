@@ -3076,8 +3076,8 @@ node {
                                             echo "Using deploy.sh script for infrastructure deployment..."
                                             chmod +x ./deploy.sh
                                             
-                                            # Run the deploy script which handles existing resources
-                                            if ./deploy.sh; then
+                                            # Run the deploy script with clean strategy to resolve conflicts
+                                            if TERRAFORM_STRATEGY=clean ./deploy.sh; then
                                                 APPLICATION_STATUS="success"
                                                 echo "Infrastructure deployment completed successfully"
                                             else

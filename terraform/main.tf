@@ -576,9 +576,9 @@ resource "kubernetes_stateful_set" "mongodb" {
 
   # Add reasonable timeouts to prevent deployment timeout
   timeouts {
-    create = "15m"
-    update = "15m"
-    delete = "5m"
+    create = "20m"
+    update = "20m"
+    delete = "10m"
   }
 }
 

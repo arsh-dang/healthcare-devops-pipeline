@@ -10,52 +10,15 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
-# Function to handle existing resources
-handle_existing_resources() {
-    log "Checking for existing resources..."
+# Function to handle state lock issues
+handle_state_lock() {
+    log "Checking for Terraform state lock..."
     
-    # Check if namespaces exist and import them if needed
-    if kubectl get namespace healthcare-staging >/dev/null 2>&1; then
-        log "Namespace healthcare-staging already exists, attempting to import..."
-        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
-            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
-            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
-            kubernetes_namespace.healthcare healthcare-staging || true
-    fi
-    
-    if kubectl get namespace monitoring-staging >/dev/null 2>&1; then
-        log "Namespace monitoring-staging already exists, attempting to import..."
-        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
-            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
-            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
-            kubernetes_namespace.monitoring monitoring-staging || true
-    fi
-    
-    # Check if cluster role exists
-    if kubectl get clusterrole prometheus-staging >/dev/null 2>&1; then
-        log "ClusterRole prometheus-staging already exists, attempting to import..."
-        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
-            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
-            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
-            kubernetes_cluster_role.prometheus prometheus-staging || true
-    fi
-    
-    # Check if alertmanager deployment exists
-    if kubectl get deployment alertmanager -n monitoring-staging >/dev/null 2>&1; then
-        log "Alertmanager deployment already exists, attempting to import..."
-        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
-            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
-            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
-            kubernetes_deployment.alertmanager monitoring-staging/alertmanager || true
-    fi
-    
-    # Check if monitoring backup cron job exists
-    if kubectl get cronjob monitoring-backup -n monitoring-staging >/dev/null 2>&1; then
-        log "Monitoring backup cron job already exists, attempting to import..."
-        terraform import -var="environment=staging" -var="app_version=${BUILD_NUMBER:-latest}" \
-            -var="frontend_image=${FRONTEND_IMAGE:-healthcare-app-frontend:latest}" \
-            -var="backend_image=${BACKEND_IMAGE:-healthcare-app-backend:latest}" \
-            kubernetes_cron_job_v1.monitoring_backup monitoring-staging/monitoring-backup || true
+    # Try to unlock the state if it's locked
+    if terraform force-unlock -lock=false 2>/dev/null; then
+        log "Successfully unlocked Terraform state"
+    else
+        log "No state lock found or unable to unlock"
     fi
 }
 
@@ -63,14 +26,18 @@ handle_existing_resources() {
 cleanup_existing_resources() {
     log "Cleaning up existing conflicting resources..."
     
-    # Delete resources that might conflict (optional)
-    kubectl delete namespace healthcare-staging --ignore-not-found=true || true
-    kubectl delete namespace monitoring-staging --ignore-not-found=true || true
-    kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
-    kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
-    
-    # Wait a bit for cleanup to complete
-    sleep 10
+    # Use the cleanup script for thorough cleanup
+    if [[ -f "./cleanup-resources.sh" ]]; then
+        log "Using cleanup script for resource cleanup..."
+        ./cleanup-resources.sh all
+    else
+        # Fallback to manual cleanup
+        kubectl delete namespace healthcare-staging --ignore-not-found=true || true
+        kubectl delete namespace monitoring-staging --ignore-not-found=true || true
+        kubectl delete clusterrole prometheus-staging --ignore-not-found=true || true
+        kubectl delete clusterrolebinding prometheus-staging --ignore-not-found=true || true
+        sleep 10
+    fi
 }
 
 # Main deployment function
@@ -102,6 +69,9 @@ deploy_infrastructure() {
         handle_existing_resources
     fi
     
+    # Handle state lock issues
+    handle_state_lock
+    
     # Plan the deployment
     log "Planning Terraform deployment..."
     terraform plan \
@@ -113,7 +83,7 @@ deploy_infrastructure() {
     
     # Apply the deployment
     log "Applying Terraform configuration..."
-    terraform apply -auto-approve tfplan
+    terraform apply -auto-approve -lock-timeout=10m tfplan
     
     # Cleanup plan file
     rm -f tfplan

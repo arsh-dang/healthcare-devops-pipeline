@@ -25,7 +25,7 @@ replica_count = {
 # SMTP Email Configuration (using mock values for staging)
 smtp_server = "smtp.gmail.com"
 smtp_port = 587
-smtp_username = "staging-alerts@healthcare.local"
+smtp_username = "admin@healthcare.local"
 smtp_password = "mock-password"
 smtp_from_email = "alerts@healthcare-staging.local"
 
@@ -60,5 +60,5 @@ enable_log_aggregation = false
 # Synthetic monitoring (disabled for staging)
 enable_synthetic_monitoring = false
 
-# Distributed tracing (enabled for staging)
-enable_distributed_tracing = true
+# Distributed tracing (temporarily disabled to fix deployment conflicts)
+enable_distributed_tracing = false
