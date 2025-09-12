@@ -7,8 +7,8 @@ properties([
     parameters([
         choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
         choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], description: 'Target environment'),
-        booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Run test suite'),
-        booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: false, description: 'Run security scanning'),
+        booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
+        booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
         booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: false, description: 'Deploy to Kubernetes'),
         // Slack parameters
         string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications'),
@@ -616,6 +616,7 @@ node {
                 }
             }
             
+            if (params.RUN_TESTS) {
             stage('Test') {
                 echo 'Running comprehensive tests with Datadog monitoring...'
                 
@@ -1120,6 +1121,7 @@ node {
                     }
                 }
             }
+            }
             
             stage('Code Quality') {
                 echo 'Running comprehensive code quality analysis with Datadog monitoring...'
@@ -1391,6 +1393,7 @@ node {
                 }
             }
             
+            if (params.RUN_SECURITY_SCAN) {
             stage('Security') {
                 echo 'Running comprehensive security analysis with Datadog monitoring...'
                 
@@ -1717,6 +1720,7 @@ node {
                         throw e
                     }
                 }
+            }
             }
             
             stage('Load Testing') {
