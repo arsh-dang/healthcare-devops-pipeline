@@ -83,6 +83,9 @@ app.get("/metrics", async (req, res) => {
 // Routes
 app.use("/api/appointments", appointmentRoutes);
 
+// GDPR Compliance Routes
+app.use("/api/gdpr", require("./routes/gdprRoutes"));
+
 // Root route
 app.get("/", (req, res) => {
   res.send("Healthcare Appointment API is running");
@@ -121,11 +124,9 @@ if (MONGODB_USERNAME && MONGODB_PASSWORD) {
     process.env.MONGODB_URI ||
     `mongodb://${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
 }
-// eslint-disable-next-line no-console
+
 console.log(`Connecting to MongoDB at: ${MONGODB_HOST}:${MONGODB_PORT}`);
-// eslint-disable-next-line no-console
 console.log(`Database: ${MONGODB_DATABASE}`);
-// eslint-disable-next-line no-console
 console.log(`Using authentication: ${!!MONGODB_USERNAME}`);
 
 mongoose

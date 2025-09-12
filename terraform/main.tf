@@ -124,8 +124,33 @@ variable "resource_limits" {
   }
 }
 
-variable "enable_persistent_storage" {
-  description = "Enable persistent storage for monitoring components"
+variable "enable_encryption" {
+  description = "Enable data encryption at rest"
+  type        = bool
+  default     = true
+}
+
+variable "kms_key_id" {
+  description = "KMS key ID for encryption (leave empty for auto-generation)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "enable_network_policies" {
+  description = "Enable comprehensive network policies"
+  type        = bool
+  default     = true
+}
+
+variable "allowed_ip_ranges" {
+  description = "Allowed IP ranges for ingress"
+  type        = list(string)
+  default     = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+}
+
+variable "enable_data_transfer_controls" {
+  description = "Enable data transfer controls for GDPR compliance"
   type        = bool
   default     = true
 }
@@ -175,6 +200,10 @@ locals {
   
   # Use provided password or generate random one
   mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
+  
+  # Encryption configuration
+  encryption_enabled = var.enable_encryption
+  kms_key_arn = var.kms_key_id != "" ? var.kms_key_id : (var.enable_encryption ? aws_kms_key.healthcare_encryption[0].arn : "")
 }
 
 # Random password for MongoDB (only if not provided via variable)
@@ -186,6 +215,28 @@ resource "random_password" "mongodb_password" {
   upper   = true
   lower   = true
   numeric = true
+}
+
+# KMS Key for data encryption at rest
+resource "aws_kms_key" "healthcare_encryption" {
+  count = var.enable_encryption && var.kms_key_id == "" ? 1 : 0
+  
+  description             = "KMS key for healthcare application data encryption"
+  deletion_window_in_days = 30
+  enable_key_rotation     = true
+  
+  tags = {
+    Name        = "healthcare-encryption-key"
+    Environment = var.environment
+    Purpose     = "data-encryption"
+  }
+}
+
+resource "aws_kms_alias" "healthcare_encryption" {
+  count = var.enable_encryption && var.kms_key_id == "" ? 1 : 0
+  
+  name          = "alias/healthcare-encryption-${var.environment}"
+  target_key_id = aws_kms_key.healthcare_encryption[0].key_id
 }
 
 # Kubernetes Namespace for application
@@ -227,6 +278,10 @@ resource "kubernetes_secret" "app_secrets" {
     name      = "healthcare-app-secrets"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.common_labels
+    annotations = var.enable_encryption ? {
+      "encryption.kubernetes.io/encrypted" = "true"
+      "kms-key-id" = local.kms_key_arn
+    } : {}
   }
 
   type = "Opaque"
@@ -234,7 +289,19 @@ resource "kubernetes_secret" "app_secrets" {
   data = {
     mongodb-root-password = local.mongodb_password
     jwt-secret            = "super-secret-jwt-key-${var.environment}"
+    encryption-key        = var.enable_encryption ? random_password.encryption_key[0].result : ""
   }
+}
+
+# Random encryption key for additional data protection
+resource "random_password" "encryption_key" {
+  count = var.enable_encryption ? 1 : 0
+  
+  length  = 32
+  special = true
+  upper   = true
+  lower   = true
+  numeric = true
 }
 
 # MongoDB StatefulSet with advanced configuration
@@ -1200,6 +1267,8 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "mongodb_hpa" {
 
 # Network Policies for security
 resource "kubernetes_network_policy" "default_deny" {
+  count = var.enable_network_policies ? 1 : 0
+  
   metadata {
     name      = "default-deny-all"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1208,6 +1277,174 @@ resource "kubernetes_network_policy" "default_deny" {
   spec {
     pod_selector {}
     policy_types = ["Ingress", "Egress"]
+  }
+}
+
+# Allow internal communication within namespace
+resource "kubernetes_network_policy" "allow_internal" {
+  count = var.enable_network_policies ? 1 : 0
+  
+  metadata {
+    name      = "allow-internal-communication"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {}
+    policy_types = ["Ingress", "Egress"]
+
+    ingress {
+      from {
+        pod_selector {}
+      }
+    }
+
+    egress {
+      to {
+        pod_selector {}
+      }
+    }
+
+    # Allow DNS
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "53"
+        protocol = "UDP"
+      }
+      ports {
+        port     = "53"
+        protocol = "TCP"
+      }
+    }
+  }
+}
+
+# Security group for database access
+resource "kubernetes_network_policy" "mongodb_security" {
+  count = var.enable_network_policies ? 1 : 0
+  
+  metadata {
+    name      = "mongodb-security-policy"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.mongodb_labels
+    }
+    policy_types = ["Ingress"]
+
+    ingress {
+      from {
+        pod_selector {
+          match_labels = local.backend_labels
+        }
+      }
+      ports {
+        port     = "27017"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow health checks from Kubernetes
+    ingress {
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "27017"
+        protocol = "TCP"
+      }
+    }
+  }
+}
+
+# Web application firewall simulation via network policy
+resource "kubernetes_network_policy" "waf_frontend" {
+  count = var.enable_network_policies ? 1 : 0
+  
+  metadata {
+    name      = "frontend-waf-policy"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.frontend_labels
+    }
+    policy_types = ["Ingress"]
+
+    ingress {
+      ports {
+        port     = "3001"
+        protocol = "TCP"
+      }
+      from {
+        ip_block {
+          cidr = "0.0.0.0/0"
+          except = [
+            "10.0.0.0/8",
+            "172.16.0.0/12", 
+            "192.168.0.0/16"
+          ]
+        }
+      }
+    }
+  }
+}
+
+# Backend API security
+resource "kubernetes_network_policy" "backend_security" {
+  count = var.enable_network_policies ? 1 : 0
+  
+  metadata {
+    name      = "backend-security-policy"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+
+  spec {
+    pod_selector {
+      match_labels = local.backend_labels
+    }
+    policy_types = ["Ingress"]
+
+    ingress {
+      from {
+        pod_selector {
+          match_labels = local.frontend_labels
+        }
+      }
+      ports {
+        port     = "5000"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow health checks
+    ingress {
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "5000"
+        protocol = "TCP"
+      }
+    }
   }
 }
 
@@ -1509,6 +1746,115 @@ resource "kubernetes_cluster_role_binding" "datadog_cluster_agent" {
     kind      = "ServiceAccount"
     name      = "datadog-cluster-agent"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
+  }
+}
+
+# Data Transfer Controls for GDPR Compliance
+resource "kubernetes_config_map" "data_transfer_policy" {
+  count = var.enable_data_transfer_controls ? 1 : 0
+  
+  metadata {
+    name      = "data-transfer-policy"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.common_labels
+  }
+
+  data = {
+    "transfer-policy.json" = jsonencode({
+      version = "1.0"
+      organization = "Healthcare App Corporation"
+      data_transfer_rules = [
+        {
+          purpose = "EU-US Data Transfers"
+          legal_basis = "Standard Contractual Clauses"
+          safeguards = [
+            "SCCs implemented",
+            "Data minimization",
+            "Encryption in transit",
+            "Regular audits"
+          ]
+          restricted_countries = []
+          approval_required = false
+        },
+        {
+          purpose = "Third-party processing"
+          legal_basis = "Legitimate interest"
+          safeguards = [
+            "DPA executed",
+            "Security assessments",
+            "Incident notification",
+            "Audit rights"
+          ]
+          restricted_countries = ["CN", "RU", "IR", "KP"]
+          approval_required = true
+        }
+      ]
+      audit_trail = {
+        enabled = true
+        retention_days = 2555  # 7 years
+        log_transfers = true
+      }
+    })
+  }
+}
+
+# Data Subject Rights Implementation
+resource "kubernetes_config_map" "gdpr_rights_config" {
+  metadata {
+    name      = "gdpr-rights-config"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.common_labels
+  }
+
+  data = {
+    "rights-implementation.json" = jsonencode({
+      data_subject_rights = {
+        access = {
+          enabled = true
+          max_response_days = 30
+          automated_processing = true
+        }
+        rectification = {
+          enabled = true
+          max_response_days = 30
+          automated_processing = true
+        }
+        erasure = {
+          enabled = true
+          max_response_days = 30
+          automated_processing = true
+          exceptions = ["legal-obligation", "public-interest", "research"]
+        }
+        restriction = {
+          enabled = true
+          max_response_days = 30
+          automated_processing = true
+        }
+        portability = {
+          enabled = true
+          max_response_days = 30
+          formats = ["json", "xml", "csv"]
+          automated_processing = true
+        }
+        objection = {
+          enabled = true
+          max_response_days = 30
+          automated_processing = true
+        }
+      }
+      consent_management = {
+        enabled = true
+        granular_consent = true
+        withdrawal_enabled = true
+        consent_log_retention = 2555  # 7 years
+      }
+      breach_notification = {
+        enabled = true
+        supervisory_authority_deadline_hours = 72
+        affected_individuals_deadline_days = 1
+        automated_detection = true
+      }
+    })
   }
 }
 output "mongodb_password" {
