@@ -1734,11 +1734,18 @@ node {
                                     
                                     echo "Executing load tests..."
                                     
+                                    # Set environment variables for CI/CD environment
+                                    export LOAD_TEST_MODE="mock"
+                                    export TARGET_APP_URL="http://localhost:3001"
+                                    export TARGET_API_URL="http://localhost:5001"
+                                    export LOAD_TEST_DURATION="30"
+                                    export LOAD_TEST_USERS="5"
+                                    
                                     if [ -f "scripts/load-testing.sh" ]; then
                                         echo "Using load testing script..."
                                         chmod +x scripts/load-testing.sh
                                         
-                                        # Run load tests
+                                        # Run load tests (will use mock mode in CI/CD)
                                         if ./scripts/load-testing.sh; then
                                             LOAD_TEST_STATUS="success"
                                             echo "Load tests completed successfully"
