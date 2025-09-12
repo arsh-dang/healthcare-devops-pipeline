@@ -1413,7 +1413,7 @@ resource "kubernetes_network_policy" "backend_security" {
 
   spec {
     pod_selector {
-      match_labels = local.backend_labels
+      match_labels = local.mongodb_labels  # Backend runs in MongoDB pod
     }
     policy_types = ["Ingress"]
 
@@ -1429,12 +1429,27 @@ resource "kubernetes_network_policy" "backend_security" {
       }
     }
 
-    # Allow health checks
+    # Allow health checks from Kubernetes
     ingress {
       from {
         namespace_selector {
           match_labels = {
             "kubernetes.io/metadata.name" = "kube-system"
+          }
+        }
+      }
+      ports {
+        port     = "5001"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow traffic from ingress-nginx namespace
+    ingress {
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "ingress-nginx"
           }
         }
       }

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthcare-config
+  namespace: healthcare-staging
+data:
+  NODE_ENV: "production"
+  API_URL: "/api"
+  DATABASE_NAME: "healthcare-app"

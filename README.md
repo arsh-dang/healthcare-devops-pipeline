@@ -119,7 +119,28 @@ A comprehensive **7-stage CI/CD pipeline** for healthcare web application deploy
       └─────────────┘                 └─────────────┘
 ```
 
-## 7-Stage Pipeline Implementation
+## Monitoring & Observability
+
+### Access URLs
+- **Grafana Dashboard**: http://localhost:30285/grafana/
+  - Username: `admin`
+  - Password: `admin` (change on first login)
+- **Prometheus Metrics**: http://localhost:30285/prometheus/
+- **Jaeger Tracing**: http://localhost:30285/jaeger/
+- **Alertmanager**: http://localhost:30285/alertmanager/
+
+### Monitoring Stack Features
+- **Prometheus**: Metrics collection and alerting
+- **Grafana**: Visualization dashboards with custom healthcare metrics
+- **Jaeger**: Distributed tracing for request flow analysis
+- **MongoDB Exporter**: Database performance monitoring
+- **Node Exporter**: System resource monitoring
+- **Alertmanager**: Alert routing and notification management
+
+### Health Check Endpoints
+- **Frontend Health**: http://localhost:30285/health
+- **Backend Health**: http://localhost:30285/api/health
+- **MongoDB Health**: Internal cluster connectivity monitoring
 
 ### Stage 1: Build & Package
 - **Frontend Build**: React application with production optimizations
@@ -216,8 +237,11 @@ npm install
 docker-compose up -d
 
 # Access the application
-# Frontend: http://localhost:3001
-# Backend API: http://localhost:5001
+# Frontend: http://localhost:30285
+# Backend API: http://localhost:30285/api
+# Grafana: http://localhost:30285/grafana
+# Prometheus: http://localhost:30285/prometheus
+# Jaeger: http://localhost:30285/jaeger
 ```
 
 ### Jenkins Pipeline Setup

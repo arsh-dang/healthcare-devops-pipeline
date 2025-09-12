@@ -1,53 +1,64 @@
-# Terraform variables for staging environment
+# Staging environment configuration for Healthcare App
+# This file configures the Terraform deployment for staging
+
+# Environment configuration
 environment = "staging"
 app_version = "latest"
 
-# Docker images
-frontend_image = "healthcare-frontend:latest"
-backend_image = "healthcare-backend:latest"
+# Docker images (will be built by Jenkins pipeline)
+frontend_image = "healthcare-app-frontend:latest"
+backend_image = "healthcare-app-backend:latest"
 
 # MongoDB Configuration
-mongodb_root_password = ""
+mongodb_root_password = "healthcare-staging-2024"
 
 # Monitoring
-enable_datadog = false
-datadog_api_key = ""
+enable_monitoring = true
+enable_datadog = false  # Disable Datadog for staging to avoid costs
 
 # Resource scaling for staging
 replica_count = {
-  frontend = 2
+  frontend = 1
+  backend  = 1
 }
 
-# Staging resource limits
-resource_limits = {
-  frontend = {
-    cpu_request = "100m"
-    memory_request = "128Mi"
-    cpu_limit = "500m"
-    memory_limit = "512Mi"
-  }
-  backend = {
-    cpu_request = "200m"
-    memory_request = "256Mi"
-    cpu_limit = "1000m"
-    memory_limit = "1Gi"
-  }
-}
+# SMTP Email Configuration (using mock values for staging)
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
+smtp_username = "staging-alerts@healthcare.local"
+smtp_password = "mock-password"
+smtp_from_email = "alerts@healthcare-staging.local"
 
-# SMTP Email Configuration (BUILD PARAMETERS - Set via environment variables)
-# smtp_server = "smtp.gmail.com"
-# smtp_port = "587"
-# smtp_username = "your-email@gmail.com"
-# smtp_password = "your-gmail-app-password"
-# smtp_from_email = "alerts@healthcare.company.com"
+# Alert Email Recipients
+alert_email_critical = "admin@healthcare.local"
+alert_email_warning = "team@healthcare.local"
+alert_email_info = "info@healthcare.local"
 
-# Alert Email Recipients (BUILD PARAMETERS - Set via environment variables)
-# alert_email_critical = "critical-alerts@healthcare.company.com"
-# alert_email_warning = "alerts@healthcare.company.com"
-# alert_email_team = "team@healthcare.company.com"
+# Slack Configuration (disabled for staging)
+slack_webhook_critical = ""
+slack_webhook_warning = ""
+slack_webhook_info = ""
+slack_channel_critical = "#alerts-critical"
+slack_channel_warning = "#alerts-warning"
+slack_channel_info = "#alerts-info"
 
-# Slack Configuration (BUILD PARAMETERS - Set via environment variables)
-# slack_webhook_critical = "https://hooks.slack.com/services/YOUR/WEBHOOK"
-# slack_webhook_warning = "https://hooks.slack.com/services/YOUR/WEBHOOK"
-# slack_channel_critical = "#healthcare-critical"
-# slack_channel_warning = "#healthcare-alerts"
+# Persistent storage (disabled for staging to use emptyDir)
+enable_persistent_storage = false
+
+# Network policies (enabled for security)
+enable_network_policies = true
+
+# Data transfer controls (enabled for compliance)
+enable_data_transfer_controls = true
+
+# Ingress monitoring (disabled for staging)
+enable_ingress_monitoring = false
+
+# Log aggregation (disabled for staging)
+enable_log_aggregation = false
+
+# Synthetic monitoring (disabled for staging)
+enable_synthetic_monitoring = false
+
+# Distributed tracing (enabled for staging)
+enable_distributed_tracing = true

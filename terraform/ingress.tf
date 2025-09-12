@@ -154,6 +154,23 @@ resource "kubernetes_ingress_v1" "monitoring" {
             }
           }
         }
+
+        dynamic "path" {
+          for_each = var.enable_distributed_tracing ? [1] : []
+          content {
+            path      = "/jaeger"
+            path_type = "Prefix"
+
+            backend {
+              service {
+                name = kubernetes_service.jaeger[0].metadata[0].name
+                port {
+                  number = 16686
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
