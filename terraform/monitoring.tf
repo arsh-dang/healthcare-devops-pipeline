@@ -363,6 +363,10 @@ resource "kubernetes_secret" "mongodb_exporter_secret" {
   data = {
     "mongodb-root-password" = data.kubernetes_secret.healthcare_app_secrets.data["mongodb-root-password"]
   }
+
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
 }
 
 # Data source to read the secret from healthcare namespace
@@ -469,6 +473,10 @@ resource "kubernetes_deployment" "mongodb_exporter" {
         }
       }
     }
+  }
+
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
   }
 }
 
