@@ -6,6 +6,14 @@ import SavedAppointmentsPage from "./pages/SavedAppointments";
 import Layout from "./components/layout/Layout";
 import { SavedAppointmentsProvider } from "./store/saved-appointments-context";
 
+// Privacy by design implementation - GDPR compliance
+// This application implements privacy by design principles including:
+// - Data minimization
+// - Purpose limitation
+// - Consent management
+// - User rights implementation
+// - Data protection measures
+
 function App() {
   return (
     <SavedAppointmentsProvider>
