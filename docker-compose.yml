@@ -50,7 +50,6 @@ services:
     networks:
       - healthcare-network
     volumes:
-      - ./server:/app/server:ro
       - /app/node_modules
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
