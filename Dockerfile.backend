@@ -4,17 +4,14 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm
-RUN npm install -g pnpm
+# Copy package.json and package-lock.json from root
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN pnpm install --prod
+RUN npm install --production
 
 # Copy server files
-COPY server/ server/
+COPY server/ ./server/
 
 # Expose the port the app runs on
 EXPOSE 5001
