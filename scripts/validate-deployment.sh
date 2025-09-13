@@ -123,7 +123,7 @@ test_api_endpoints() {
     echo "Testing API Endpoints..."
     
     # Test if backend is accessible
-    BACKEND_URL="http://localhost:5001"
+    BACKEND_URL="http://localhost:30285/api"
     if curl -s "${BACKEND_URL}/health" | grep -q "ok"; then
         print_status "Backend health endpoint is working"
     else

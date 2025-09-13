@@ -218,10 +218,10 @@ After deployment, access monitoring interfaces:
 - **MongoDB Exporter**: https://monitoring.company.com/mongodb-exporter
 
 ### Staging Environment:
-- **Grafana**: http://127.0.0.1:3000
-- **Prometheus**: http://127.0.0.1:9090
-- **Alertmanager**: http://127.0.0.1:9093
-- **MongoDB Exporter**: http://127.0.0.1:9216
+- **Grafana**: http://localhost:30285/grafana
+- **Prometheus**: http://localhost:30285/prometheus
+- **Alertmanager**: http://localhost:30285/alertmanager
+- **MongoDB Exporter**: http://localhost:30285/mongodb-exporter
 
 ## Troubleshooting
 

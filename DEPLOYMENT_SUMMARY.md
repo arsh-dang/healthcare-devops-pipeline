@@ -57,10 +57,10 @@ terraform apply tfplan
 
 ## Access URLs (After Deployment)
 
-- **Grafana**: http://127.0.0.1:3000
-- **Prometheus**: http://127.0.0.1:9090
-- **Alertmanager**: http://127.0.0.1:9093
-- **MongoDB Exporter**: http://127.0.0.1:9216### Default Credentials
+- **Grafana**: http://localhost:30285/grafana
+- **Prometheus**: http://localhost:30285/prometheus
+- **Alertmanager**: http://localhost:30285/alertmanager
+- **MongoDB Exporter**: http://localhost:30285/mongodb-exporter### Default Credentials
 - **Grafana**: `admin` / `admin` (Change immediately!)
 
 ## Key Features Implemented

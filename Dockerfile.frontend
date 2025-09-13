@@ -42,4 +42,4 @@ RUN printf '%s\n' \
     chmod +x /docker-entrypoint.d/40-init-nginx-cache.sh
 
 # Expose port
-EXPOSE 3001
+EXPOSE 30285

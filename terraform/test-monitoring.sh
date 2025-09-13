@@ -41,7 +41,7 @@ test_http_endpoint() {
 echo "📊 Testing Prometheus metrics collection..."
 
 run_test "Prometheus API accessible" \
-    "kubectl exec -n ${MONITORING_NAMESPACE} \$(kubectl get pods -n ${MONITORING_NAMESPACE} -l component=prometheus -o jsonpath='{.items[0].metadata.name}') -- curl -s http://localhost:9090/-/healthy"
+    "kubectl exec -n ${MONITORING_NAMESPACE} \$(kubectl get pods -n ${MONITORING_NAMESPACE} -l component=prometheus -o jsonpath='{.items[0].metadata.name}') -- curl -s http://localhost:30285/prometheus/-/healthy"
 
 run_test "MongoDB exporter metrics" \
     "kubectl exec -n ${MONITORING_NAMESPACE} \$(kubectl get pods -n ${MONITORING_NAMESPACE} -l component=prometheus -o jsonpath='{.items[0].metadata.name}') -- curl -s http://mongodb-exporter:9216/metrics | grep -q mongodb"
@@ -54,7 +54,7 @@ echo ""
 echo "📈 Testing Grafana accessibility..."
 
 run_test "Grafana service accessible" \
-    "kubectl port-forward -n ${MONITORING_NAMESPACE} svc/grafana 3000:3000 --address 127.0.0.1 >/dev/null 2>&1 & sleep 3 && test_http_endpoint http://127.0.0.1:3000 200 && kill %1"
+    "test_http_endpoint http://localhost:30285/grafana 200"
 
 # Test Alertmanager
 echo ""
@@ -96,7 +96,7 @@ if kubectl get deployment synthetic-monitoring -n "${MONITORING_NAMESPACE}" >/de
         "kubectl run test-backend --image=curlimages/curl:8.1.2 --rm -i --restart=Never -- curl -s --max-time 5 http://healthcare-backend.${NAMESPACE}.svc.cluster.local:5001/health | grep -q 'ok'"
 
     run_test "Frontend availability" \
-        "kubectl run test-frontend --image=curlimages/curl:8.1.2 --rm -i --restart=Never -- curl -s --max-time 5 http://healthcare-frontend.${NAMESPACE}.svc.cluster.local:3001 | grep -q '<!DOCTYPE html>'"
+        "kubectl run test-frontend --image=curlimages/curl:8.1.2 --rm -i --restart=Never -- curl -s --max-time 5 http://healthcare-frontend.${NAMESPACE}.svc.cluster.local:30285 | grep -q '<!DOCTYPE html>'"
 else
     echo "⚠️  Synthetic monitoring not deployed"
 fi
@@ -138,11 +138,11 @@ if kubectl get deployment prometheus -n "${MONITORING_NAMESPACE}" >/dev/null 2>&
 
     # Test basic query
     run_test "Prometheus query performance" \
-        "kubectl exec -n ${MONITORING_NAMESPACE} ${PROMETHEUS_POD} -- timeout 5 curl -s 'http://localhost:9090/api/v1/query?query=up' | jq -r '.status' | grep -q 'success'"
+        "kubectl exec -n ${MONITORING_NAMESPACE} ${PROMETHEUS_POD} -- timeout 5 curl -s 'http://localhost:30285/prometheus/api/v1/query?query=up' | jq -r '.status' | grep -q 'success'"
 
     # Test range query
     run_test "Prometheus range query" \
-        "kubectl exec -n ${MONITORING_NAMESPACE} ${PROMETHEUS_POD} -- timeout 10 curl -s 'http://localhost:9090/api/v1/query_range?query=up&start=\$(date -d \"5 minutes ago\" +%s)&end=\$(date +%s)&step=60' | jq -r '.status' | grep -q 'success'"
+        "kubectl exec -n ${MONITORING_NAMESPACE} ${PROMETHEUS_POD} -- timeout 10 curl -s 'http://localhost:30285/prometheus/api/v1/query_range?query=up&start=\$(date -d \"5 minutes ago\" +%s)&end=\$(date +%s)&step=60' | jq -r '.status' | grep -q 'success'"
 else
     echo "⚠️  Prometheus performance test skipped"
 fi

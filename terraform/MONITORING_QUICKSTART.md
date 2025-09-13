@@ -34,26 +34,26 @@ Replace `[environment]` with `staging` or `production`.
 ```bash
 kubectl port-forward -n monitoring-staging svc/grafana 3000:3000
 ```
-- URL: http://localhost:3000
+- URL: http://localhost:30285
 - Default credentials: admin/admin
 
 ### Prometheus (Metrics & Querying)
 ```bash
 kubectl port-forward -n monitoring-staging svc/prometheus 9090:9090
 ```
-- URL: http://localhost:9090
+- URL: http://localhost:30285/prometheus
 
 ### Jaeger (Distributed Tracing)
 ```bash
 kubectl port-forward -n monitoring-staging svc/jaeger 16686:16686
 ```
-- URL: http://localhost:16686
+- URL: http://localhost:30285/jaeger
 
 ### Alertmanager (Alert Management)
 ```bash
 kubectl port-forward -n monitoring-staging svc/alertmanager 9093:9093
 ```
-- URL: http://localhost:9093
+- URL: http://localhost:30285/alertmanager
 
 ## Key Features Added
 

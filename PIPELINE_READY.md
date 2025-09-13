@@ -67,8 +67,8 @@ This document summarizes all the setup and configuration completed to make the h
 docker-compose up -d
 
 # Access application
-# Frontend: http://localhost:3001
-# Backend: http://localhost:5001
+# Frontend: http://localhost:30285
+# Backend: http://localhost:30285/api
 ```
 
 ### Jenkins Pipeline Setup

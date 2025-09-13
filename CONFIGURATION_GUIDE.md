@@ -382,7 +382,7 @@ If you encounter issues:
 After configuration:
 
 1. **Deploy the stack**: `./deploy-monitoring.sh staging`
-2. **Access monitoring**: http://127.0.0.1:3000 (Grafana)
+2. **Access monitoring**: http://localhost:30285/grafana (Grafana)
 3. **Configure alerts**: Set up notification channels
 4. **Customize dashboards**: Add healthcare-specific metrics
 5. **Test notifications**: Trigger test alerts

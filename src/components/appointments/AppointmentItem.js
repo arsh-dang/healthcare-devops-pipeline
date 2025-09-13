@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Card from "../ui/Card";
 import classes from "./AppointmentItem.module.css";
 import SavedAppointmentsContext from "../../store/saved-appointments-context";
+import { buildApiUrl } from "../../utils/helpers";
 
 function AppointmentItem(props) {
   const savedAppointmentsCtx = useContext(SavedAppointmentsContext);
@@ -33,8 +34,8 @@ function AppointmentItem(props) {
     if (window.confirm("Are you sure you want to delete this appointment? This action cannot be undone.")) {
       setIsDeleting(true);
       
-            // Using 127.0.0.1 for API calls
-      fetch(`http://127.0.0.1:5001/api/appointments/${props.id}`, {
+      // Using centralized API URL through reverse proxy
+      fetch(buildApiUrl(`appointments/${props.id}`), {
         method: 'DELETE',
       })
       .then(response => {

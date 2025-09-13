@@ -10,6 +10,7 @@ yarn.lock
 build/
 dist/
 coverage/
+frontend.tar
 
 # Environment files
 .env
@@ -54,3 +55,9 @@ security-reports/
 fix-*.js
 temp-*.js
 cleanup-*.js
+deploy-*.sh
+setup-*.sh
+validate-*.sh
+terragrunt-*.sh
+jenkins-*.groovy
+test-*.js

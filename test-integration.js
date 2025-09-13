@@ -2,12 +2,12 @@ const { execSync } = require('child_process');
 const axios = require('axios');
 
 // Configuration
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5001/api';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:30285/api';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:30285';
 
 // For Jenkins/CI environment, try host machine IP if localhost fails
 const CI_API_BASE_URL = process.env.CI_API_BASE_URL || 'http://host.docker.internal:5001/api';
-const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://host.docker.internal:3001';
+const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://host.docker.internal:30285';
 
 // Test results
 let testResults = {

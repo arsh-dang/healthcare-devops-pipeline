@@ -85,7 +85,7 @@ describe('NewAppointmentPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
 
-    expect(fetch).toHaveBeenCalledWith('http://127.0.0.1:5001/api/appointments', {
+    expect(fetch).toHaveBeenCalledWith('http://localhost:30285/api/appointments', {
       method: 'POST',
       body: JSON.stringify({
         patientName: 'John Doe',

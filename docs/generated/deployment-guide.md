@@ -131,7 +131,7 @@ curl https://api.healthcare-app.com/health
 # Port forward Grafana
 kubectl port-forward svc/grafana 3000:3000
 
-# Access at: http://localhost:3000
+# Access at: http://localhost:30285
 # Default credentials: admin/admin
 ```
 
@@ -140,7 +140,7 @@ kubectl port-forward svc/grafana 3000:3000
 # Port forward Prometheus
 kubectl port-forward svc/prometheus 9090:9090
 
-# Access at: http://localhost:9090
+# Access at: http://localhost:30285/prometheus
 ```
 
 ### Datadog Integration
@@ -197,13 +197,13 @@ kubectl get virtualservice, destinationrule, gateway
 #### Application Health
 ```bash
 # Frontend health
-curl http://localhost:3001
+curl http://localhost:30285
 
 # Backend health
-curl http://localhost:5001/health
+curl http://localhost:30285/api/health
 
 # Database health
-curl http://localhost:5001/health/database
+curl http://localhost:30285/api/health/database
 ```
 
 #### Infrastructure Health

@@ -142,10 +142,10 @@ datadog_rum_client_token = "your-rum-client-token"
 ## Access URLs (After Deployment)
 
 ### **Staging Environment:**
-- **Grafana**: http://127.0.0.1:3000
-- **Prometheus**: http://127.0.0.1:9090
-- **Alertmanager**: http://127.0.0.1:9093
-- **MongoDB Exporter**: http://127.0.0.1:9216
+- **Grafana**: http://localhost:30285/grafana
+- **Prometheus**: http://localhost:30285/prometheus
+- **Alertmanager**: http://localhost:30285/alertmanager
+- **MongoDB Exporter**: http://localhost:30285/mongodb-exporter
 
 ### **Default Credentials:**
 - **Grafana**: admin / admin123
@@ -202,7 +202,7 @@ kubectl logs -n monitoring-staging deployment/prometheus
 ./deploy-monitoring.sh staging
 
 # 4. Access monitoring
-# Grafana: http://127.0.0.1:3000
+# Grafana: http://localhost:30285/grafana
 ```
 
 ## Support
@@ -224,7 +224,7 @@ kubectl logs -n monitoring-staging deployment/prometheus
 1. **Configure variables**: `./setup-config.sh`
 2. **Validate setup**: `./validate-config.sh`
 3. **Deploy stack**: `./deploy-monitoring.sh staging`
-4. **Access monitoring**: http://127.0.0.1:3000
+4. **Access monitoring**: http://localhost:30285/grafana
 5. **Configure alerts**: Set up notification preferences
 
 **Your healthcare application monitoring stack is now fully configured and ready for deployment! **

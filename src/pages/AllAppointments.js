@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 import AppointmentList from "../components/appointments/AppointmentList";
+import { buildApiUrl } from "../utils/helpers";
 
 function AllAppointmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -11,8 +12,8 @@ function AllAppointmentsPage() {
     setIsLoading(true);
     setError(null);
     
-        // Using 127.0.0.1 for API calls
-    fetch("http://127.0.0.1:5001/api/appointments")
+    // Using centralized API URL through reverse proxy
+    fetch(buildApiUrl("appointments"))
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');

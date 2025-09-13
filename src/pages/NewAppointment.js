@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AppointmentForm from "../components/appointments/AppointmentForm";
 import { useNavigate } from "react-router-dom";
+import { buildApiUrl } from "../utils/helpers";
 
 function NewAppointmentPage() {
     const navigate = useNavigate();
@@ -11,8 +12,8 @@ function NewAppointmentPage() {
         setIsSubmitting(true);
         setError(null);
 
-                // Using 127.0.0.1 for API calls
-        fetch('http://127.0.0.1:5001/api/appointments', {
+        // Using centralized API URL through reverse proxy
+        fetch(buildApiUrl('appointments'), {
             method: 'POST',
             body: JSON.stringify(appointmentData),
             headers: {

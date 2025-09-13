@@ -28,8 +28,8 @@ print_error() {
 }
 
 # Configuration
-APP_URL="${APP_URL:-http://localhost:3001}"
-API_URL="${API_URL:-http://localhost:5001}"
+APP_URL="${APP_URL:-http://localhost:30285}"
+API_URL="${API_URL:-http://localhost:30285/api}"
 TIMEOUT=10
 
 # Check if we're in a CI environment

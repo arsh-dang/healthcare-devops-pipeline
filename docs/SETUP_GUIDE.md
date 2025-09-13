@@ -192,7 +192,7 @@ git push origin main
 # Access Prometheus (after pipeline deployment)
 kubectl port-forward svc/prometheus-server 9090:80 -n monitoring
 
-# Open browser: http://localhost:9090
+# Open browser: http://localhost:30285/prometheus
 ```
 
 ### Grafana Setup
@@ -200,7 +200,7 @@ kubectl port-forward svc/prometheus-server 9090:80 -n monitoring
 # Access Grafana (after pipeline deployment)
 kubectl port-forward svc/grafana 3000:80 -n monitoring
 
-# Open browser: http://localhost:3000
+# Open browser: http://localhost:30285
 # Default credentials: admin/admin
 ```
 
@@ -266,7 +266,7 @@ kubectl logs -f deployment/healthcare-frontend -n healthcare
 kubectl logs -f deployment/healthcare-backend -n healthcare
 
 # Check service connectivity
-kubectl exec -it pod-name -n healthcare -- curl http://localhost:3000/health
+kubectl exec -it pod-name -n healthcare -- curl http://localhost:30285/health
 ```
 
 #### Infrastructure Debugging

@@ -163,7 +163,7 @@ if resource_exists deployment "synthetic-monitoring" "${MONITORING_NAMESPACE}"; 
 
     # Test frontend availability
     if kubectl run test-frontend-health --image=curlimages/curl:8.1.2 --rm -i --restart=Never -- \
-        curl -s --max-time 10 http://healthcare-frontend.${NAMESPACE}.svc.cluster.local:3001 >/dev/null 2>&1; then
+        curl -s --max-time 10 http://healthcare-frontend.${NAMESPACE}.svc.cluster.local:30285 >/dev/null 2>&1; then
         echo "✅ Frontend service is accessible"
     else
         echo "❌ Frontend service is not accessible"
@@ -185,7 +185,7 @@ if resource_exists deployment "prometheus" "${MONITORING_NAMESPACE}"; then
     if [ -n "${PROMETHEUS_POD}" ]; then
         # Check targets endpoint
         TARGETS=$(kubectl exec -n "${MONITORING_NAMESPACE}" "${PROMETHEUS_POD}" -- \
-            curl -s http://localhost:9090/api/v1/targets | jq -r '.data.activeTargets[].health' 2>/dev/null || echo "")
+            curl -s http://localhost:30285/prometheus/api/v1/targets | jq -r '.data.activeTargets[].health' 2>/dev/null || echo "")
 
         if echo "${TARGETS}" | grep -q "up"; then
             UP_TARGETS=$(echo "${TARGETS}" | grep -c "up" || echo "0")

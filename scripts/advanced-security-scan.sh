@@ -6,7 +6,7 @@ set -e
 echo "Starting Advanced Security Testing Suite..."
 
 # Configuration
-APP_URL=${1:-"http://localhost:3000"}
+APP_URL=${1:-"http://localhost:30285"}
 REPORT_DIR="security-reports"
 ZAP_PORT=${ZAP_PORT:-8090}
 

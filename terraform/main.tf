@@ -112,7 +112,7 @@ variable "resource_limits" {
     backend = {
       cpu_request    = "200m"
       memory_request = "256Mi"
-      cpu_limit      = "1000m"
+      cpu_limit      = "300m"
       memory_limit   = "1Gi"
     }
     mongodb = {
@@ -305,13 +305,13 @@ resource "random_password" "encryption_key" {
 # MongoDB StatefulSet with advanced configuration
 resource "kubernetes_stateful_set" "mongodb" {
   metadata {
-    name      = "mongodb"
+    name      = var.environment == "production" ? "mongodb" : "mongodb-staging"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.mongodb_labels
   }
 
   spec {
-    service_name = "mongodb"
+    service_name = var.environment == "production" ? "mongodb" : "mongodb-staging"
     replicas     = 1
 
     selector {
@@ -361,11 +361,11 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           resources {
             requests = {
-              cpu    = "500m"
+              cpu    = "100m"
               memory = "1Gi"
             }
             limits = {
-              cpu    = "2"
+              cpu    = "500m"
               memory = "4Gi"
             }
           }
@@ -455,20 +455,40 @@ resource "kubernetes_stateful_set" "mongodb" {
             value = "healthcare-app"
           }
 
-          # Datadog APM environment variables (Core APM available for free tier)
+          # Jaeger distributed tracing environment variables
           env {
-            name  = "DD_TRACE_ENABLED"
-            value = var.enable_datadog ? "true" : "false"
-          }
-
-          env {
-            name  = "DD_ENV"
-            value = var.environment
-          }
-
-          env {
-            name  = "DD_SERVICE"
+            name  = "JAEGER_SERVICE_NAME"
             value = "healthcare-backend"
+          }
+
+          env {
+            name  = "JAEGER_AGENT_HOST"
+            value = "jaeger.monitoring-staging.svc.cluster.local"
+          }
+
+          env {
+            name  = "JAEGER_AGENT_PORT"
+            value = "14268"
+          }
+
+          env {
+            name  = "JAEGER_SAMPLER_TYPE"
+            value = "const"
+          }
+
+          env {
+            name  = "JAEGER_SAMPLER_PARAM"
+            value = "1"
+          }
+
+          env {
+            name  = "JAEGER_REPORTER_LOG_SPANS"
+            value = "true"
+          }
+
+          env {
+            name  = "JAEGER_PROPAGATION"
+            value = "jaeger,b3"
           }
 
           # Note: Datadog RUM is not available for student accounts
@@ -880,7 +900,7 @@ resource "kubernetes_deployment" "frontend" {
           image_pull_policy = "IfNotPresent"
 
           port {
-            container_port = 3001
+            container_port = 30285
             name           = "http"
           }
 
@@ -977,7 +997,7 @@ resource "kubernetes_deployment" "frontend" {
 # Services
 resource "kubernetes_service" "mongodb" {
   metadata {
-    name      = "mongodb"
+    name      = "mongodb-staging"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.mongodb_labels
   }
@@ -992,6 +1012,82 @@ resource "kubernetes_service" "mongodb" {
     }
 
     type = "ClusterIP"
+  }
+}
+
+# Monitoring services in healthcare namespace for ingress routing
+resource "kubernetes_service" "grafana_healthcare" {
+  metadata {
+    name      = "grafana"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.common_labels, { component = "grafana" })
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = "grafana.monitoring-staging.svc.cluster.local"
+
+    port {
+      port = 3000
+    }
+  }
+}
+
+resource "kubernetes_service" "prometheus_healthcare" {
+  metadata {
+    name      = "prometheus"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.common_labels, { component = "prometheus" })
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = "prometheus.monitoring-staging.svc.cluster.local"
+
+    port {
+      port = 9090
+    }
+  }
+}
+
+resource "kubernetes_service" "alertmanager_healthcare" {
+  metadata {
+    name      = "alertmanager"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.common_labels, { component = "alertmanager" })
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = "alertmanager.monitoring-staging.svc.cluster.local"
+
+    port {
+      port = 9093
+    }
+  }
+}
+
+# Jaeger service for distributed tracing
+resource "kubernetes_service" "jaeger_healthcare" {
+  metadata {
+    name      = "jaeger"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.common_labels, { component = "jaeger" })
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = "jaeger.monitoring-staging.svc.cluster.local"
+
+    port {
+      port = 14268
+      name = "collect"
+    }
+
+    port {
+      port = 16686
+      name = "query"
+    }
   }
 }
 
@@ -1190,7 +1286,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
+    selector = local.backend_labels  # Backend runs as sidecar in MongoDB pod
 
     port {
       port        = 5001
@@ -1213,7 +1309,7 @@ resource "kubernetes_service" "frontend" {
     selector = local.frontend_labels
 
     port {
-      port        = 3001
+      port        = 30285
       target_port = "http"
       protocol    = "TCP"
     }
@@ -1385,7 +1481,7 @@ resource "kubernetes_network_policy" "waf_frontend" {
 
     ingress {
       ports {
-        port     = "3001"
+        port     = "30285"
         protocol = "TCP"
       }
       from {
@@ -1413,7 +1509,7 @@ resource "kubernetes_network_policy" "backend_security" {
 
   spec {
     pod_selector {
-      match_labels = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
+      match_labels = local.backend_labels  # Backend runs as sidecar in MongoDB pod
     }
     policy_types = ["Ingress"]
 
@@ -1534,7 +1630,7 @@ resource "kubernetes_network_policy" "allow_frontend_ingress" {
 
     ingress {
       ports {
-        port     = "3001"
+        port     = "30285"
         protocol = "TCP"
       }
       from {
@@ -1870,6 +1966,40 @@ resource "kubernetes_config_map" "gdpr_rights_config" {
     })
   }
 }
+
+# Backend Secret (converted from YAML)
+resource "kubernetes_secret" "backend_secret" {
+  metadata {
+    name      = "backend-secret"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.common_labels
+  }
+
+  type = "Opaque"
+
+  data = {
+    jwt-secret     = "SnVzdEFTZWN1cmVTZWNyZXRGb3JKV1RUb2tlbnM=" # JustASecureSecretForJWTTokens
+    cookie-secret  = "Q3J5cHRvZ3JhcGhpY2FsbHlTZWN1cmVDb29raWVTZWNyZXQ=" # CryptographicallySecureCookieSecret
+    api-key        = "c3VwZXItc2VjcmV0LWFwaS1rZXktMTIzNDU=" # super-secret-api-key-12345
+    mongodb-uri    = "bW9uZ29kYjovL2FkbWluOnBhc3N3b3JkMTIzQG1vbmdvZGI6MjcwMTcvaGVhbHRoY2FyZS1hcHA/YXV0aFNvdXJjZT1hZG1pbg==" # mongodb://admin:password123@mongodb:27017/healthcare-app?authSource=admin
+  }
+}
+
+# Healthcare ConfigMap (converted from YAML)
+resource "kubernetes_config_map" "healthcare_config" {
+  metadata {
+    name      = "healthcare-config"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.common_labels
+  }
+
+  data = {
+    NODE_ENV      = var.environment
+    API_URL       = "/api"
+    DATABASE_NAME = "healthcare-app"
+  }
+}
+
 output "mongodb_password" {
   description = "MongoDB root password (sensitive - only shown for convenience)"
   value       = local.mongodb_password

@@ -4,8 +4,8 @@ echo "[INFO] Starting Load Testing Suite"
 echo "[INFO] =========================="
 
 # Configuration
-TARGET_APP_URL="${TARGET_APP_URL:-http://localhost:3001}"
-TARGET_API_URL="${TARGET_API_URL:-http://localhost:5001}"
+TARGET_APP_URL="${TARGET_APP_URL:-http://localhost:30285}"
+TARGET_API_URL="${TARGET_API_URL:-http://localhost:30285/api}"
 DURATION="${LOAD_TEST_DURATION:-60}"
 VIRTUAL_USERS="${LOAD_TEST_USERS:-10}"
 REPORT_DIR="${LOAD_TEST_REPORT_DIR:-load-tests/reports}"

@@ -1083,7 +1083,7 @@ class RealTimeMonitoring {
     
     async getSystemMetrics() {
         // Get system metrics from Prometheus
-        const prometheusUrl = process.env.PROMETHEUS_URL || 'http://localhost:9090';
+        const prometheusUrl = process.env.PROMETHEUS_URL || 'http://localhost:30285/prometheus';
         
         try {
             const responses = await Promise.all([
