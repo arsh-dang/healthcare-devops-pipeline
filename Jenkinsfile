@@ -4174,17 +4174,17 @@ node {
                                 if command -v kubectl >/dev/null 2>&1; then
                                     echo "Checking green environment pod status..."
                                     
-                                    # Wait for green pods to be ready
+                                    # Wait for green pods to be ready (use correct labels from Terraform)
                                     echo "Waiting for green environment pods to be ready..."
-                                    kubectl wait --for=condition=ready pod -l environment=production-green -n healthcare-app --timeout=300s || echo "Green pods not ready within timeout"
+                                    kubectl wait --for=condition=ready pod -l environment=production-green -n healthcare-production-green --timeout=300s || echo "Green pods not ready within timeout"
                                     
                                     # Check green service endpoints
                                     echo "Checking green service endpoints..."
-                                    kubectl get services -l environment=production-green -n healthcare-app || echo "Green services not found"
+                                    kubectl get services -l environment=production-green -n healthcare-production-green || echo "Green services not found"
                                     
-                                    # Test green ingress
+                                    # Test green ingress (use correct ingress name from Terraform)
                                     echo "Testing green ingress..."
-                                    GREEN_INGRESS_IP=$(kubectl get ingress healthcare-app-green -n healthcare-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+                                    GREEN_INGRESS_IP=$(kubectl get ingress healthcare-app-ingress -n healthcare-production-green -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
                                     if [ -n "$GREEN_INGRESS_IP" ]; then
                                         echo "Green ingress available at: $GREEN_INGRESS_IP"
                                         
@@ -4200,9 +4200,9 @@ node {
                                     else
                                         echo "Green ingress not available - checking pod direct access"
                                         # Try to access pods directly for health checks
-                                        GREEN_POD=$(kubectl get pods -l environment=production-green -n healthcare-app -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                        GREEN_POD=$(kubectl get pods -l environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$GREEN_POD" ]; then
-                                            kubectl exec $GREEN_POD -n healthcare-app -- curl -s http://localhost:3000/health >/dev/null 2>&1 && GREEN_HEALTH_STATUS="healthy" || GREEN_HEALTH_STATUS="unhealthy"
+                                            kubectl exec $GREEN_POD -n healthcare-production-green -- curl -s http://localhost:3000/health >/dev/null 2>&1 && GREEN_HEALTH_STATUS="healthy" || GREEN_HEALTH_STATUS="unhealthy"
                                         else
                                             echo "No green pods found"
                                             GREEN_HEALTH_STATUS="unhealthy"
@@ -4260,7 +4260,7 @@ node {
                                     
                                     # In production, you would update the ingress resource or service selector
                                     # For demonstration, we'll simulate the traffic switch
-                                    kubectl patch ingress healthcare-app -n healthcare-app --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "healthcare-app-green"}]' || echo "Traffic switch simulation completed"
+                                    kubectl patch ingress healthcare-app-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Traffic switch simulation completed"
                                     
                                     echo "Traffic successfully switched to green environment"
                                     TRAFFIC_SWITCH_STATUS="success"
@@ -4316,9 +4316,9 @@ node {
                                     
                                     # Check if green environment is responding
                                     if command -v kubectl >/dev/null 2>&1; then
-                                        GREEN_POD=$(kubectl get pods -l environment=production-green -n healthcare-app -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                        GREEN_POD=$(kubectl get pods -l environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$GREEN_POD" ]; then
-                                            kubectl exec $GREEN_POD -n healthcare-app -- curl -s http://localhost:3000/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            kubectl exec $GREEN_POD -n healthcare-production-green -- curl -s http://localhost:3000/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         else
                                             MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         fi
@@ -4450,10 +4450,10 @@ node {
                             
                             if command -v kubectl >/dev/null 2>&1; then
                                 # Switch traffic back to blue environment
-                                kubectl patch ingress healthcare-app -n healthcare-app --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "healthcare-app-blue"}]' || echo "Rollback traffic switch simulation completed"
+                                kubectl patch ingress healthcare-app-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Rollback traffic switch simulation completed"
                                 
                                 # Scale down green environment
-                                kubectl scale deployment healthcare-app-green --replicas=0 -n healthcare-app || echo "Green environment scaled down"
+                                kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-production-green || echo "Green environment scaled down"
                                 
                                 echo "Automatic rollback completed"
                             else
