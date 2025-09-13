@@ -72,12 +72,12 @@ def sendSlackNotification(String message, String color = 'good') {
                     ]]
                 ]
 
-                httpRequest(
-                    httpMode: 'POST',
-                    contentType: 'APPLICATION_JSON',
-                    url: webhookUrl,
-                    requestBody: groovy.json.JsonOutput.toJson(payload)
-                )
+                sh """
+                    curl -X POST \
+                        -H 'Content-Type: application/json' \
+                        -d '${groovy.json.JsonOutput.toJson(payload)}' \
+                        ${webhookUrl}
+                """
             }
         } catch (Exception e) {
             echo "Failed to send Slack notification: ${e.getMessage()}"
