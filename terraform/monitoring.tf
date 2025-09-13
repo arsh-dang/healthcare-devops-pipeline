@@ -361,7 +361,7 @@ resource "kubernetes_secret" "mongodb_exporter_secret" {
   type = "Opaque"
 
   data = {
-    "mongodb-root-password" = data.kubernetes_secret.healthcare_app_secrets.data["mongodb-root-password"]
+    "mongodb-root-password" = kubernetes_secret.app_secrets.data["mongodb-root-password"]
   }
 
   lifecycle {
@@ -369,13 +369,7 @@ resource "kubernetes_secret" "mongodb_exporter_secret" {
   }
 }
 
-# Data source to read the secret from healthcare namespace
-data "kubernetes_secret" "healthcare_app_secrets" {
-  metadata {
-    name      = "healthcare-app-secrets"
-    namespace = "${var.namespace}-${var.environment}"
-  }
-}
+
 resource "kubernetes_config_map" "mongodb_exporter_config" {
   metadata {
     name      = "mongodb-exporter-config"
