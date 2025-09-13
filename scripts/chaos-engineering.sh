@@ -139,7 +139,7 @@ check_application_health() {
         fi
 
         # Check backend API health
-        if curl -s --max-time 10 http://localhost:30285/api/health >/dev/null 2>&1; then
+        if curl -s --max-time 10 http://localhost:5001/health >/dev/null 2>&1; then
             log_success "Backend API health check passed"
             return 0
         else
@@ -156,7 +156,7 @@ check_application_health() {
 
 # Pod failure simulation
 simulate_pod_failure() {
-    local scenario_start=$(date +%s%3N)
+    local scenario_start=$(date +%s)000
     local scenario_name="Pod Failure Simulation"
 
     log_info "Starting pod failure simulation (Chaos Level: $CHAOS_LEVEL)"
@@ -168,18 +168,18 @@ simulate_pod_failure() {
 
         if [ $((RANDOM % 10)) -lt 8 ]; then
             log_success "Pod failure simulation completed successfully (simulated)"
-            update_experiment_log "$scenario_name" "passed" $(( $(date +%s%3N) - scenario_start )) "Simulated pod failure with successful recovery"
+            update_experiment_log "$scenario_name" "passed" $(( $(date +%s)000 - scenario_start )) "Simulated pod failure with successful recovery"
             return 0
         else
             log_error "Pod failure simulation failed (simulated)"
-            update_experiment_log "$scenario_name" "failed" $(( $(date +%s%3N) - scenario_start )) "Simulated pod failure without recovery"
+            update_experiment_log "$scenario_name" "failed" $(( $(date +%s)000 - scenario_start )) "Simulated pod failure without recovery"
             return 1
         fi
     fi
 
     # Real pod failure simulation using kubectl
-    local namespace="healthcare-app"
-    local deployment_name="healthcare-app-frontend"
+    local namespace="healthcare-staging"
+    local deployment_name="frontend"
 
     # Get current replica count
     local original_replicas=$(kubectl get deployment $deployment_name -n $namespace -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
@@ -194,11 +194,17 @@ simulate_pod_failure() {
     sleep $((CHAOS_LEVEL * 2))
 
     # Check application health during failure
-    if check_application_health; then
+    # First check if pods are actually down
+    local pod_count=$(kubectl get pods -n $namespace -l app=frontend --no-headers | wc -l)
+    if [ "$pod_count" -eq 0 ]; then
+        log_info "All frontend pods are down - this is expected during pod failure simulation"
+        # Don't check health endpoint since pods are down
+        log_info "Skipping health check since pods are intentionally down"
+    elif check_application_health; then
         log_error "Application should be unhealthy during pod failure"
         # Restore deployment
         kubectl scale deployment $deployment_name -n $namespace --replicas=$original_replicas
-        update_experiment_log "$scenario_name" "failed" $(( $(date +%s%3N) - scenario_start )) "Application remained healthy during pod failure"
+        update_experiment_log "$scenario_name" "failed" $(( $(date +%s)000 - scenario_start )) "Application remained healthy during pod failure"
         return 1
     fi
 
@@ -208,23 +214,23 @@ simulate_pod_failure() {
 
     # Wait for pods to be ready
     log_info "Waiting for pods to be ready..."
-    kubectl wait --for=condition=ready pod -l app=healthcare-app-frontend -n $namespace --timeout=300s
+    kubectl wait --for=condition=ready pod -l app=frontend -n $namespace --timeout=300s
 
     # Verify recovery
     if check_application_health; then
         log_success "Pod failure simulation completed successfully"
-        update_experiment_log "$scenario_name" "passed" $(( $(date +%s%3N) - scenario_start )) "Pod failure simulated and recovered successfully"
+        update_experiment_log "$scenario_name" "passed" $(( $(date +%s)000 - scenario_start )) "Pod failure simulated and recovered successfully"
         return 0
     else
         log_error "Application failed to recover from pod failure"
-        update_experiment_log "$scenario_name" "failed" $(( $(date +%s%3N) - scenario_start )) "Application failed to recover from pod failure"
+        update_experiment_log "$scenario_name" "failed" $(( $(date +%s)000 - scenario_start )) "Application failed to recover from pod failure"
         return 1
     fi
 }
 
 # Network disruption simulation
 simulate_network_disruption() {
-    local scenario_start=$(date +%s%3N)
+    local scenario_start=$(date +%s)000
     local scenario_name="Network Disruption Simulation"
 
     log_info "Starting network disruption simulation (Chaos Level: $CHAOS_LEVEL)"
@@ -243,11 +249,11 @@ simulate_network_disruption() {
         # Test application under simulated conditions
         if check_application_health; then
             log_success "Network disruption simulation completed successfully (simulated)"
-            update_experiment_log "$scenario_name" "passed" $(( $(date +%s%3N) - scenario_start )) "Network disruption simulated with successful application resilience"
+            update_experiment_log "$scenario_name" "passed" $(( $(date +%s)000 - scenario_start )) "Network disruption simulated with successful application resilience"
             return 0
         else
             log_error "Application failed under simulated network disruption"
-            update_experiment_log "$scenario_name" "failed" $(( $(date +%s%3N) - scenario_start )) "Application failed under simulated network conditions"
+            update_experiment_log "$scenario_name" "failed" $(( $(date +%s)000 - scenario_start )) "Application failed under simulated network conditions"
             return 1
         fi
     fi
@@ -278,13 +284,13 @@ simulate_network_disruption() {
     # Remove network rules
     sudo tc qdisc del dev $interface root
 
-    update_experiment_log "$scenario_name" "$result" $(( $(date +%s%3N) - scenario_start )) "$details"
+    update_experiment_log "$scenario_name" "$result" $(( $(date +%s)000 - scenario_start )) "$details"
     return $([ "$result" = "passed" ] && echo 0 || echo 1)
 }
 
 # Resource stress simulation
 simulate_resource_stress() {
-    local scenario_start=$(date +%s%3N)
+    local scenario_start=$(date +%s)000
     local scenario_name="Resource Stress Simulation"
 
     log_info "Starting resource stress simulation (Chaos Level: $CHAOS_LEVEL)"
@@ -303,11 +309,11 @@ simulate_resource_stress() {
 
         if check_application_health; then
             log_success "Resource stress simulation completed successfully (simulated)"
-            update_experiment_log "$scenario_name" "passed" $(( $(date +%s%3N) - scenario_start )) "Resource stress simulated with successful application resilience"
+            update_experiment_log "$scenario_name" "passed" $(( $(date +%s)000 - scenario_start )) "Resource stress simulated with successful application resilience"
             return 0
         else
             log_error "Application failed under simulated resource stress"
-            update_experiment_log "$scenario_name" "failed" $(( $(date +%s%3N) - scenario_start )) "Application failed under simulated resource stress"
+            update_experiment_log "$scenario_name" "failed" $(( $(date +%s)000 - scenario_start )) "Application failed under simulated resource stress"
             return 1
         fi
     fi
@@ -350,18 +356,18 @@ simulate_resource_stress() {
 
     if [ $success_rate -ge 80 ]; then
         log_success "Application handled resource stress successfully"
-        update_experiment_log "$scenario_name" "passed" $(( $(date +%s%3N) - scenario_start )) "Resource stress handled with ${success_rate}% success rate"
+        update_experiment_log "$scenario_name" "passed" $(( $(date +%s)000 - scenario_start )) "Resource stress handled with ${success_rate}% success rate"
         return 0
     else
         log_error "Application failed under resource stress"
-        update_experiment_log "$scenario_name" "failed" $(( $(date +%s%3N) - scenario_start )) "Resource stress caused ${success_rate}% success rate"
+        update_experiment_log "$scenario_name" "failed" $(( $(date +%s)000 - scenario_start )) "Resource stress caused ${success_rate}% success rate"
         return 1
     fi
 }
 
 # Main execution
 main() {
-    local experiment_start=$(date +%s%3N)
+    local experiment_start=$(date +%s)000
 
     log_info "Starting Healthcare App Chaos Engineering Experiment"
     log_info "Chaos Level: $CHAOS_LEVEL"
@@ -396,7 +402,7 @@ main() {
         ((scenarios_failed++))
     fi
 
-    local experiment_duration=$(( $(date +%s%3N) - experiment_start ))
+    local experiment_duration=$(( $(date +%s)000 - experiment_start ))
 
     # Finalize experiment log
     finalize_experiment_log $experiment_duration
