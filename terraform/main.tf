@@ -1190,7 +1190,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.backend_labels  # Fixed: Select backend pods, not mongodb pods
+    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
 
     port {
       port        = 5001
@@ -1413,7 +1413,7 @@ resource "kubernetes_network_policy" "backend_security" {
 
   spec {
     pod_selector {
-      match_labels = local.backend_labels  # Fixed: Select backend pods, not mongodb pods
+      match_labels = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
     }
     policy_types = ["Ingress"]
 
