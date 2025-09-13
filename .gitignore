@@ -50,6 +50,7 @@ lint-results.json
 # Generated reports
 reports/
 security-reports/
+chaos-reports/
 
 # Temporary development scripts
 fix-*.js
