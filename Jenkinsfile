@@ -4121,7 +4121,7 @@ node {
                                 echo "Deploying to green environment with Terraform..."
                                 
                                 # Update Terraform variables for green environment
-                                sed -i 's/environment = "staging"/environment = "production-green"/g' terraform.tfvars
+                                sed -i '' 's/environment = "staging"/environment = "production-green"/g' terraform.tfvars
                                 
                                 # Initialize and plan green deployment
                                 terraform init -upgrade
