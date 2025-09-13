@@ -315,7 +315,7 @@ resource "kubernetes_stateful_set" "mongodb" {
     replicas     = 1
 
     selector {
-      match_labels = local.mongodb_labels
+      match_labels = merge(local.mongodb_labels, local.backend_labels)
     }
 
     template {
