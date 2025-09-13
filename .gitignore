@@ -51,6 +51,7 @@ lint-results.json
 reports/
 security-reports/
 chaos-reports/
+compliance-reports/
 
 # Temporary development scripts
 fix-*.js
