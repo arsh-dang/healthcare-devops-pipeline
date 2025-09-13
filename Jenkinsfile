@@ -4772,7 +4772,7 @@ EOF
 ## Rollback Information
 - Previous Version: \$(git describe --tags --abbrev=0 2>/dev/null || echo "Initial release")
 - Rollback Artifacts: Available in release-artifacts/terraform/
-- Rollback Command: \`terraform apply -auto-approve terraform.tfstate.backup\`
+- Rollback Command: `terraform apply -auto-approve terraform.tfstate.backup`
 
 ## Testing Results
 - Unit Tests: Passed
