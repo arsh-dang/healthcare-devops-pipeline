@@ -76,7 +76,7 @@ def sendSlackNotification(String message, String color = 'good') {
                     httpMode: 'POST',
                     contentType: 'APPLICATION_JSON',
                     url: webhookUrl,
-                    requestBody: writeJSON(returnText: true, json: payload)
+                    requestBody: groovy.json.JsonOutput.toJson(payload)
                 )
             }
         } catch (Exception e) {
