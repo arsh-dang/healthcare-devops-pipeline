@@ -506,8 +506,8 @@ resource "kubernetes_config_map" "prometheus_config" {
   data = {
     "prometheus.yml" = yamlencode({
       global = {
-        scrape_interval     = "15s"
-        evaluation_interval = "15s"
+        scrape_interval     = var.environment == "production" ? "15s" : "30s"
+        evaluation_interval = var.environment == "production" ? "15s" : "30s"
       }
 
       rule_files = [
@@ -1055,12 +1055,12 @@ resource "kubernetes_deployment" "prometheus" {
 
           resources {
             requests = {
-              cpu    = "500m"
-              memory = "1Gi"
+              cpu    = var.environment == "production" ? "500m" : "200m"
+              memory = var.environment == "production" ? "1Gi" : "512Mi"
             }
             limits = {
-              cpu    = "1000m"
-              memory = "2Gi"
+              cpu    = var.environment == "production" ? "1000m" : "500m"
+              memory = var.environment == "production" ? "2Gi" : "1Gi"
             }
           }
 
@@ -1413,12 +1413,12 @@ resource "kubernetes_deployment" "grafana" {
 
           resources {
             requests = {
-              cpu    = "200m"
-              memory = "256Mi"
+              cpu    = var.environment == "production" ? "200m" : "100m"
+              memory = var.environment == "production" ? "256Mi" : "128Mi"
             }
             limits = {
-              cpu    = "500m"
-              memory = "512Mi"
+              cpu    = var.environment == "production" ? "500m" : "200m"
+              memory = var.environment == "production" ? "512Mi" : "256Mi"
             }
           }
 
@@ -2357,7 +2357,7 @@ resource "kubernetes_config_map" "synthetic_monitoring_config" {
       },
       {
         name     = "healthcare-frontend-availability"
-        url      = "http://healthcare-frontend.${var.namespace}-${var.environment}.svc.cluster.local:3001"
+        url      = "http://healthcare-frontend.${var.namespace}-${var.environment}.svc.cluster.local:30285"
         method   = "GET"
         interval = "30s"
         timeout  = "10s"
@@ -2456,7 +2456,7 @@ resource "kubernetes_deployment" "synthetic_monitoring" {
                 # Run frontend availability test
                 START_TIME=$(date +%s%N)
                 if curl -s --max-time 10 -o /dev/null -w "%%{http_code}" \
-                  http://healthcare-frontend.${var.namespace}-${var.environment}.svc.cluster.local:3001 > /tmp/frontend_status; then
+                  http://healthcare-frontend.${var.namespace}-${var.environment}.svc.cluster.local:30285 > /tmp/frontend_status; then
 
                   HTTP_CODE=$(cat /tmp/frontend_status)
                   END_TIME=$(date +%s%N)

@@ -60,5 +60,5 @@ enable_log_aggregation = false
 # Synthetic monitoring (disabled for staging)
 enable_synthetic_monitoring = false
 
-# Distributed tracing (temporarily disabled to fix deployment conflicts)
-enable_distributed_tracing = false
+# Distributed tracing (enabled for testing)
+enable_distributed_tracing = true
