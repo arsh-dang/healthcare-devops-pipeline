@@ -4189,15 +4189,15 @@ node {
                                         echo "Green ingress available at: $GREEN_INGRESS_IP"
                                         
                                         # Test backend health endpoint through ingress
-                                        if curl -s --max-time 10 http://$GREEN_INGRESS_IP/api/health >/dev/null 2>&1; then
+                                        if curl -s --max-time 10 http://$GREEN_INGRESS_IP/health >/dev/null 2>&1; then
                                             echo "Green environment backend health check passed"
                                             GREEN_HEALTH_STATUS="healthy"
                                         else
                                             echo "Green environment backend health check failed - trying direct pod access"
                                             # Fallback: Try to access backend pods directly
-                                            GREEN_BACKEND_POD=$(kubectl get pods -l app=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                            GREEN_BACKEND_POD=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$GREEN_BACKEND_POD" ]; then
-                                                kubectl exec $GREEN_BACKEND_POD -n healthcare-production-green -- curl -s http://localhost:5000/health >/dev/null 2>&1 && GREEN_HEALTH_STATUS="healthy" || GREEN_HEALTH_STATUS="unhealthy"
+                                                kubectl exec $GREEN_BACKEND_POD -n healthcare-production-green -- curl -s http://localhost:5001/health >/dev/null 2>&1 && GREEN_HEALTH_STATUS="healthy" || GREEN_HEALTH_STATUS="unhealthy"
                                             else
                                                 echo "No green backend pods found"
                                                 GREEN_HEALTH_STATUS="unhealthy"
@@ -4207,9 +4207,9 @@ node {
                                     else
                                         echo "Green ingress not available - checking pod direct access"
                                         # Try to access backend pods directly for health checks
-                                        GREEN_BACKEND_POD=$(kubectl get pods -l app=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                        GREEN_BACKEND_POD=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$GREEN_BACKEND_POD" ]; then
-                                            kubectl exec $GREEN_BACKEND_POD -n healthcare-production-green -- curl -s http://localhost:5000/health >/dev/null 2>&1 && GREEN_HEALTH_STATUS="healthy" || GREEN_HEALTH_STATUS="unhealthy"
+                                            kubectl exec $GREEN_BACKEND_POD -n healthcare-production-green -- curl -s http://localhost:5001/health >/dev/null 2>&1 && GREEN_HEALTH_STATUS="healthy" || GREEN_HEALTH_STATUS="unhealthy"
                                         else
                                             echo "No green backend pods found"
                                             GREEN_HEALTH_STATUS="unhealthy"
@@ -4323,9 +4323,9 @@ node {
                                     
                                     # Check if green environment is responding
                                     if command -v kubectl >/dev/null 2>&1; then
-                                        GREEN_BACKEND_POD=$(kubectl get pods -l app=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                        GREEN_BACKEND_POD=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$GREEN_BACKEND_POD" ]; then
-                                            kubectl exec $GREEN_BACKEND_POD -n healthcare-production-green -- curl -s http://localhost:5000/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            kubectl exec $GREEN_BACKEND_POD -n healthcare-production-green -- curl -s http://localhost:5001/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         else
                                             MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         fi
