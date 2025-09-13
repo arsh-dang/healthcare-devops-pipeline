@@ -320,7 +320,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
     template {
       metadata {
-        labels = local.mongodb_labels
+        labels = merge(local.mongodb_labels, local.backend_labels)  # Include both mongodb and backend labels
       }
 
       spec {
