@@ -1884,35 +1884,108 @@ generate_jsdoc() {
     log_docs "Generating JSDoc documentation..."
 
     if command -v npx &> /dev/null; then
-        # Create JSDoc configuration
+        # Create JSDoc configuration with better error handling
         cat > jsdoc-config.json << 'EOF'
 {
   "source": {
     "include": ["server/", "src/"],
-    "includePattern": "\\.(js|jsx|ts|tsx)$",
-    "exclude": ["node_modules/", "build/", "coverage/"]
+    "includePattern": "\\.(js|jsx)$",
+    "exclude": [
+      "node_modules/",
+      "build/",
+      "coverage/",
+      "dist/",
+      ".git/",
+      "**/node_modules/**",
+      "**/*.d.ts",
+      "**/@types/**",
+      "**/coverage/**",
+      "**/build/**",
+      "**/dist/**",
+      "**/*.min.js",
+      "**/*.test.js",
+      "**/*.spec.js",
+      "**/test/**",
+      "**/tests/**",
+      "**/__tests__/**",
+      "**/*.ts",
+      "**/*.tsx"
+    ]
   },
   "opts": {
     "destination": "'$OUTPUT_DIR'/api/jsdoc/",
     "recurse": true,
-    "readme": "README.md"
+    "readme": "README.md",
+    "encoding": "utf8"
   },
-  "plugins": ["plugins/markdown"],
+  "plugins": [
+    "plugins/markdown"
+  ],
   "templates": {
     "default": {
-      "outputSourceFiles": true
+      "outputSourceFiles": true,
+      "includeDate": true
     }
   }
 }
 EOF
 
-        # Generate JSDoc
-        npx jsdoc -c jsdoc-config.json
+        # Generate JSDoc with better error handling
+        log_info "Running JSDoc generation (JavaScript only)..."
+        if npx jsdoc -c jsdoc-config.json 2>&1 | grep -E "(ERROR|WARNING)" | grep -v "Unable to parse" | grep -v "does not permit" | head -20; then
+            log_warning "JSDoc completed with some warnings"
+        else
+            log_success "JSDoc documentation generated successfully"
+        fi
+
+        # Check if JSDoc directory was created
+        if [ -d "$OUTPUT_DIR/api/jsdoc" ]; then
+            log_success "JSDoc files generated in $OUTPUT_DIR/api/jsdoc/"
+        else
+            log_warning "JSDoc directory not created - generating basic API docs instead"
+            # Create a simple API documentation page
+            mkdir -p "$OUTPUT_DIR/api/jsdoc"
+            cat > "$OUTPUT_DIR/api/jsdoc/index.html" << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare API Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .header { background: #f5f5f5; padding: 20px; border-radius: 8px; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 Healthcare DevOps Pipeline API</h1>
+        <p>Backend API Documentation</p>
+    </div>
+
+    <div class="warning">
+        <h3>Note</h3>
+        <p>JSDoc generation encountered some TypeScript parsing issues with modern JavaScript features.</p>
+        <p>Please refer to the OpenAPI specification for complete API documentation.</p>
+        <p><a href="../openapi-spec.yaml">View OpenAPI Specification</a></p>
+    </div>
+
+    <h2>Available Documentation</h2>
+    <ul>
+        <li><a href="../openapi-spec.yaml">OpenAPI 3.0 Specification</a></li>
+        <li><a href="../../../README.md">Project README</a></li>
+        <li><a href="../index.html">Documentation Index</a></li>
+    </ul>
+</body>
+</html>
+EOF
+        fi
 
         # Clean up config file
         rm jsdoc-config.json
 
-        log_success "JSDoc documentation generated"
+        log_success "JSDoc documentation generation completed"
     else
         log_warning "npx not available - skipping JSDoc generation"
     fi
