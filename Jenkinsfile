@@ -467,15 +467,80 @@ node {
                                     
                                     # Check if docker is available
                                     if command -v docker >/dev/null 2>&1; then
-                                        echo "Building frontend Docker image..."
-                                        docker build -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
-                                        docker tag healthcare-app-frontend:${BUILD_NUMBER} healthcare-app-frontend:latest
+                                        echo "Building Docker images with local registry resilience..."
                                         
-                                        echo "Building backend Docker image..."
-                                        docker build -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
+                                        # Network connectivity check
+                                        echo "Checking network connectivity..."
+                                        if curl -s --max-time 10 https://registry-1.docker.io/v2/ >/dev/null 2>&1; then
+                                            echo "Docker Hub is accessible"
+                                            NETWORK_STATUS="online"
+                                        elif curl -s --max-time 5 http://localhost:5000/v2/ >/dev/null 2>&1; then
+                                            echo "Local registry is accessible (Docker Hub not reachable)"
+                                            NETWORK_STATUS="local_only"
+                                        else
+                                            echo "Limited network connectivity - will use local resources only"
+                                            NETWORK_STATUS="offline"
+                                        fi
+                                        
+                                        # Check if local registry is available
+                                        if curl -s --max-time 5 http://localhost:5000/v2/ >/dev/null 2>&1; then
+                                            echo "Local Docker registry is available at localhost:5000"
+                                            REGISTRY_AVAILABLE=true
+                                        else
+                                            echo "Local Docker registry not available - will build without registry"
+                                            REGISTRY_AVAILABLE=false
+                                        fi
+                                        
+                                        # Check for existing frontend image in local registry
+                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-frontend:latest 2>/dev/null; then
+                                            echo "Using existing frontend image from local registry"
+                                            docker tag localhost:5000/healthcare-app-frontend:latest healthcare-app-frontend:${BUILD_NUMBER}
+                                            FRONTEND_BUILT=false
+                                        else
+                                            echo "Building frontend Docker image..."
+                                            # Build with network resilience flags
+                                            docker build --network=host --no-cache=false --pull=false \
+                                                -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
+                                            FRONTEND_BUILT=true
+                                        fi
+                                        
+                                        # Check for existing backend image in local registry
+                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-backend:latest 2>/dev/null; then
+                                            echo "Using existing backend image from local registry"
+                                            docker tag localhost:5000/healthcare-app-backend:latest healthcare-app-backend:${BUILD_NUMBER}
+                                            BACKEND_BUILT=false
+                                        else
+                                            echo "Building backend Docker image..."
+                                            # Build with network resilience flags
+                                            docker build --network=host --no-cache=false --pull=false \
+                                                -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
+                                            BACKEND_BUILT=true
+                                        fi
+                                        
+                                        # Create latest tags for consistency
+                                        docker tag healthcare-app-frontend:${BUILD_NUMBER} healthcare-app-frontend:latest
                                         docker tag healthcare-app-backend:${BUILD_NUMBER} healthcare-app-backend:latest
                                         
-                                        echo "Docker images built successfully"
+                                        # Push to local registry if available and newly built
+                                        if [ "$REGISTRY_AVAILABLE" = true ]; then
+                                            if [ "$FRONTEND_BUILT" = true ]; then
+                                                echo "Pushing frontend image to local registry..."
+                                                docker tag healthcare-app-frontend:${BUILD_NUMBER} localhost:5000/healthcare-app-frontend:${BUILD_NUMBER}
+                                                docker tag healthcare-app-frontend:latest localhost:5000/healthcare-app-frontend:latest
+                                                docker push localhost:5000/healthcare-app-frontend:${BUILD_NUMBER}
+                                                docker push localhost:5000/healthcare-app-frontend:latest
+                                            fi
+                                            
+                                            if [ "$BACKEND_BUILT" = true ]; then
+                                                echo "Pushing backend image to local registry..."
+                                                docker tag healthcare-app-backend:${BUILD_NUMBER} localhost:5000/healthcare-app-backend:${BUILD_NUMBER}
+                                                docker tag healthcare-app-backend:latest localhost:5000/healthcare-app-backend:latest
+                                                docker push localhost:5000/healthcare-app-backend:${BUILD_NUMBER}
+                                                docker push localhost:5000/healthcare-app-backend:latest
+                                            fi
+                                        fi
+                                        
+                                        echo "Docker images prepared successfully"
                                         docker images | grep healthcare-app
                                         
                                         # Send build success metric
@@ -3436,14 +3501,45 @@ node {
                                     fi
                                     
                                     if command -v docker >/dev/null 2>&1; then
-                                        echo "Building Docker images for staging deployment..."
+                                        echo "Building Docker images for staging deployment with local registry resilience..."
                                         
-                                        # Build frontend image
-                                        docker build -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
+                                        # Check if local registry is available
+                                        if curl -s --max-time 5 http://localhost:5000/v2/ >/dev/null 2>&1; then
+                                            echo "Local Docker registry is available at localhost:5000"
+                                            REGISTRY_AVAILABLE=true
+                                        else
+                                            echo "Local Docker registry not available - will build without registry"
+                                            REGISTRY_AVAILABLE=false
+                                        fi
+                                        
+                                        # Check for existing frontend image in local registry
+                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-frontend:staging-latest 2>/dev/null; then
+                                            echo "Using existing frontend image from local registry"
+                                            docker tag localhost:5000/healthcare-app-frontend:staging-latest healthcare-app-frontend:${BUILD_NUMBER}
+                                            FRONTEND_BUILT=false
+                                        else
+                                            echo "Building frontend Docker image..."
+                                            # Build with network resilience flags
+                                            docker build --network=host --no-cache=false --pull=false \
+                                                -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
+                                            FRONTEND_BUILT=true
+                                        fi
+                                        
+                                        # Check for existing backend image in local registry
+                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-backend:staging-latest 2>/dev/null; then
+                                            echo "Using existing backend image from local registry"
+                                            docker tag localhost:5000/healthcare-app-backend:staging-latest healthcare-app-backend:${BUILD_NUMBER}
+                                            BACKEND_BUILT=false
+                                        else
+                                            echo "Building backend Docker image..."
+                                            # Build with network resilience flags
+                                            docker build --network=host --no-cache=false --pull=false \
+                                                -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
+                                            BACKEND_BUILT=true
+                                        fi
+                                        
+                                        # Create staging tags
                                         docker tag healthcare-app-frontend:${BUILD_NUMBER} healthcare-app-frontend:staging-latest
-                                        
-                                        # Build backend image
-                                        docker build -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                         docker tag healthcare-app-backend:${BUILD_NUMBER} healthcare-app-backend:staging-latest
                                         
                                         echo "Docker images built successfully"
@@ -3490,18 +3586,47 @@ node {
                                     fi
                                     
                                     if command -v docker >/dev/null 2>&1; then
-                                        echo "Pushing Docker images to registry..."
+                                        echo "Pushing Docker images to registry with resilience..."
                                         
-                                        # Tag images for registry
-                                        docker tag healthcare-app-frontend:staging-latest localhost:5000/healthcare-app-frontend:staging-${BUILD_NUMBER}
-                                        docker tag healthcare-app-backend:staging-latest localhost:5000/healthcare-app-backend:staging-${BUILD_NUMBER}
-                                        
-                                        # Push images
-                                        docker push localhost:5000/healthcare-app-frontend:staging-${BUILD_NUMBER}
-                                        docker push localhost:5000/healthcare-app-backend:staging-${BUILD_NUMBER}
-                                        
-                                        echo "Docker images pushed to registry successfully"
-                                        REGISTRY_PUSH_STATUS="success"
+                                        # Check registry availability again
+                                        if curl -s --max-time 5 http://localhost:5000/v2/ >/dev/null 2>&1; then
+                                            echo "Local Docker registry is available for push operations"
+                                            
+                                            # Tag images for registry with retry logic
+                                            echo "Tagging images for registry..."
+                                            docker tag healthcare-app-frontend:staging-latest localhost:5000/healthcare-app-frontend:staging-${BUILD_NUMBER} || echo "Frontend tagging failed"
+                                            docker tag healthcare-app-backend:staging-latest localhost:5000/healthcare-app-backend:staging-${BUILD_NUMBER} || echo "Backend tagging failed"
+                                            
+                                            # Push images with retry logic
+                                            echo "Pushing frontend image..."
+                                            for i in {1..3}; do
+                                                if docker push localhost:5000/healthcare-app-frontend:staging-${BUILD_NUMBER}; then
+                                                    echo "Frontend image push successful"
+                                                    break
+                                                else
+                                                    echo "Frontend push attempt $i failed, retrying..."
+                                                    sleep 2
+                                                fi
+                                            done
+                                            
+                                            echo "Pushing backend image..."
+                                            for i in {1..3}; do
+                                                if docker push localhost:5000/healthcare-app-backend:staging-${BUILD_NUMBER}; then
+                                                    echo "Backend image push successful"
+                                                    break
+                                                else
+                                                    echo "Backend push attempt $i failed, retrying..."
+                                                    sleep 2
+                                                fi
+                                            done
+                                            
+                                            echo "Docker images pushed to registry successfully"
+                                            REGISTRY_PUSH_STATUS="success"
+                                        else
+                                            echo "Local Docker registry not available - skipping push operations"
+                                            echo "Images will be available locally for deployment"
+                                            REGISTRY_PUSH_STATUS="skipped"
+                                        fi
                                     else
                                         echo "Docker not available - skipping registry push"
                                         REGISTRY_PUSH_STATUS="skipped"
