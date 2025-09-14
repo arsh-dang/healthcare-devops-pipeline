@@ -653,6 +653,7 @@ node {
                                                 echo "Base image nginx:1.25.3-alpine confirmed available, proceeding with build..."
                                                 # Build with network resilience flags and explicit no-pull
                                                 docker build --network=host --no-cache=true --pull=false \
+                                                    --dns=8.8.8.8 --dns=1.1.1.1 --dns=8.8.4.4 \
                                                     -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
                                                 if [ $? -eq 0 ]; then
                                                     echo "Frontend build completed successfully"
@@ -676,7 +677,7 @@ node {
                                             else
                                                 echo "Base image node:20-alpine confirmed available, proceeding with build..."
                                                 # Build with network resilience flags and explicit no-pull
-                                                docker build --network=host --no-cache=true --pull=false \
+                                                docker build --network=host --no-cache=true --pull=false --dns=8.8.8.8 --dns=1.1.1.1 --dns=8.8.4.4 \
                                                     -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                                 if [ $? -eq 0 ]; then
                                                     echo "Backend build completed successfully"
