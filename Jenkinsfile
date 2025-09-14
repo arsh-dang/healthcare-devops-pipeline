@@ -3725,6 +3725,7 @@ node {
                                             echo "Building frontend Docker image..."
                                             # Build with network resilience flags
                                             docker build --network=host --no-cache=true --pull=false \
+                                                --dns=8.8.8.8 --dns=1.1.1.1 --dns=8.8.4.4 \
                                                 -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
                                             FRONTEND_BUILT=true
                                         fi
@@ -3738,6 +3739,7 @@ node {
                                             echo "Building backend Docker image..."
                                             # Build with network resilience flags
                                             docker build --network=host --no-cache=true --pull=false \
+                                                --dns=8.8.8.8 --dns=1.1.1.1 --dns=8.8.4.4 \
                                                 -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                             BACKEND_BUILT=true
                                         fi
