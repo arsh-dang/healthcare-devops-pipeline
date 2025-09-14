@@ -1,8 +1,8 @@
 # Use Node.js as base image
 FROM node:20-alpine
 
-# Install curl and pnpm for health checks and package management
-RUN apk add --no-cache curl && npm install -g pnpm
+# Install pnpm globally using npm
+RUN npm install -g pnpm --registry=https://registry.npmjs.org/
 
 # Set working directory
 WORKDIR /app
@@ -10,7 +10,7 @@ WORKDIR /app
 # Copy package files from root
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
+# Install dependencies using pnpm with legacy peer deps
 RUN pnpm install --frozen-lockfile --prod --legacy-peer-deps
 
 # Copy server files

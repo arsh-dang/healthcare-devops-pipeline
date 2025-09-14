@@ -1,33 +1,24 @@
 # Use Node.js as base image
 FROM node:20-alpine AS build
 
+# Install pnpm globally using npm (simpler and more reliable)
+RUN npm install -g pnpm --registry=https://registry.npmjs.org/
+
 # Set working directory
 WORKDIR /app
 
-# Install curl for network operations
-RUN apk add --no-cache curl
-
-# Copy package files (using pnpm)
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm with retry logic and fallback
-RUN apk add --no-cache curl && \
-    export SHELL=/bin/sh && \
-    (curl -f https://get.pnpm.io/install.sh | SHELL=/bin/sh sh - || \
-     npm install -g pnpm --registry=https://registry.npmjs.org/ || \
-     npm install -g pnpm --registry=https://registry.npmmirror.com/ || \
-     echo "Failed to install pnpm, falling back to npm" && \
-     npm install --legacy-peer-deps)
-
-# Install dependencies with fallback to npm
-RUN (pnpm install || npm install --legacy-peer-deps)
+# Install dependencies using pnpm with legacy peer deps to handle version conflicts
+RUN pnpm install --frozen-lockfile --legacy-peer-deps
 
 # Copy the rest of the code
 COPY public/ public/
 COPY src/ src/
 
-# Build the app for production with fallback
-RUN (pnpm build || npm run build --legacy-peer-deps)
+# Build the app for production
+RUN pnpm build
 
 # Production stage
 FROM nginx:1.25.3-alpine
