@@ -3723,9 +3723,11 @@ node {
                                             FRONTEND_BUILT=false
                                         else
                                             echo "Building frontend Docker image..."
-                                            # Build with direct hostname mapping for Alpine package repository
+                                            # Build with direct hostname mappings for package repositories
                                             docker build --network=host --no-cache=true --pull=false \
                                                 --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
+                                                --add-host=get.pnpm.io:66.33.60.130 \
+                                                --add-host=cname.vercel-dns.com:76.76.21.93 \
                                                 -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
                                             FRONTEND_BUILT=true
                                         fi
@@ -3737,9 +3739,11 @@ node {
                                             BACKEND_BUILT=false
                                         else
                                             echo "Building backend Docker image..."
-                                            # Build with direct hostname mapping for Alpine package repository
+                                            # Build with direct hostname mappings for package repositories
                                             docker build --network=host --no-cache=true --pull=false \
                                                 --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
+                                                --add-host=get.pnpm.io:66.33.60.130 \
+                                                --add-host=cname.vercel-dns.com:76.76.21.93 \
                                                 -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                             BACKEND_BUILT=true
                                         fi
