@@ -4868,98 +4868,99 @@ node {
                                 for i in $(seq 1 12); do
                                     echo "Monitoring check $i..."
                                     
-                                    # Check frontend pods directly for health
-                                    FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                    if [ -n "$FRONTEND_PODS" ]; then
-                                        for pod in $FRONTEND_PODS; do
-                                            POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
-                                            if [ "$POD_READY" = "True" ]; then
-                                                # Check frontend health endpoint directly from the frontend pod
-                                                kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:30285/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                            else
-                                                echo "Frontend pod $pod is not ready"
-                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                            fi
-                                        done
-                                    else
-                                        echo "No frontend pods found"
-                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                    fi
-                                    
-                                    # Enhanced pod-based health checking for all components
-                                    echo "Performing enhanced pod-based health checks..."
-                                    
-                                    # Check frontend pods
-                                    FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                    if [ -n "$FRONTEND_PODS" ]; then
-                                        for pod in $FRONTEND_PODS; do
-                                            POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
-                                            if [ "$POD_READY" = "True" ]; then
-                                                echo "Frontend pod $pod is ready"
-                                                MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
-                                            else
-                                                echo "Frontend pod $pod is not ready"
-                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                            fi
-                                        done
-                                    else
-                                        echo "No frontend pods found"
-                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                    fi
-                                        
-                                        # Check backend pods
-                                        BACKEND_PODS=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                        if [ -n "$BACKEND_PODS" ]; then
-                                            for pod in $BACKEND_PODS; do
+                                    if command -v kubectl >/dev/null 2>&1; then
+                                        # Check frontend pods directly for health
+                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                        if [ -n "$FRONTEND_PODS" ]; then
+                                            for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
-                                                    echo "Backend pod $pod is ready"
-                                                    MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                    # Check frontend health endpoint directly from the frontend pod
+                                                    kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:30285/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 else
-                                                    echo "Backend pod $pod is not ready"
+                                                    echo "Frontend pod $pod is not ready"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 fi
                                             done
                                         else
-                                            echo "No backend pods found"
+                                            echo "No frontend pods found"
                                             MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         fi
                                         
-                                        # Check MongoDB pods
-                                        MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                        if [ -n "$MONGODB_PODS" ]; then
-                                            for pod in $MONGODB_PODS; do
+                                        # Enhanced pod-based health checking for all components
+                                        echo "Performing enhanced pod-based health checks..."
+                                        
+                                        # Check frontend pods
+                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                        if [ -n "$FRONTEND_PODS" ]; then
+                                            for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
-                                                    echo "MongoDB pod $pod is ready"
+                                                    echo "Frontend pod $pod is ready"
                                                     MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                 else
-                                                    echo "MongoDB pod $pod is not ready"
+                                                    echo "Frontend pod $pod is not ready"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 fi
                                             done
                                         else
-                                            echo "No MongoDB pods found"
+                                            echo "No frontend pods found"
                                             MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         fi
-                                        
-                                        # Check service endpoints
-                                        GREEN_SERVICES=$(kubectl get services -l environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                        if [ -n "$GREEN_SERVICES" ]; then
-                                            for service in $GREEN_SERVICES; do
-                                                SERVICE_ENDPOINTS=$(kubectl get endpoints $service -n healthcare-production-green -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w)
-                                                if [ "$SERVICE_ENDPOINTS" -gt 0 ]; then
-                                                    echo "Service $service has $SERVICE_ENDPOINTS endpoints"
-                                                    MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
-                                                else
-                                                    echo "Service $service has no endpoints"
-                                                    MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                                fi
-                                            done
-                                        else
-                                            echo "No green services found"
-                                            MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                        fi
+                                            
+                                            # Check backend pods
+                                            BACKEND_PODS=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            if [ -n "$BACKEND_PODS" ]; then
+                                                for pod in $BACKEND_PODS; do
+                                                    POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                    if [ "$POD_READY" = "True" ]; then
+                                                        echo "Backend pod $pod is ready"
+                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                    else
+                                                        echo "Backend pod $pod is not ready"
+                                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    fi
+                                                done
+                                            else
+                                                echo "No backend pods found"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
+                                            
+                                            # Check MongoDB pods
+                                            MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            if [ -n "$MONGODB_PODS" ]; then
+                                                for pod in $MONGODB_PODS; do
+                                                    POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                    if [ "$POD_READY" = "True" ]; then
+                                                        echo "MongoDB pod $pod is ready"
+                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                    else
+                                                        echo "MongoDB pod $pod is not ready"
+                                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    fi
+                                                done
+                                            else
+                                                echo "No MongoDB pods found"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
+                                            
+                                            # Check service endpoints
+                                            GREEN_SERVICES=$(kubectl get services -l environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            if [ -n "$GREEN_SERVICES" ]; then
+                                                for service in $GREEN_SERVICES; do
+                                                    SERVICE_ENDPOINTS=$(kubectl get endpoints $service -n healthcare-production-green -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w)
+                                                    if [ "$SERVICE_ENDPOINTS" -gt 0 ]; then
+                                                        echo "Service $service has $SERVICE_ENDPOINTS endpoints"
+                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                    else
+                                                        echo "Service $service has no endpoints"
+                                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    fi
+                                                done
+                                            else
+                                                echo "No green services found"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
                                     else
                                         # Simulate monitoring
                                         if [ $((RANDOM % 10)) -gt 8 ]; then
