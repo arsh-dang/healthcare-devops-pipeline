@@ -63,3 +63,4 @@ validate-*.sh
 terragrunt-*.sh
 jenkins-*.groovy
 test-*.js
+test-*.sh
