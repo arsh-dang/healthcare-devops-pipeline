@@ -12,21 +12,22 @@ COPY package.json pnpm-lock.yaml ./
 
 # Install pnpm with retry logic and fallback
 RUN apk add --no-cache curl && \
-    (curl -f https://get.pnpm.io/install.sh | sh - || \
+    export SHELL=/bin/sh && \
+    (curl -f https://get.pnpm.io/install.sh | SHELL=/bin/sh sh - || \
      npm install -g pnpm --registry=https://registry.npmjs.org/ || \
      npm install -g pnpm --registry=https://registry.npmmirror.com/ || \
      echo "Failed to install pnpm, falling back to npm" && \
-     npm install)
+     npm install --legacy-peer-deps)
 
 # Install dependencies with fallback to npm
-RUN (pnpm install || npm install)
+RUN (pnpm install || npm install --legacy-peer-deps)
 
 # Copy the rest of the code
 COPY public/ public/
 COPY src/ src/
 
 # Build the app for production with fallback
-RUN (pnpm build || npm run build)
+RUN (pnpm build || npm run build --legacy-peer-deps)
 
 # Production stage
 FROM nginx:1.25.3-alpine
