@@ -27,8 +27,8 @@ resource "kubernetes_config_map" "alertmanager_config" {
   data = {
     "alertmanager.yml" = yamlencode({
       global = {
-        smtp_smarthost = "${var.smtp_server}:${var.smtp_port}"
-        smtp_from      = var.smtp_from_email
+        smtp_smarthost     = "${var.smtp_server}:${var.smtp_port}"
+        smtp_from          = var.smtp_from_email
         smtp_auth_username = var.smtp_username != "" ? var.smtp_username : null
         smtp_auth_password = var.smtp_password != "" ? var.smtp_password : null
       }
@@ -67,7 +67,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
           name = "healthcare-critical"
           email_configs = var.smtp_username != "" ? [
             {
-              to           = var.alert_email_critical
+              to            = var.alert_email_critical
               send_resolved = true
               headers = {
                 subject = "{{ .GroupLabels.alertname }} - CRITICAL"
@@ -85,11 +85,11 @@ resource "kubernetes_config_map" "alertmanager_config" {
           ] : []
           slack_configs = var.slack_webhook_critical != "" ? [
             {
-              api_url = var.slack_webhook_critical
-              channel = var.slack_channel_critical
+              api_url       = var.slack_webhook_critical
+              channel       = var.slack_channel_critical
               send_resolved = true
-              title = "CRITICAL: {{ .GroupLabels.alertname }}"
-              text = <<-EOT
+              title         = "CRITICAL: {{ .GroupLabels.alertname }}"
+              text          = <<-EOT
                 *Alert:* {{ .GroupLabels.alertname }}
                 *Severity:* {{ .GroupLabels.severity }}
                 *Description:* {{ .CommonAnnotations.description }}
@@ -104,7 +104,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
           name = "healthcare-warning"
           email_configs = var.smtp_username != "" ? [
             {
-              to           = var.alert_email_warning
+              to            = var.alert_email_warning
               send_resolved = true
               headers = {
                 subject = "{{ .GroupLabels.alertname }} - WARNING"
@@ -122,11 +122,11 @@ resource "kubernetes_config_map" "alertmanager_config" {
           ] : []
           slack_configs = var.slack_webhook_warning != "" ? [
             {
-              api_url = var.slack_webhook_warning
-              channel = var.slack_channel_warning
+              api_url       = var.slack_webhook_warning
+              channel       = var.slack_channel_warning
               send_resolved = true
-              title = "WARNING: {{ .GroupLabels.alertname }}"
-              text = <<-EOT
+              title         = "WARNING: {{ .GroupLabels.alertname }}"
+              text          = <<-EOT
                 *Alert:* {{ .GroupLabels.alertname }}
                 *Severity:* {{ .GroupLabels.severity }}
                 *Description:* {{ .CommonAnnotations.description }}
@@ -141,7 +141,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
           name = "healthcare-info"
           email_configs = var.smtp_username != "" ? [
             {
-              to           = var.alert_email_info
+              to            = var.alert_email_info
               send_resolved = true
               headers = {
                 subject = "{{ .GroupLabels.alertname }} - INFO"
@@ -159,11 +159,11 @@ resource "kubernetes_config_map" "alertmanager_config" {
           ] : []
           slack_configs = var.slack_webhook_info != "" ? [
             {
-              api_url = var.slack_webhook_info
-              channel = var.slack_channel_info
+              api_url       = var.slack_webhook_info
+              channel       = var.slack_channel_info
               send_resolved = true
-              title = "ℹ️ INFO: {{ .GroupLabels.alertname }}"
-              text = <<-EOT
+              title         = "ℹ️ INFO: {{ .GroupLabels.alertname }}"
+              text          = <<-EOT
                 *Alert:* {{ .GroupLabels.alertname }}
                 *Severity:* {{ .GroupLabels.severity }}
                 *Description:* {{ .CommonAnnotations.description }}
@@ -200,8 +200,8 @@ resource "kubernetes_deployment" "alertmanager" {
   }
 
   spec {
-    replicas = 1
-    progress_deadline_seconds = 900  # 15 minutes timeout
+    replicas                  = 1
+    progress_deadline_seconds = 900 # 15 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "alertmanager" })
@@ -394,8 +394,8 @@ resource "kubernetes_deployment" "mongodb_exporter" {
   }
 
   spec {
-    replicas = 1
-    progress_deadline_seconds = 900  # 15 minutes timeout
+    replicas                  = 1
+    progress_deadline_seconds = 900 # 15 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "mongodb-exporter" })
@@ -1635,7 +1635,7 @@ resource "kubernetes_cron_job_v1" "monitoring_backup" {
   }
 
   spec {
-    schedule = "0 2 * * *"  # Daily at 2 AM
+    schedule = "0 2 * * *" # Daily at 2 AM
     job_template {
       metadata {
         labels = merge(local.common_labels, { component = "monitoring", purpose = "backup" })
@@ -1833,7 +1833,7 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
           }
 
           env {
-            name  = "POD_NAME"
+            name = "POD_NAME"
             value_from {
               field_ref {
                 field_path = "metadata.name"
@@ -1842,7 +1842,7 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
           }
 
           env {
-            name  = "POD_NAMESPACE"
+            name = "POD_NAMESPACE"
             value_from {
               field_ref {
                 field_path = "metadata.namespace"
@@ -2758,12 +2758,12 @@ resource "kubernetes_config_map" "jaeger_config" {
         param = 1
       }
       reporter = {
-        log_spans           = true
+        log_spans             = true
         local_agent_host_port = "jaeger-agent:6831"
       }
       headers = {
-        jaeger_debug_header = "debug-id"
-        jaeger_baggage_header = "baggage"
+        jaeger_debug_header       = "debug-id"
+        jaeger_baggage_header     = "baggage"
         trace_context_header_name = "traceparent"
       }
       baggage_restrictions = {
@@ -3158,9 +3158,9 @@ output "jaeger_service" {
 output "enhanced_monitoring_features" {
   description = "Status of enhanced monitoring features"
   value = {
-    ingress_monitoring     = var.enable_ingress_monitoring
-    log_aggregation        = var.enable_log_aggregation
-    synthetic_monitoring   = var.enable_synthetic_monitoring
-    distributed_tracing    = var.enable_distributed_tracing
+    ingress_monitoring   = var.enable_ingress_monitoring
+    log_aggregation      = var.enable_log_aggregation
+    synthetic_monitoring = var.enable_synthetic_monitoring
+    distributed_tracing  = var.enable_distributed_tracing
   }
 }
