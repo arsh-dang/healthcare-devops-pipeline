@@ -6487,6 +6487,6 @@ EOF
         '''
     }
 }
-// Force Jenkins to reload pipeline configuration
-// This comment ensures Jenkins detects the pipeline change
+// Force Jenkins to reload pipeline configuration - updated at 2024-12-19 10:30 UTC
+// This comment ensures Jenkins detects the pipeline change and reloads the configuration
 def forceReload = true
