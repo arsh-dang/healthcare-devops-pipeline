@@ -552,6 +552,29 @@ node {
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
                                             fi
+                                            
+                                            # Skip Docker build if critical base images are missing
+                                            echo "CRITICAL: Required base images are not available. Skipping Docker build to prevent failure."
+                                            echo "Please ensure network connectivity and run the pre-cache script:"
+                                            echo "  ./scripts/pre-cache-images.sh"
+                                            
+                                            # Send build skip event
+                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                                curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                                    -H "Content-Type: application/json" \
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -d "{
+                                                        \"title\": \"Docker Build Skipped\",
+                                                        \"text\": \"Docker build skipped due to missing base images. Network connectivity required.\",
+                                                        \"priority\": \"normal\",
+                                                        \"tags\": [\"env:staging\", \"service:healthcare-app\", \"stage:build\", \"status:skipped\", \"reason:missing_base_images\"],
+                                                        \"alert_type\": \"warning\"
+                                                    }" || echo "Failed to send Datadog event"
+                                            fi
+                                            
+                                            # Exit with success to allow pipeline to continue with other stages
+                                            echo "Skipping Docker build stage..."
+                                            continue
                                         fi
                                         
                                         # Check for existing frontend image in local registry
@@ -561,10 +584,17 @@ node {
                                             FRONTEND_BUILT=false
                                         else
                                             echo "Building frontend Docker image..."
-                                            # Build with network resilience flags
-                                            docker build --network=host --no-cache=false --pull=false \
-                                                -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
-                                            FRONTEND_BUILT=true
+                                            # Check if required base images are available before building
+                                            if ! docker images nginx:1.25.3-alpine | grep -q "1.25.3-alpine"; then
+                                                echo "ERROR: nginx:1.25.3-alpine base image not available. Skipping frontend build."
+                                                FRONTEND_BUILT=false
+                                                FRONTEND_FAILED=true
+                                            else
+                                                # Build with network resilience flags
+                                                docker build --network=host --no-cache=false --pull=false \
+                                                    -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
+                                                FRONTEND_BUILT=true
+                                            fi
                                         fi
                                         
                                         # Check for existing backend image in local registry
@@ -574,10 +604,17 @@ node {
                                             BACKEND_BUILT=false
                                         else
                                             echo "Building backend Docker image..."
-                                            # Build with network resilience flags
-                                            docker build --network=host --no-cache=false --pull=false \
-                                                -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
-                                            BACKEND_BUILT=true
+                                            # Check if required base images are available before building
+                                            if ! docker images node:20-alpine | grep -q "20-alpine"; then
+                                                echo "ERROR: node:20-alpine base image not available. Skipping backend build."
+                                                BACKEND_BUILT=false
+                                                BACKEND_FAILED=true
+                                            else
+                                                # Build with network resilience flags
+                                                docker build --network=host --no-cache=false --pull=false \
+                                                    -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
+                                                BACKEND_BUILT=true
+                                            fi
                                         fi
                                         
                                         # Create latest tags for consistency
@@ -586,38 +623,70 @@ node {
                                         
                                         # Push to local registry if available and newly built
                                         if [ "$REGISTRY_AVAILABLE" = true ]; then
-                                            if [ "$FRONTEND_BUILT" = true ]; then
+                                            if [ "$FRONTEND_BUILT" = true ] && [ "${FRONTEND_FAILED:-false}" != true ]; then
                                                 echo "Pushing frontend image to local registry..."
                                                 docker tag healthcare-app-frontend:${BUILD_NUMBER} localhost:5000/healthcare-app-frontend:${BUILD_NUMBER}
                                                 docker tag healthcare-app-frontend:latest localhost:5000/healthcare-app-frontend:latest
                                                 docker push localhost:5000/healthcare-app-frontend:${BUILD_NUMBER}
                                                 docker push localhost:5000/healthcare-app-frontend:latest
+                                            else
+                                                echo "Skipping frontend push - image not built or build failed"
                                             fi
                                             
-                                            if [ "$BACKEND_BUILT" = true ]; then
+                                            if [ "$BACKEND_BUILT" = true ] && [ "${BACKEND_FAILED:-false}" != true ]; then
                                                 echo "Pushing backend image to local registry..."
                                                 docker tag healthcare-app-backend:${BUILD_NUMBER} localhost:5000/healthcare-app-backend:${BUILD_NUMBER}
                                                 docker tag healthcare-app-backend:latest localhost:5000/healthcare-app-backend:latest
                                                 docker push localhost:5000/healthcare-app-backend:${BUILD_NUMBER}
                                                 docker push localhost:5000/healthcare-app-backend:latest
+                                            else
+                                                echo "Skipping backend push - image not built or build failed"
                                             fi
                                         fi
                                         
                                         echo "Docker images prepared successfully"
                                         docker images | grep healthcare-app
                                         
-                                        # Send build success metric
+                                        # Send build success metric based on component status
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.build.docker.success\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                            # Check if both builds failed
+                                            if [ "$FRONTEND_FAILED" = "true" ] && [ "$BACKEND_FAILED" = "true" ]; then
+                                                # Both builds failed - send failure metric
+                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                                    -H "Content-Type: application/json" \\
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -d "{
+                                                        \\"series\\": [{
+                                                            \\"metric\\": \\"jenkins.build.docker.failure\\",
+                                                            \\"points\\": [[$(date +%s), 1]],
+                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\", \\"reason:missing_base_images\\"]
+                                                        }]
+                                                    }" || echo "Failed to send Datadog metric"
+                                            elif [ "$FRONTEND_FAILED" = "true" ] || [ "$BACKEND_FAILED" = "true" ]; then
+                                                # Partial success - one build succeeded, one failed
+                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                                    -H "Content-Type: application/json" \\
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -d "{
+                                                        \\"series\\": [{
+                                                            \\"metric\\": \\"jenkins.build.docker.partial_success\\",
+                                                            \\"points\\": [[$(date +%s), 1]],
+                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\", \\"frontend_failed:$FRONTEND_FAILED\\", \\"backend_failed:$BACKEND_FAILED\\"]
+                                                        }]
+                                                    }" || echo "Failed to send Datadog metric"
+                                            else
+                                                # Full success - both builds succeeded
+                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                                    -H "Content-Type: application/json" \\
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -d "{
+                                                        \\"series\\": [{
+                                                            \\"metric\\": \\"jenkins.build.docker.success\\",
+                                                            \\"points\\": [[$(date +%s), 1]],
+                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\"]
+                                                        }]
+                                                    }" || echo "Failed to send Datadog metric"
+                                            fi
                                         fi
                                     else
                                         echo "Docker not found - skipping Docker build for now"
