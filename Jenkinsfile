@@ -258,11 +258,11 @@ node {
                                 -H "Content-Type: application/json" \\
                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                 -d "{
-                                    \\"title\\": \\"Jenkins Pipeline Started\\",
-                                    \\"text\\": \\"Healthcare App CI/CD Pipeline #${BUILD_NUMBER} started for commit ${GIT_COMMIT}\\",
-                                    \\"priority\\": \\"normal\\",
-                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"pipeline:jenkins\\", \\"event:pipeline_start\\"],
-                                    \\"alert_type\\": \\"info\\"
+                                    \\\"title\\\": \\\"Jenkins Pipeline Started\\\",
+                                    \\\"text\\\": \\\"Healthcare App CI/CD Pipeline #${BUILD_NUMBER} started for commit ${GIT_COMMIT}\\\",
+                                    \\\"priority\\\": \\\"normal\\\",
+                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"pipeline:jenkins\\\", \\\"event:pipeline_start\\\"],
+                                    \\\"alert_type\\\": \\\"info\\\"
                                 }" || echo "Failed to send Datadog event"
                         else
                             echo "Datadog API key not configured - monitoring disabled"
@@ -299,10 +299,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.build.frontend.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:frontend\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.build.frontend.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:frontend\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -348,10 +348,10 @@ node {
                                                     -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                                     -d "{
-                                                        \\"series\\": [{
-                                                            \\"metric\\": \\"jenkins.build.frontend.success\\",
-                                                            \\"points\\": [[$(date +%s), 1]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:frontend\\"]
+                                                        \\\"series\\\": [{
+                                                            \\\"metric\\\": \\\"jenkins.build.frontend.success\\\",
+                                                            \\\"points\\\": [[$(date +%s), 1]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:frontend\\\"]
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
                                             fi
@@ -365,10 +365,10 @@ node {
                                                     -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                                     -d "{
-                                                        \\"series\\": [{
-                                                            \\"metric\\": \\"jenkins.build.frontend.failure\\",
-                                                            \\"points\\": [[$(date +%s), 1]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:frontend\\"]
+                                                        \\\"series\\\": [{
+                                                            \\\"metric\\\": \\\"jenkins.build.frontend.failure\\\",
+                                                            \\\"points\\\": [[$(date +%s), 1]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:frontend\\\"]
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
                                             fi
@@ -400,10 +400,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.build.backend.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:backend\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.build.backend.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:backend\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -435,10 +435,10 @@ node {
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                                 -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.build.backend.success\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:backend\\"]
+                                                    \\\"series\\\": [{
+                                                        \\\"metric\\\": \\\"jenkins.build.backend.success\\\",
+                                                        \\\"points\\\": [[$(date +%s), 1]],
+                                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:backend\\\"]
                                                     }]
                                                 }" || echo "Failed to send Datadog metric"
                                         fi
@@ -457,10 +457,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.build.docker.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.build.docker.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:docker\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -495,15 +495,47 @@ node {
                                         echo "Checking for required base images..."
                                         BASE_IMAGES_AVAILABLE=true
                                         
+                                        # Function to pull image with retry logic
+                                        pull_image_with_retry() {
+                                            local image_name=$1
+                                            local max_retries=3
+                                            local retry_count=0
+                                            local pull_success=false
+                                            
+                                            while [ $retry_count -lt $max_retries ] && [ "$pull_success" = false ]; do
+                                                echo "Attempting to pull $image_name (attempt $((retry_count + 1))/$max_retries)..."
+                                                
+                                                # Set timeout for docker pull
+                                                if timeout 300 docker pull "$image_name" 2>/dev/null; then
+                                                    echo "Successfully pulled $image_name"
+                                                    pull_success=true
+                                                else
+                                                    retry_count=$((retry_count + 1))
+                                                    if [ $retry_count -lt $max_retries ]; then
+                                                        echo "Failed to pull $image_name, retrying in 10 seconds..."
+                                                        sleep 10
+                                                    else
+                                                        echo "Failed to pull $image_name after $max_retries attempts"
+                                                    fi
+                                                fi
+                                            done
+                                            
+                                            if [ "$pull_success" = true ]; then
+                                                return 0
+                                            else
+                                                return 1
+                                            fi
+                                        }
+                                        
                                         # Check if node:20-alpine is available locally
                                         if ! docker images node:20-alpine | grep -q "20-alpine"; then
                                             echo "Base image node:20-alpine not found locally"
                                             if [ "$NETWORK_STATUS" = "online" ]; then
-                                                echo "Attempting to pull node:20-alpine..."
-                                                if docker pull node:20-alpine; then
+                                                echo "Attempting to pull node:20-alpine with retry logic..."
+                                                if pull_image_with_retry "node:20-alpine"; then
                                                     echo "Successfully pulled node:20-alpine"
                                                 else
-                                                    echo "Failed to pull node:20-alpine - build may fail"
+                                                    echo "Failed to pull node:20-alpine after retries - build may fail"
                                                     BASE_IMAGES_AVAILABLE=false
                                                 fi
                                             else
@@ -518,11 +550,11 @@ node {
                                         if ! docker images nginx:1.25.3-alpine | grep -q "1.25.3-alpine"; then
                                             echo "Base image nginx:1.25.3-alpine not found locally"
                                             if [ "$NETWORK_STATUS" = "online" ]; then
-                                                echo "Attempting to pull nginx:1.25.3-alpine..."
-                                                if docker pull nginx:1.25.3-alpine; then
+                                                echo "Attempting to pull nginx:1.25.3-alpine with retry logic..."
+                                                if pull_image_with_retry "nginx:1.25.3-alpine"; then
                                                     echo "Successfully pulled nginx:1.25.3-alpine"
                                                 else
-                                                    echo "Failed to pull nginx:1.25.3-alpine - frontend build may fail"
+                                                    echo "Failed to pull nginx:1.25.3-alpine after retries - frontend build may fail"
                                                     BASE_IMAGES_AVAILABLE=false
                                                 fi
                                             else
@@ -545,10 +577,10 @@ node {
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
                                                     -d "{
-                                                        \"series\": [{
-                                                            \"metric\": \"jenkins.build.base_images_missing\",
-                                                            \"points\": [[$(date +%s), 1]],
-                                                            \"tags\": [\"env:staging\", \"service:healthcare-app\", \"issue:missing_base_images\"]
+                                                        \\\"series\\\": [{
+                                                            \\\"metric\\\": \\\"jenkins.build.base_images_missing\\\",
+                                                            \\\"points\\\": [[$(date +%s), 1]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"issue:missing_base_images\\\"]
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
                                             fi
@@ -564,11 +596,11 @@ node {
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
                                                     -d "{
-                                                        \\"title\\": \\"Docker Build Skipped\\",
-                                                        \\"text\\": \\"Docker build skipped due to missing base images. Network connectivity required.\\",
-                                                        \\"priority\\": \\"normal\\",
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:build\\", \\"status:skipped\\", \\"reason:missing_base_images\\"],
-                                                        \\"alert_type\\": \\"warning\\"
+                                                        \\\"title\\\": \\\"Docker Build Skipped\\\",
+                                                        \\\"text\\\": \\\"Docker build skipped due to missing base images. Network connectivity required.\\\",
+                                                        \\\"priority\\\": \\\"normal\\\",
+                                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:skipped\\\", \\\"reason:missing_base_images\\\"],
+                                                        \\\"alert_type\\\": \\\"warning\\\"
                                                     }" || echo "Failed to send Datadog event"
                                             fi
                                             
@@ -578,42 +610,82 @@ node {
                                         fi
                                         
                                         # Check for existing frontend image in local registry
-                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-frontend:latest 2>/dev/null; then
-                                            echo "Using existing frontend image from local registry"
-                                            docker tag localhost:5000/healthcare-app-frontend:latest healthcare-app-frontend:${BUILD_NUMBER}
-                                            FRONTEND_BUILT=false
+                                        if [ "$REGISTRY_AVAILABLE" = true ]; then
+                                            echo "Attempting to pull frontend image from local registry..."
+                                            if docker pull localhost:5000/healthcare-app-frontend:latest 2>/dev/null; then
+                                                echo "Using existing frontend image from local registry"
+                                                docker tag localhost:5000/healthcare-app-frontend:latest healthcare-app-frontend:${BUILD_NUMBER}
+                                                FRONTEND_BUILT=false
+                                            else
+                                                echo "Frontend image not found in local registry, will build from scratch"
+                                                FRONTEND_BUILT=true
+                                            fi
                                         else
+                                            echo "Local registry not available, will build frontend from scratch"
+                                            FRONTEND_BUILT=true
+                                        fi
+                                        
+                                        # Check for existing backend image in local registry
+                                        if [ "$REGISTRY_AVAILABLE" = true ]; then
+                                            echo "Attempting to pull backend image from local registry..."
+                                            if docker pull localhost:5000/healthcare-app-backend:latest 2>/dev/null; then
+                                                echo "Using existing backend image from local registry"
+                                                docker tag localhost:5000/healthcare-app-backend:latest healthcare-app-backend:${BUILD_NUMBER}
+                                                BACKEND_BUILT=false
+                                            else
+                                                echo "Backend image not found in local registry, will build from scratch"
+                                                BACKEND_BUILT=true
+                                            fi
+                                        else
+                                            echo "Local registry not available, will build backend from scratch"
+                                            BACKEND_BUILT=true
+                                        fi
+                                        
+                                        # Build frontend if needed
+                                        if [ "$FRONTEND_BUILT" = true ]; then
                                             echo "Building frontend Docker image..."
-                                            # Check if required base images are available before building
+                                            # Double-check if required base images are available before building
                                             if ! docker images nginx:1.25.3-alpine | grep -q "1.25.3-alpine"; then
                                                 echo "ERROR: nginx:1.25.3-alpine base image not available. Skipping frontend build."
                                                 FRONTEND_BUILT=false
                                                 FRONTEND_FAILED=true
                                             else
-                                                # Build with network resilience flags
+                                                echo "Base image nginx:1.25.3-alpine confirmed available, proceeding with build..."
+                                                # Build with network resilience flags and explicit no-pull
                                                 docker build --network=host --no-cache=false --pull=false \
                                                     -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
-                                                FRONTEND_BUILT=true
+                                                if [ $? -eq 0 ]; then
+                                                    echo "Frontend build completed successfully"
+                                                    FRONTEND_BUILT=true
+                                                else
+                                                    echo "Frontend build failed"
+                                                    FRONTEND_BUILT=false
+                                                    FRONTEND_FAILED=true
+                                                fi
                                             fi
                                         fi
                                         
-                                        # Check for existing backend image in local registry
-                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-backend:latest 2>/dev/null; then
-                                            echo "Using existing backend image from local registry"
-                                            docker tag localhost:5000/healthcare-app-backend:latest healthcare-app-backend:${BUILD_NUMBER}
-                                            BACKEND_BUILT=false
-                                        else
+                                        # Build backend if needed
+                                        if [ "$BACKEND_BUILT" = true ]; then
                                             echo "Building backend Docker image..."
-                                            # Check if required base images are available before building
+                                            # Double-check if required base images are available before building
                                             if ! docker images node:20-alpine | grep -q "20-alpine"; then
                                                 echo "ERROR: node:20-alpine base image not available. Skipping backend build."
                                                 BACKEND_BUILT=false
                                                 BACKEND_FAILED=true
                                             else
-                                                # Build with network resilience flags
+                                                echo "Base image node:20-alpine confirmed available, proceeding with build..."
+                                                # Build with network resilience flags and explicit no-pull
                                                 docker build --network=host --no-cache=false --pull=false \
                                                     -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
-                                                BACKEND_BUILT=true
+                                                if [ $? -eq 0 ]; then
+                                                    echo "Backend build completed successfully"
+                                                    BACKEND_BUILT=true
+                                                else
+                                                    echo "Backend build failed"
+                                                    BACKEND_BUILT=false
+                                                    BACKEND_FAILED=true
+                                                fi
                                             fi
                                         fi
                                         
@@ -720,10 +792,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.build.docs.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docs\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.build.docs.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:docs\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -751,10 +823,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.build.docs.success\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docs\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.build.docs.success\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:docs\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -771,10 +843,10 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.build.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${buildDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
+                                        \\\"series\\\": [{
+                                            \\\"metric\\\": \\\"jenkins.build.duration\\\",
+                                            \\\"points\\\": [[\$(date +%s), ${buildDuration}]],
+                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\"]
                                         }]
                                     }" || echo "Failed to send Datadog metric"
                             fi
@@ -787,11 +859,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Build Stage Completed\\",
-                                        \\"text\\": \\"Healthcare App build completed successfully in ''' + "${buildDuration}" + '''ms\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:build\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
+                                        \\\"title\\\": \\\"Build Stage Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App build completed successfully in ''' + "${buildDuration}" + '''ms\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -804,11 +876,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Build Stage Failed\\",
-                                        \\"text\\": \\"Healthcare App build failed: ''' + "${e.getMessage()}" + '''\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:build\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
+                                        \\\"title\\\": \\\"Build Stage Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App build failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -836,10 +908,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.unit.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:unit\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.test.unit.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -876,21 +948,21 @@ node {
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                                 -d "{
-                                                    \\"series\\": [
+                                                    \\\"series\\\": [
                                                         {
-                                                            \\"metric\\": \\"jenkins.test.unit.total\\",
-                                                            \\"points\\": [[$(date +%s), ${TEST_COUNT:-0}]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:unit\\"]
+                                                            \\\"metric\\\": \\\"jenkins.test.unit.total\\\",
+                                                            \\\"points\\\": [[$(date +%s), ${TEST_COUNT:-0}]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                         },
                                                         {
-                                                            \\"metric\\": \\"jenkins.test.unit.passed\\",
-                                                            \\"points\\": [[$(date +%s), ${TEST_PASSED:-0}]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:unit\\"]
+                                                            \\\"metric\\\": \\\"jenkins.test.unit.passed\\\",
+                                                            \\\"points\\\": [[$(date +%s), ${TEST_PASSED:-0}]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                         },
                                                         {
-                                                            \\"metric\\": \\"jenkins.test.unit.failed\\",
-                                                            \\"points\\": [[$(date +%s), ${TEST_FAILED:-0}]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:unit\\"]
+                                                            \\\"metric\\\": \\\"jenkins.test.unit.failed\\\",
+                                                            \\\"points\\\": [[$(date +%s), ${TEST_FAILED:-0}]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                         }
                                                     ]
                                                 }" || echo "Failed to send Datadog metrics"
@@ -912,10 +984,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.integration.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:integration\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.test.integration.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:integration\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -946,10 +1018,10 @@ node {
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                                 -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.test.integration.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$INT_TEST_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:integration\\"]
+                                                    \\\"series\\\": [{
+                                                        \\\"metric\\\": \\\"jenkins.test.integration.result\\\",
+                                                        \\\"points\\\": [[$(date +%s), \$([ \\\"$INT_TEST_STATUS\\\" = \\\"success\\\" ] && echo 1 || echo 0)]],
+                                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:integration\\\"]
                                                     }]
                                                 }" || echo "Failed to send Datadog metric"
                                         fi
@@ -968,10 +1040,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.api.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:api\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.test.api.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -997,21 +1069,21 @@ node {
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                                 -d "{
-                                                    \\"series\\": [
+                                                    \\\"series\\\": [
                                                         {
-                                                            \\"metric\\": \\"jenkins.test.api.total\\",
-                                                            \\"points\\": [[$(date +%s), $API_TESTS_TOTAL]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:api\\"]
+                                                            \\\"metric\\\": \\\"jenkins.test.api.total\\\",
+                                                            \\\"points\\\": [[$(date +%s), $API_TESTS_TOTAL]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                         },
                                                         {
-                                                            \\"metric\\": \\"jenkins.test.api.passed\\",
-                                                            \\"points\\": [[$(date +%s), $API_TESTS_PASSED]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:api\\"]
+                                                            \\\"metric\\\": \\\"jenkins.test.api.passed\\\",
+                                                            \\\"points\\\": [[$(date +%s), $API_TESTS_PASSED]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                         },
                                                         {
-                                                            \\"metric\\": \\"jenkins.test.api.failed\\",
-                                                            \\"points\\": [[$(date +%s), $API_TESTS_FAILED]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:api\\"]
+                                                            \\\"metric\\\": \\\"jenkins.test.api.failed\\\",
+                                                            \\\"points\\\": [[$(date +%s), $API_TESTS_FAILED]],
+                                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                         }
                                                     ]
                                                 }" || echo "Failed to send Datadog metrics"
@@ -1035,10 +1107,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.performance.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:performance\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.test.performance.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:performance\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -1115,10 +1187,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.accessibility.success\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:accessibility\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.test.accessibility.success\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:accessibility\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -1135,10 +1207,10 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.security.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:security\\"]
+                                                \\\"series\\\": [{
+                                                    \\\"metric\\\": \\\"jenkins.test.security.start\\\",
+                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:security\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
                                     fi
@@ -1191,16 +1263,16 @@ node {
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                             -d "{
-                                                \\"series\\": [
+                                                \\\"series\\\": [
                                                     {
-                                                        \\"metric\\": \\"jenkins.test.security.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$SECURITY_TEST_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:security\\"]
+                                                        \\\"metric\\\": \\\"jenkins.test.security.result\\\",
+                                                        \\\"points\\\": [[$(date +%s), \$([ \\\"$SECURITY_TEST_STATUS\\\" = \\\"success\\\" ] && echo 1 || echo 0)]],
+                                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:security\\\"]
                                                     },
                                                     {
-                                                        \\"metric\\": \\"jenkins.test.security.issues\\",
-                                                        \\"points\\": [[$(date +%s), ${SEC_ISSUES:-0}]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:security\\"]
+                                                        \\\"metric\\\": \\\"jenkins.test.security.issues\\\",
+                                                        \\\"points\\\": [[$(date +%s), ${SEC_ISSUES:-0}]],
+                                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:security\\\"]
                                                     }
                                                 ]
                                             }" || echo "Failed to send Datadog metrics"
@@ -1293,11 +1365,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Test Stage Completed\\",
-                                        \\"text\\": \\"Healthcare App tests completed in ${testDuration}ms\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:test\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
+                                        \\\"title\\\": \\\"Test Stage Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App tests completed in ${testDuration}ms\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:test\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         """
@@ -1310,11 +1382,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Test Stage Failed\\",
-                                        \\"text\\": \\"Healthcare App tests failed: ''' + "${e.getMessage()}" + '''\\",
-                                        \\"priority\\": \\"high\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:test\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
+                                        \\\"title\\\": \\\"Test Stage Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App tests failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"priority\\\": \\\"high\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:test\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -1710,11 +1782,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Code Quality Analysis Completed\\",
-                                        \\"text\\": \\"Healthcare App code quality analysis completed in ${qualityDuration}ms with ESLint, TypeScript, Coverage, Complexity, and SonarQube analysis\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:quality\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
+                                        \\\"title\\\": \\\"Code Quality Analysis Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App code quality analysis completed in ${qualityDuration}ms with ESLint, TypeScript, Coverage, Complexity, and SonarQube analysis\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:quality\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         """
@@ -1727,11 +1799,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Code Quality Analysis Failed\\",
-                                        \\"text\\": \\"Healthcare App code quality analysis failed: ''' + "${e.getMessage()}" + '''\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:quality\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
+                                        \\\"title\\\": \\\"Code Quality Analysis Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App code quality analysis failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:quality\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -2039,11 +2111,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Security Stage Completed\\",
-                                        \\"text\\": \\"Healthcare App security scans completed in ${securityDuration}ms\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:security\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
+                                        \\\"title\\\": \\\"Security Stage Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App security scans completed in ${securityDuration}ms\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:security\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         """
@@ -2056,11 +2128,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Security Stage Failed\\",
-                                        \\"text\\": \\"Healthcare App security scans failed: ''' + "${e.getMessage()}" + '''\\",
-                                        \\"priority\\": \\"high\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:security\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
+                                        \\\"title\\\": \\\"Security Stage Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App security scans failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"priority\\\": \\\"high\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:security\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -2084,11 +2156,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Load Testing Started\\",
-                                        \\"text\\": \\"Healthcare App load testing started with Artillery for performance validation\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"testing:performance\\"],
-                                        \\"alert_type\\": \\"info\\"
+                                        \\\"title\\\": \\\"Load Testing Started\\\",
+                                        \\\"text\\\": \\\"Healthcare App load testing started with Artillery for performance validation\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:loadtest\\\", \\\"testing:performance\\\"],
+                                        \\\"alert_type\\\": \\\"info\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -2327,11 +2399,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Load Testing Completed\\",
-                                        \\"text\\": \\"Healthcare App load testing completed successfully in ${loadTestDuration}ms with performance analysis and scalability testing\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
+                                        \\\"title\\\": \\\"Load Testing Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App load testing completed successfully in ${loadTestDuration}ms with performance analysis and scalability testing\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:loadtest\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         """
@@ -2344,11 +2416,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Load Testing Failed\\",
-                                        \\"text\\": \\"Healthcare App load testing failed: ''' + "${e.getMessage()}" + '''\\",
-                                        \\"priority\\": \\"high\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
+                                        \\\"title\\\": \\\"Load Testing Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App load testing failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"priority\\\": \\\"high\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:loadtest\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -2371,11 +2443,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Chaos Engineering Started\\",
-                                        \\"text\\": \\"Healthcare App chaos engineering tests started for resilience validation\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"testing:resilience\\"],
-                                        \\"alert_type\\": \\"info\\"
+                                        \\\"title\\\": \\\"Chaos Engineering Started\\\",
+                                        \\\"text\\\": \\\"Healthcare App chaos engineering tests started for resilience validation\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:chaos\\\", \\\"testing:resilience\\\"],
+                                        \\\"alert_type\\\": \\\"info\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
@@ -2601,11 +2673,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Chaos Engineering Completed\\",
-                                        \\"text\\": \\"Healthcare App chaos engineering tests completed successfully in ${chaosDuration}ms with pod failure, network disruption, and resource stress testing\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
+                                        \\\"title\\\": \\\"Chaos Engineering Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App chaos engineering tests completed successfully in ${chaosDuration}ms with pod failure, network disruption, and resource stress testing\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:chaos\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         """
