@@ -3723,10 +3723,9 @@ node {
                                             FRONTEND_BUILT=false
                                         else
                                             echo "Building frontend Docker image..."
-                                            # Build with DNS configuration for Alpine package repository
+                                            # Build with direct hostname mapping for Alpine package repository
                                             docker build --network=host --no-cache=true --pull=false \
                                                 --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
-                                                --dns=8.8.8.8 --dns=1.1.1.1 \
                                                 -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
                                             FRONTEND_BUILT=true
                                         fi
@@ -3738,10 +3737,9 @@ node {
                                             BACKEND_BUILT=false
                                         else
                                             echo "Building backend Docker image..."
-                                            # Build with DNS configuration for Alpine package repository
+                                            # Build with direct hostname mapping for Alpine package repository
                                             docker build --network=host --no-cache=true --pull=false \
                                                 --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
-                                                --dns=8.8.8.8 --dns=1.1.1.1 \
                                                 -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                             BACKEND_BUILT=true
                                         fi
