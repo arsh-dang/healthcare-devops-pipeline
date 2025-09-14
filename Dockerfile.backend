@@ -10,8 +10,8 @@ WORKDIR /app
 # Copy package files from root
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm with legacy peer deps
-RUN pnpm install --frozen-lockfile --prod --legacy-peer-deps
+# Install dependencies using pnpm
+RUN pnpm install --no-frozen-lockfile --prod
 
 # Copy server files
 COPY server/ ./server/

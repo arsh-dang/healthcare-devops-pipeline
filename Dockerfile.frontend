@@ -10,13 +10,14 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm with legacy peer deps to handle version conflicts
-RUN pnpm install --frozen-lockfile --legacy-peer-deps
+# Install dependencies using pnpm
+RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the code
 COPY public/ public/
 COPY src/ src/
 
+# Build the app for production
 # Build the app for production
 RUN pnpm build
 
