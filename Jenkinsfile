@@ -2140,7 +2140,6 @@ node {
                     }
                 }
             }
-            }
             
             stage('Load Testing') {
                 echo 'Running comprehensive load testing with Artillery...'
@@ -2690,11 +2689,11 @@ node {
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
-                                        \\"title\\": \\"Chaos Engineering Failed\\",
-                                        \\"text\\": \\"Healthcare App chaos engineering tests failed: ''' + "${e.getMessage()}" + '''\\",
-                                        \\"priority\\": \\"high\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
+                                        \\\"title\\\": \\\"Chaos Engineering Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App chaos engineering tests failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"priority\\\": \\\"high\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:chaos\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
