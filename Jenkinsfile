@@ -564,11 +564,11 @@ node {
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
                                                     -d "{
-                                                        \"title\": \"Docker Build Skipped\",
-                                                        \"text\": \"Docker build skipped due to missing base images. Network connectivity required.\",
-                                                        \"priority\": \"normal\",
-                                                        \"tags\": [\"env:staging\", \"service:healthcare-app\", \"stage:build\", \"status:skipped\", \"reason:missing_base_images\"],
-                                                        \"alert_type\": \"warning\"
+                                                        \\"title\\": \\"Docker Build Skipped\\",
+                                                        \\"text\\": \\"Docker build skipped due to missing base images. Network connectivity required.\\",
+                                                        \\"priority\\": \\"normal\\",
+                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:build\\", \\"status:skipped\\", \\"reason:missing_base_images\\"],
+                                                        \\"alert_type\\": \\"warning\\"
                                                     }" || echo "Failed to send Datadog event"
                                             fi
                                             
@@ -5441,72 +5441,72 @@ EOF
                                     
                                     # Create main application dashboard
                                     DASHBOARD_CONFIG='{
-                                        "title": "Healthcare App - Production Overview",
-                                        "description": "Comprehensive monitoring dashboard for Healthcare App production environment",
-                                        "widgets": [
+                                        \\"title\\": \\"Healthcare App - Production Overview\\",
+                                        \\"description\\": \\"Comprehensive monitoring dashboard for Healthcare App production environment\\",
+                                        \\"widgets\\": [
                                             {
-                                                "definition": {
-                                                    "type": "timeseries",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"timeseries\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "avg:healthcare.response_time{env:production,service:healthcare-app}",
-                                                            "display_type": "line"
+                                                            \\"q\\": \\"avg:healthcare.response_time{env:production,service:healthcare-app}\\",
+                                                            \\"display_type\\": \\"line\\"
                                                         }
                                                     ],
-                                                    "title": "Application Response Time"
+                                                    \\"title\\": \\"Application Response Time\\"
                                                 },
-                                                "layout": {"x": 0, "y": 0, "width": 6, "height": 4}
+                                                \\"layout\\": {\\"x\\": 0, \\"y\\": 0, \\"width\\": 6, \\"height\\": 4}
                                             },
                                             {
-                                                "definition": {
-                                                    "type": "timeseries",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"timeseries\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "sum:healthcare.requests.count{env:production,service:healthcare-app}",
-                                                            "display_type": "area"
+                                                            \\"q\\": \\"sum:healthcare.requests.count{env:production,service:healthcare-app}\\",
+                                                            \\"display_type\\": \\"area\\"
                                                         }
                                                     ],
-                                                    "title": "Request Volume"
+                                                    \\"title\\": \\"Request Volume\\"
                                                 },
-                                                "layout": {"x": 6, "y": 0, "width": 6, "height": 4}
+                                                \\"layout\\": {\\"x\\": 6, \\"y\\": 0, \\"width\\": 6, \\"height\\": 4}
                                             },
                                             {
-                                                "definition": {
-                                                    "type": "timeseries",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"timeseries\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "avg:healthcare.error_rate{env:production,service:healthcare-app}",
-                                                            "display_type": "line"
+                                                            \\"q\\": \\"avg:healthcare.error_rate{env:production,service:healthcare-app}\\",
+                                                            \\"display_type\\": \\"line\\"
                                                         }
                                                     ],
-                                                    "title": "Error Rate"
+                                                    \\"title\\": \\"Error Rate\\"
                                                 },
-                                                "layout": {"x": 0, "y": 4, "width": 6, "height": 4}
+                                                \\"layout\\": {\\"x\\": 0, \\"y\\": 4, \\"width\\": 6, \\"height\\": 4}
                                             },
                                             {
-                                                "definition": {
-                                                    "type": "toplist",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"toplist\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "top(avg:healthcare.cpu_usage{env:production,service:healthcare-app} by {host}, 10, 'mean', 'desc')",
-                                                            "conditional_formats": []
+                                                            \\"q\\": \\"top(avg:healthcare.cpu_usage{env:production,service:healthcare-app} by {host}, 10, \\'mean\\', \\'desc\\')\\",
+                                                            \\"conditional_formats\\": []
                                                         }
                                                     ],
-                                                    "title": "Top CPU Usage by Host"
+                                                    \\"title\\": \\"Top CPU Usage by Host\\"
                                                 },
-                                                "layout": {"x": 6, "y": 4, "width": 6, "height": 4}
+                                                \\"layout\\": {\\"x\\": 6, \\"y\\": 4, \\"width\\": 6, \\"height\\": 4}
                                             }
                                         ],
-                                        "template_variables": [
+                                        \\"template_variables\\": [
                                             {
-                                                "name": "env",
-                                                "prefix": "env",
-                                                "default": "production"
+                                                \\"name\\": \\"env\\",
+                                                \\"prefix\\": \\"env\\",
+                                                \\"default\\": \\"production\\"
                                             }
                                         ],
-                                        "layout_type": "ordered",
-                                        "is_read_only": false,
-                                        "notify_list": []
+                                        \\"layout_type\\": \\"ordered\\",
+                                        \\"is_read_only\\": false,
+                                        \\"notify_list\\": []
                                     }'
                                     
                                     # Create dashboard via Datadog API
@@ -5534,61 +5534,61 @@ EOF
                                     
                                     # Create performance dashboard
                                     PERFORMANCE_CONFIG='{
-                                        "title": "Healthcare App - Performance Metrics",
-                                        "description": "Detailed performance monitoring for Healthcare App",
-                                        "widgets": [
+                                        \\"title\\": \\"Healthcare App - Performance Metrics\\",
+                                        \\"description\\": \\"Detailed performance monitoring for Healthcare App\\",
+                                        \\"widgets\\": [
                                             {
-                                                "definition": {
-                                                    "type": "timeseries",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"timeseries\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "avg:healthcare.memory_usage{env:production,service:healthcare-app}",
-                                                            "display_type": "area"
+                                                            \\"q\\": \\"avg:healthcare.memory_usage{env:production,service:healthcare-app}\\",
+                                                            \\"display_type\\": \\"area\\"
                                                         }
                                                     ],
-                                                    "title": "Memory Usage"
+                                                    \\"title\\": \\"Memory Usage\\"
                                                 },
-                                                "layout": {"x": 0, "y": 0, "width": 6, "height": 4}
+                                                \\"layout\\": {\\"x\\": 0, \\"y\\": 0, \\"width\\": 6, \\"height\\": 4}
                                             },
                                             {
-                                                "definition": {
-                                                    "type": "timeseries",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"timeseries\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "avg:healthcare.disk_usage{env:production,service:healthcare-app}",
-                                                            "display_type": "area"
+                                                            \\"q\\": \\"avg:healthcare.disk_usage{env:production,service:healthcare-app}\\",
+                                                            \\"display_type\\": \\"area\\"
                                                         }
                                                     ],
-                                                    "title": "Disk Usage"
+                                                    \\"title\\": \\"Disk Usage\\"
                                                 },
-                                                "layout": {"x": 6, "y": 0, "width": 6, "height": 4}
+                                                \\"layout\\": {\\"x\\": 6, \\"y\\": 0, \\"width\\": 6, \\"height\\": 4}
                                             },
                                             {
-                                                "definition": {
-                                                    "type": "heatmap",
-                                                    "requests": [
+                                                \\"definition\\": {
+                                                    \\"type\\": \\"heatmap\\",
+                                                    \\"requests\\": [
                                                         {
-                                                            "q": "avg:healthcare.response_time{env:production,service:healthcare-app} by {endpoint}",
-                                                            "style": {
-                                                                "palette": "green_to_red"
+                                                            \\"q\\": \\"avg:healthcare.response_time{env:production,service:healthcare-app} by {endpoint}\\",
+                                                            \\"style\\": {
+                                                                \\"palette\\": \\"green_to_red\\"
                                                             }
                                                         }
                                                     ],
-                                                    "title": "Response Time Heatmap by Endpoint"
+                                                    \\"title\\": \\"Response Time Heatmap by Endpoint\\"
                                                 },
-                                                "layout": {"x": 0, "y": 4, "width": 12, "height": 4}
+                                                \\"layout\\": {\\"x\\": 0, \\"y\\": 4, \\"width\\": 12, \\"height\\": 4}
                                             }
                                         ],
-                                        "template_variables": [
+                                        \\"template_variables\\": [
                                             {
-                                                "name": "env",
-                                                "prefix": "env",
-                                                "default": "production"
+                                                \\"name\\": \\"env\\",
+                                                \\"prefix\\": \\"env\\",
+                                                \\"default\\": \\"production\\"
                                             }
                                         ],
-                                        "layout_type": "ordered",
-                                        "is_read_only": false,
-                                        "notify_list": []
+                                        \\"layout_type\\": \\"ordered\\",
+                                        \\"is_read_only\\": false,
+                                        \\"notify_list\\": []
                                     }'
                                     
                                     # Create performance dashboard
@@ -5648,63 +5648,63 @@ EOF
                                     
                                     # Create high error rate alert
                                     ERROR_ALERT_CONFIG='{
-                                        "name": "Healthcare App - High Error Rate",
-                                        "type": "metric alert",
-                                        "query": "avg(last_5m):avg:healthcare.error_rate{env:production,service:healthcare-app} > 5",
-                                        "message": "Healthcare App error rate is above 5% in production. @slack-healthcare-alerts @pagerduty-healthcare",
-                                        "tags": ["env:production", "service:healthcare-app", "alert_type:error_rate"],
-                                        "options": {
-                                            "thresholds": {
-                                                "critical": 5,
-                                                "warning": 2
+                                        \\"name\\": \\"Healthcare App - High Error Rate\\",
+                                        \\"type\\": \\"metric alert\\",
+                                        \\"query\\": \\"avg(last_5m):avg:healthcare.error_rate{env:production,service:healthcare-app} > 5\\",
+                                        \\"message\\": \\"Healthcare App error rate is above 5% in production. @slack-healthcare-alerts @pagerduty-healthcare\\",
+                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"alert_type:error_rate\\"],
+                                        \\"options\\": {
+                                            \\"thresholds\\": {
+                                                \\"critical\\": 5,
+                                                \\"warning\\": 2
                                             },
-                                            "notify_audit": false,
-                                            "notify_no_data": true,
-                                            "no_data_timeframe": 10,
-                                            "renotify_interval": 10,
-                                            "escalation_message": "Healthcare App error rate remains high. Immediate investigation required.",
-                                            "include_tags": true
+                                            \\"notify_audit\\": false,
+                                            \\"notify_no_data\\": true,
+                                            \\"no_data_timeframe\\": 10,
+                                            \\"renotify_interval\\": 10,
+                                            \\"escalation_message\\": \\"Healthcare App error rate remains high. Immediate investigation required.\\",
+                                            \\"include_tags\\": true
                                         }
                                     }'
                                     
                                     # Create response time alert
                                     RESPONSE_TIME_ALERT_CONFIG='{
-                                        "name": "Healthcare App - High Response Time",
-                                        "type": "metric alert",
-                                        "query": "avg(last_5m):avg:healthcare.response_time{env:production,service:healthcare-app} > 3000",
-                                        "message": "Healthcare App response time exceeds 3 seconds in production. @slack-healthcare-alerts",
-                                        "tags": ["env:production", "service:healthcare-app", "alert_type:response_time"],
-                                        "options": {
-                                            "thresholds": {
-                                                "critical": 3000,
-                                                "warning": 2000
+                                        \\"name\\": \\"Healthcare App - High Response Time\\",
+                                        \\"type\\": \\"metric alert\\",
+                                        \\"query\\": \\"avg(last_5m):avg:healthcare.response_time{env:production,service:healthcare-app} > 3000\\",
+                                        \\"message\\": \\"Healthcare App response time exceeds 3 seconds in production. @slack-healthcare-alerts\\",
+                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"alert_type:response_time\\"],
+                                        \\"options\\": {
+                                            \\"thresholds\\": {
+                                                \\"critical\\": 3000,
+                                                \\"warning\\": 2000
                                             },
-                                            "notify_audit": false,
-                                            "notify_no_data": true,
-                                            "no_data_timeframe": 10,
-                                            "include_tags": true
+                                            \\"notify_audit\\": false,
+                                            \\"notify_no_data\\": true,
+                                            \\"no_data_timeframe\\": 10,
+                                            \\"include_tags\\": true
                                         }
                                     }'
                                     
                                     # Create availability alert
                                     AVAILABILITY_ALERT_CONFIG='{
-                                        "name": "Healthcare App - Service Unavailable",
-                                        "type": "service check",
-                                        "query": "\\"healthcare.health_check\\" by \\"host\\".last(2).count_by_status()",
-                                        "message": "Healthcare App health check is failing. Service may be unavailable. @slack-healthcare-alerts @pagerduty-healthcare",
-                                        "tags": ["env:production", "service:healthcare-app", "alert_type:availability"],
-                                        "options": {
-                                            "thresholds": {
-                                                "critical": 1,
-                                                "warning": 1,
-                                                "ok": 1
+                                        \\"name\\": \\"Healthcare App - Service Unavailable\\",
+                                        \\"type\\": \\"service check\\",
+                                        \\"query\\": \\"\\\\\\"healthcare.health_check\\\\\\" by \\\\\\"host\\\\\\".last(2).count_by_status()\\",
+                                        \\"message\\": \\"Healthcare App health check is failing. Service may be unavailable. @slack-healthcare-alerts @pagerduty-healthcare\\",
+                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"alert_type:availability\\"],
+                                        \\"options\\": {
+                                            \\"thresholds\\": {
+                                                \\"critical\\": 1,
+                                                \\"warning\\": 1,
+                                                \\"ok\\": 1
                                             },
-                                            "notify_audit": false,
-                                            "notify_no_data": true,
-                                            "no_data_timeframe": 5,
-                                            "renotify_interval": 5,
-                                            "escalation_message": "Healthcare App is down. Immediate action required.",
-                                            "include_tags": true
+                                            \\"notify_audit\\": false,
+                                            \\"notify_no_data\\": true,
+                                            \\"no_data_timeframe\\": 5,
+                                            \\"renotify_interval\\": 5,
+                                            \\"escalation_message\\": \\"Healthcare App is down. Immediate action required.\\",
+                                            \\"include_tags\\": true
                                         }
                                     }'
                                     
@@ -5802,22 +5802,22 @@ EOF
                                     
                                     # Create log pipeline configuration
                                     LOG_PIPELINE_CONFIG='{
-                                        "name": "Healthcare App Production Logs",
-                                        "is_enabled": true,
-                                        "filter": {
-                                            "query": "service:healthcare-app env:production"
+                                        \\"name\\": \\"Healthcare App Production Logs\\",
+                                        \\"is_enabled\\": true,
+                                        \\"filter\\": {
+                                            \\"query\\": \\"service:healthcare-app env:production\\"
                                         },
-                                        "processors": [
+                                        \\"processors\\": [
                                             {
-                                                "name": "Healthcare App Log Parser",
-                                                "type": "grok-parser",
-                                                "is_enabled": true,
-                                                "definition": {
-                                                    "match_rules": [
+                                                \\"name\\": \\"Healthcare App Log Parser\\",
+                                                \\"type\\": \\"grok-parser\\",
+                                                \\"is_enabled\\": true,
+                                                \\"definition\\": {
+                                                    \\"match_rules\\": [
                                                         {
-                                                            "pattern": "%{timestamp_iso8601:timestamp} %{loglevel:level} %{data::keyvalue} %{message}",
-                                                            "samples": [
-                                                                "2024-01-01T10:00:00Z INFO user_id=123 action=login Healthcare App started"
+                                                            \\"pattern\\": \\"%{timestamp_iso8601:timestamp} %{loglevel:level} %{data::keyvalue} %{message}\\",
+                                                            \\"samples\\": [
+                                                                \\"2024-01-01T10:00:00Z INFO user_id=123 action=login Healthcare App started\\"
                                                             ]
                                                         }
                                                     ]
@@ -5828,14 +5828,14 @@ EOF
                                     
                                     # Create log metric for error tracking
                                     LOG_METRIC_CONFIG='{
-                                        "name": "healthcare.log.errors",
-                                        "compute": {
-                                            "aggregation_type": "count"
+                                        \\"name\\": \\"healthcare.log.errors\\",
+                                        \\"compute\\": {
+                                            \\"aggregation_type\\": \\"count\\"
                                         },
-                                        "filter": {
-                                            "query": "service:healthcare-app env:production status:error OR level:error"
+                                        \\"filter\\": {
+                                            \\"query\\": \\"service:healthcare-app env:production status:error OR level:error\\"
                                         },
-                                        "group_by": ["service", "env"]
+                                        \\"group_by\\": [\\"service\\", \\"env\\"]
                                     }'
                                     
                                     LOG_CONFIGS_CREATED=0
@@ -5919,98 +5919,98 @@ EOF
                                     
                                     # Create API endpoint synthetic test
                                     API_TEST_CONFIG='{
-                                        "name": "Healthcare App API Health Check",
-                                        "type": "api",
-                                        "subtype": "http",
-                                        "config": {
-                                            "assertions": [
+                                        \\"name\\": \\"Healthcare App API Health Check\\",
+                                        \\"type\\": \\"api\\",
+                                        \\"subtype\\": \\"http\\",
+                                        \\"config\\": {
+                                            \\"assertions\\": [
                                                 {
-                                                    "type": "statusCode",
-                                                    "operator": "is",
-                                                    "target": 200
+                                                    \\"type\\": \\"statusCode\\",
+                                                    \\"operator\\": \\"is\\",
+                                                    \\"target\\": 200
                                                 },
                                                 {
-                                                    "type": "responseTime",
-                                                    "operator": "lessThan",
-                                                    "target": 3000
+                                                    \\"type\\": \\"responseTime\\",
+                                                    \\"operator\\": \\"lessThan\\",
+                                                    \\"target\\": 3000
                                                 }
                                             ],
-                                            "configVariables": [],
-                                            "request": {
-                                                "method": "GET",
-                                                "url": "http://localhost:30285/api/health",
-                                                "timeout": 30
+                                            \\"configVariables\\": [],
+                                            \\"request\\": {
+                                                \\"method\\": \\"GET\\",
+                                                \\"url\\": \\"http://localhost:30285/api/health\\",
+                                                \\"timeout\\": 30
                                             }
                                         },
-                                        "message": "Healthcare App API health check is failing or slow",
-                                        "locations": ["aws:us-east-1"],
-                                        "options": {
-                                            "device_ids": ["laptop_large"],
-                                            "tick_every": 300,
-                                            "min_failure_duration": 0,
-                                            "min_location_failed": 1
+                                        \\"message\\": \\"Healthcare App API health check is failing or slow\\",
+                                        \\"locations\\": [\\"aws:us-east-1\\"],
+                                        \\"options\\": {
+                                            \\"device_ids\\": [\\"laptop_large\\"],
+                                            \\"tick_every\\": 300,
+                                            \\"min_failure_duration\\": 0,
+                                            \\"min_location_failed\\": 1
                                         },
-                                        "tags": ["env:production", "service:healthcare-app", "test_type:api"]
+                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"test_type:api\\"]
                                     }'
                                     
                                     # Create browser synthetic test for critical user journey
                                     BROWSER_TEST_CONFIG='{
-                                        "name": "Healthcare App Login Flow",
-                                        "type": "browser",
-                                        "config": {
-                                            "assertions": [
+                                        \\"name\\": \\"Healthcare App Login Flow\\",
+                                        \\"type\\": \\"browser\\",
+                                        \\"config\\": {
+                                            \\"assertions\\": [
                                                 {
-                                                    "type": "pageContains",
-                                                    "operator": "contains",
-                                                    "target": "Welcome"
+                                                    \\"type\\": \\"pageContains\\",
+                                                    \\"operator\\": \\"contains\\",
+                                                    \\"target\\": \\"Welcome\\"
                                                 }
                                             ],
-                                            "configVariables": [],
-                                            "request": {
-                                                "url": "http://localhost:30285",
-                                                "timeout": 60
+                                            \\"configVariables\\": [],
+                                            \\"request\\": {
+                                                \\"url\\": \\"http://localhost:30285\\",
+                                                \\"timeout\\": 60
                                             },
-                                            "steps": [
+                                            \\"steps\\": [
                                                 {
-                                                    "name": "Navigate to login page",
-                                                    "type": "goToUrl",
-                                                    "params": {
-                                                        "url": "http://localhost:30285/login"
+                                                    \\"name\\": \\"Navigate to login page\\",
+                                                    \\"type\\": \\"goToUrl\\",
+                                                    \\"params\\": {
+                                                        \\"url\\": \\"http://localhost:30285/login\\"
                                                     }
                                                 },
                                                 {
-                                                    "name": "Enter credentials",
-                                                    "type": "typeText",
-                                                    "params": {
-                                                        "element": "#username",
-                                                        "value": "testuser"
+                                                    \\"name\\": \\"Enter credentials\\",
+                                                    \\"type\\": \\"typeText\\",
+                                                    \\"params\\": {
+                                                        \\"element\\": \\"#username\\",
+                                                        \\"value\\": \\"testuser\\"
                                                     }
                                                 },
                                                 {
-                                                    "name": "Click login",
-                                                    "type": "click",
-                                                    "params": {
-                                                        "element": "#login-button"
+                                                    \\"name\\": \\"Click login\\",
+                                                    \\"type\\": \\"click\\",
+                                                    \\"params\\": {
+                                                        \\"element\\": \\"#login-button\\"
                                                     }
                                                 },
                                                 {
-                                                    "name": "Verify login success",
-                                                    "type": "assertPageContains",
-                                                    "params": {
-                                                        "value": "Dashboard"
+                                                    \\"name\\": \\"Verify login success\\",
+                                                    \\"type\\": \\"assertPageContains\\",
+                                                    \\"params\\": {
+                                                        \\"value\\": \\"Dashboard\\"
                                                     }
                                                 }
                                             ]
                                         },
-                                        "message": "Healthcare App login flow is failing",
-                                        "locations": ["aws:us-east-1"],
-                                        "options": {
-                                            "device_ids": ["laptop_large"],
-                                            "tick_every": 600,
-                                            "min_failure_duration": 0,
-                                            "min_location_failed": 1
+                                        \\"message\\": \\"Healthcare App login flow is failing\\",
+                                        \\"locations\\": [\\"aws:us-east-1\\"],
+                                        \\"options\\": {
+                                            \\"device_ids\\": [\\"laptop_large\\"],
+                                            \\"tick_every\\": 600,
+                                            \\"min_failure_duration\\": 0,
+                                            \\"min_location_failed\\": 1
                                         },
-                                        "tags": ["env:production", "service:healthcare-app", "test_type:browser"]
+                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"test_type:browser\\"]
                                     }'
                                     
                                     SYNTHETICS_CREATED=0
