@@ -315,12 +315,12 @@ resource "kubernetes_stateful_set" "mongodb" {
     replicas     = 1
 
     selector {
-      match_labels = merge(local.mongodb_labels, local.backend_labels)
+      match_labels = local.mongodb_labels
     }
 
     template {
       metadata {
-        labels = merge(local.mongodb_labels, local.backend_labels)  # Include both mongodb and backend labels
+        labels = local.mongodb_labels
       }
 
       spec {
@@ -920,7 +920,7 @@ resource "kubernetes_deployment" "frontend" {
 
           liveness_probe {
             http_get {
-              path = "/"
+              path = "/health"
               port = "http"
             }
             initial_delay_seconds = 60
@@ -931,7 +931,7 @@ resource "kubernetes_deployment" "frontend" {
 
           readiness_probe {
             http_get {
-              path = "/"
+              path = "/health"
               port = "http"
             }
             initial_delay_seconds = 30
@@ -1286,7 +1286,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.backend_labels  # Backend runs as sidecar in MongoDB pod
+    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
 
     port {
       port        = 5001
