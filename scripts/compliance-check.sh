@@ -30,18 +30,18 @@ log_info() {
 }
 
 log_success() {
-    echo "[SUCCESS] ✓ $1"
+    echo "[SUCCESS] [PASS] $1"
     ((PASSED_CHECKS++))
 }
 
 log_error() {
-    echo "[ERROR] ✗ $1"
+    echo "[ERROR] [ERROR] $1"
     echo "   Details: $2"
     ((FAILED_CHECKS++))
 }
 
 log_warning() {
-    echo "[WARNING] ⚠ $1"
+    echo "[WARNING] [WARNING] $1"
     echo "   Note: $2"
     ((WARNING_CHECKS++))
 }
@@ -412,7 +412,7 @@ except Exception as e:
 
 # Main execution
 main() {
-    log_info "🚀 Starting Healthcare DevOps Compliance Automation"
+    log_info "Starting Healthcare DevOps Compliance Automation"
     log_info "Report will be saved to: $REPORT_FILE"
 
     cd "$PROJECT_ROOT"
@@ -442,13 +442,13 @@ print(int(data['summary']['compliance_percentage']))
 " 2>/dev/null || echo "0")
 
         if [ "$compliance_percentage" -ge 80 ]; then
-            log_success "✅ Compliance check PASSED (${compliance_percentage}%)"
+            log_success "Compliance check PASSED (${compliance_percentage}%)"
             return 0
         elif [ "$compliance_percentage" -ge 60 ]; then
-            log_warning "⚠️  Compliance check FAIR (${compliance_percentage}%)" "Address failed checks to improve compliance"
+            log_warning "Compliance check FAIR (${compliance_percentage}%)" "Address failed checks to improve compliance"
             return 0
         else
-            log_error "❌ Compliance check FAILED (${compliance_percentage}%)" "Immediate action required"
+            log_error "Compliance check FAILED (${compliance_percentage}%)" "Immediate action required"
             return 1
         fi
     else

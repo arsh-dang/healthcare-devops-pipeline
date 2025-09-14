@@ -28,15 +28,15 @@ log_info() {
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} ✓ $1"
+    echo -e "${GREEN}[SUCCESS]${NC} [PASS] $1"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} ⚠ $1"
+    echo -e "${YELLOW}[WARNING]${NC} [WARNING] $1"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} ✗ $1"
+    echo -e "${RED}[ERROR]${NC} [ERROR] $1"
 }
 
 log_docs() {

@@ -38,7 +38,7 @@ for image in "${BASE_IMAGES[@]}"; do
 
     # Check if image already exists locally
     if docker images "$image" | grep -q "$(basename "$image")"; then
-        echo "  ✓ Already cached: $image"
+        echo "  [PASS] Already cached: $image"
         ((SUCCESS_COUNT++))
         continue
     fi
@@ -46,10 +46,10 @@ for image in "${BASE_IMAGES[@]}"; do
     # Try to pull the image
     echo "  Pulling: $image"
     if docker pull "$image"; then
-        echo "  ✓ Successfully cached: $image"
+        echo "  [PASS] Successfully cached: $image"
         ((SUCCESS_COUNT++))
     else
-        echo "  ✗ Failed to pull: $image"
+        echo "  [ERROR] Failed to pull: $image"
         echo "    This may be due to network issues. The build will fail if this image is needed."
     fi
 
@@ -61,10 +61,10 @@ echo "Successfully cached: $SUCCESS_COUNT/$TOTAL_COUNT base images"
 echo ""
 
 if [ "$SUCCESS_COUNT" -eq "$TOTAL_COUNT" ]; then
-    echo "✅ All base images are now cached locally!"
+    echo "[SUCCESS] All base images are now cached locally!"
     echo "Your Jenkins builds should now work even without internet connectivity."
 else
-    echo "⚠️  Some base images could not be cached."
+    echo "[WARNING] Some base images could not be cached."
     echo "This may cause build failures when network connectivity is poor."
     echo ""
     echo "To retry, ensure you have internet connectivity and run this script again."
