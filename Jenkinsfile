@@ -4883,27 +4883,27 @@ node {
                                         echo "No frontend pods found"
                                         MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                     fi
-                                        
-                                        # Enhanced pod-based health checking for all components
-                                        echo "Performing enhanced pod-based health checks..."
-                                        
-                                        # Check frontend pods
-                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                        if [ -n "$FRONTEND_PODS" ]; then
-                                            for pod in $FRONTEND_PODS; do
-                                                POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
-                                                if [ "$POD_READY" = "True" ]; then
-                                                    echo "Frontend pod $pod is ready"
-                                                    MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
-                                                else
-                                                    echo "Frontend pod $pod is not ready"
-                                                    MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                                fi
-                                            done
-                                        else
-                                            echo "No frontend pods found"
-                                            MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                        fi
+                                    
+                                    # Enhanced pod-based health checking for all components
+                                    echo "Performing enhanced pod-based health checks..."
+                                    
+                                    # Check frontend pods
+                                    FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                    if [ -n "$FRONTEND_PODS" ]; then
+                                        for pod in $FRONTEND_PODS; do
+                                            POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                            if [ "$POD_READY" = "True" ]; then
+                                                echo "Frontend pod $pod is ready"
+                                                MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                            else
+                                                echo "Frontend pod $pod is not ready"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
+                                        done
+                                    else
+                                        echo "No frontend pods found"
+                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                    fi
                                         
                                         # Check backend pods
                                         BACKEND_PODS=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
