@@ -4989,7 +4989,6 @@ node {
                                                 ]
                                             }" || echo "Failed to send Datadog metrics"
                                     fi
-                                    fi
                                     
                                     sleep 10
                                 done
