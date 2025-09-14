@@ -245,7 +245,7 @@ check_terraform_resource() {
 
 # HIPAA Compliance Checks
 check_hipaa_compliance() {
-    log_info " Starting HIPAA compliance validation..."
+    log_info "🔒 Starting HIPAA compliance validation..."
 
     # 1. Data Encryption at Rest
     check_terraform_resource "kubernetes_secret" "Data encryption at rest (Kubernetes secrets)" "hipaa"
@@ -279,7 +279,7 @@ check_hipaa_compliance() {
 
 # SOC 2 Compliance Checks
 check_soc2_compliance() {
-    log_info " Starting SOC 2 compliance validation..."
+    log_info "🔒 Starting SOC 2 compliance validation..."
 
     # 1. Security (CC1.1) - Network Security
     check_terraform_resource "kubernetes_network_policy" "Network security policies" "soc2"
@@ -309,7 +309,7 @@ check_soc2_compliance() {
 
 # GDPR Compliance Checks
 check_gdpr_compliance() {
-    log_info " Starting GDPR compliance validation..."
+    log_info "🔒 Starting GDPR compliance validation..."
 
     # 1. Lawful Basis for Processing
     check_file_exists "docs/GDPR_COMPLIANCE.md" "Lawful basis documentation" "gdpr"
@@ -341,7 +341,7 @@ check_gdpr_compliance() {
 
 # Additional Security Checks
 check_security_compliance() {
-    log_info " Starting additional security validation..."
+    log_info "🔒 Starting additional security validation..."
 
     # 1. Dependency Scanning
     check_command "npm" "NPM for dependency management" "security"
@@ -374,7 +374,7 @@ check_security_compliance() {
 
 # Generate compliance summary
 generate_summary() {
-    log_info " Generating compliance summary..."
+    log_info "📊 Generating compliance summary..."
 
     if command -v python3 >/dev/null 2>&1; then
         python3 -c "
