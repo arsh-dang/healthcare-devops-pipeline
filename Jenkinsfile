@@ -3728,6 +3728,7 @@ node {
                                                 --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
                                                 --add-host=get.pnpm.io:66.33.60.130 \
                                                 --add-host=cname.vercel-dns.com:76.76.21.93 \
+                                                --add-host=registry.npmjs.org:104.16.2.35 \
                                                 -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
                                             FRONTEND_BUILT=true
                                         fi
@@ -3744,6 +3745,7 @@ node {
                                                 --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
                                                 --add-host=get.pnpm.io:66.33.60.130 \
                                                 --add-host=cname.vercel-dns.com:76.76.21.93 \
+                                                --add-host=registry.npmjs.org:104.16.2.35 \
                                                 -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                             BACKEND_BUILT=true
                                         fi
