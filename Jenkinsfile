@@ -491,6 +491,69 @@ node {
                                             REGISTRY_AVAILABLE=false
                                         fi
                                         
+                                        # Check for required base images before building
+                                        echo "Checking for required base images..."
+                                        BASE_IMAGES_AVAILABLE=true
+                                        
+                                        # Check if node:20-alpine is available locally
+                                        if ! docker images node:20-alpine | grep -q "20-alpine"; then
+                                            echo "Base image node:20-alpine not found locally"
+                                            if [ "$NETWORK_STATUS" = "online" ]; then
+                                                echo "Attempting to pull node:20-alpine..."
+                                                if docker pull node:20-alpine; then
+                                                    echo "Successfully pulled node:20-alpine"
+                                                else
+                                                    echo "Failed to pull node:20-alpine - build may fail"
+                                                    BASE_IMAGES_AVAILABLE=false
+                                                fi
+                                            else
+                                                echo "Network not available and node:20-alpine not cached - build will likely fail"
+                                                BASE_IMAGES_AVAILABLE=false
+                                            fi
+                                        else
+                                            echo "Base image node:20-alpine found locally"
+                                        fi
+                                        
+                                        # Check if nginx:1.25.3-alpine is available locally (for frontend)
+                                        if ! docker images nginx:1.25.3-alpine | grep -q "1.25.3-alpine"; then
+                                            echo "Base image nginx:1.25.3-alpine not found locally"
+                                            if [ "$NETWORK_STATUS" = "online" ]; then
+                                                echo "Attempting to pull nginx:1.25.3-alpine..."
+                                                if docker pull nginx:1.25.3-alpine; then
+                                                    echo "Successfully pulled nginx:1.25.3-alpine"
+                                                else
+                                                    echo "Failed to pull nginx:1.25.3-alpine - frontend build may fail"
+                                                    BASE_IMAGES_AVAILABLE=false
+                                                fi
+                                            else
+                                                echo "Network not available and nginx:1.25.3-alpine not cached - frontend build will likely fail"
+                                                BASE_IMAGES_AVAILABLE=false
+                                            fi
+                                        else
+                                            echo "Base image nginx:1.25.3-alpine found locally"
+                                        fi
+                                        
+                                        if [ "$BASE_IMAGES_AVAILABLE" = false ]; then
+                                            echo "WARNING: Some base images are not available. Build may fail."
+                                            echo "To resolve this, ensure network connectivity or pre-cache base images:"
+                                            echo "  docker pull node:20-alpine"
+                                            echo "  docker pull nginx:1.25.3-alpine"
+                                            
+                                            # Send warning metric about missing base images
+                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                    -H "Content-Type: application/json" \
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -d "{
+                                                        \"series\": [{
+                                                            \"metric\": \"jenkins.build.base_images_missing\",
+                                                            \"points\": [[$(date +%s), 1]],
+                                                            \"tags\": [\"env:staging\", \"service:healthcare-app\", \"issue:missing_base_images\"]
+                                                        }]
+                                                    }" || echo "Failed to send Datadog metric"
+                                            fi
+                                        fi
+                                        
                                         # Check for existing frontend image in local registry
                                         if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-frontend:latest 2>/dev/null; then
                                             echo "Using existing frontend image from local registry"
