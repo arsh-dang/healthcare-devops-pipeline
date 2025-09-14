@@ -1,0 +1,48 @@
+{
+  "name": "healthcare-backend",
+  "version": "1.0.0",
+  "description": "Healthcare backend server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest",
+    "test:e2e": "jest --testPathPattern=e2e.test.js --detectOpenHandles --forceExit",
+    "test:performance": "jest --testPathPattern=performance.test.js --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch",
+    "test:debug": "jest --testPathPattern=e2e.test.js --detectOpenHandles --verbose"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.1",
+    "prom-client": "^14.2.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.1.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!**/node_modules/**",
+      "!**/test/**"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "setupFilesAfterEnv": ["<rootDir>/test/setup.js"],
+    "testTimeout": 30000,
+    "forceExit": true,
+    "detectOpenHandles": true,
+    "clearMocks": true,
+    "resetMocks": true,
+    "restoreMocks": true
+  }
+}
