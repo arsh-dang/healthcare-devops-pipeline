@@ -232,13 +232,13 @@ create_setup_summary() {
     cat > "$summary_file" << 'EOF'
 # Healthcare DevOps Pipeline - Setup Summary
 
-## Setup Completed Successfully! ✅
+## Setup Completed Successfully!
 
 This document summarizes the automated setup process for the Healthcare DevOps Pipeline.
 
 ## What Was Configured
 
-### ✅ System Prerequisites
+### System Prerequisites
 - Docker 20.10+ ✓
 - Docker Compose ✓
 - Kubernetes CLI (kubectl) ✓
@@ -247,27 +247,27 @@ This document summarizes the automated setup process for the Healthcare DevOps P
 - NPM ✓
 - Git ✓
 
-### ✅ Project Structure
+### Project Structure
 - Made all scripts executable
 - Created necessary directories (logs, backups, temp)
 - Set proper file permissions
 
-### ✅ Dependencies
+### Dependencies
 - Installed root Node.js dependencies
 - Installed frontend dependencies (if applicable)
 - Installed backend dependencies (if applicable)
 
-### ✅ Environment Configuration
+### Environment Configuration
 - Created .env file from template
 - Set up Terraform variables
 - Configured basic environment settings
 
-### ✅ Docker Environment
+### Docker Environment
 - Built Docker images for frontend and backend
 - Configured Docker Compose environment
 - Verified Docker services
 
-### ✅ Validation
+### Validation
 - Terraform configuration validated
 - Required configuration files verified
 - Environment variables checked
@@ -366,7 +366,7 @@ terraform apply
 
 ## Project Status
 
-🎯 **Ready for Development and Deployment**
+**Ready for Development and Deployment**
 
 The Healthcare DevOps Pipeline is now fully configured and ready for:
 - Local development with `docker-compose up -d`
@@ -387,12 +387,12 @@ EOF
 display_completion() {
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║                     🎉 SETUP COMPLETE! 🎉                     ║"
+    echo "║                     SETUP COMPLETE!                     ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     log_success "Healthcare DevOps Pipeline setup completed successfully!"
     echo ""
-    echo "📋 Next steps:"
+    echo "Next steps:"
     echo "  1. Review SETUP_SUMMARY.md for detailed information"
     echo "  2. Configure your environment variables in .env"
     echo "  3. Configure Terraform variables in terraform/terraform.tfvars"
@@ -405,7 +405,7 @@ display_completion() {
     echo "  • Deploy monitoring: ./scripts/deploy-monitoring.sh staging"
     echo "  • Validate setup: ./scripts/validate-deployment.sh"
     echo ""
-    echo "🔗 Access URLs:"
+    echo "Access URLs:"
     echo "  • Application: http://localhost:30285"
     echo "  • Grafana: http://localhost:30285/grafana"
     echo "  • Prometheus: http://localhost:30285/prometheus"

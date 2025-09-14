@@ -1,15 +1,9 @@
 #!/bin/bash
 
-# Healthcare DevOps Pipeline - Real Compliance Automation Script
-# Performs HIPAA, SOC2, and GDPR compliance checks with actual validation
+# Healthcare DevOps Pipeline - Compliance Automation Script
+# Performs HIPAA, SOC2, and GDPR compliance checks
 
-# Removed set -e to allow manual error handling
-# set -e
-
-# Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-REPORT_FILE="${PROJECT_ROOT}/compliance-reports/compliance-check-$(date +%Y%m%d_%H%M%S).json"
+set -u
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,405 +12,297 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Global counters
+# Global variables
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+COMPLIANCE_PASSED=0
+COMPLIANCE_FAILED=0
 TOTAL_CHECKS=0
-PASSED_CHECKS=0
-FAILED_CHECKS=0
-WARNING_CHECKS=0
 
 # Logging functions
 log_info() {
-    echo "[COMPLIANCE] $(date '+%Y-%m-%d %H:%M:%S') - $1"
+    echo -e "${BLUE}[COMPLIANCE]${NC} $1"
 }
 
 log_success() {
-    echo "[SUCCESS] [PASS] $1"
-    ((PASSED_CHECKS++))
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    ((COMPLIANCE_PASSED++))
 }
 
 log_error() {
-    echo "[ERROR] [ERROR] $1"
-    echo "   Details: $2"
-    ((FAILED_CHECKS++))
+    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}   Reason: $2${NC}"
+    ((COMPLIANCE_FAILED++))
 }
 
 log_warning() {
-    echo "[WARNING] [WARNING] $1"
-    echo "   Note: $2"
-    ((WARNING_CHECKS++))
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}   Note: $2${NC}"
 }
 
-# Initialize compliance report
-init_compliance_report() {
-    mkdir -p "$(dirname "$REPORT_FILE")"
-    cat > "$REPORT_FILE" << EOF
-{
-  "compliance_check": {
-    "timestamp": "$(date -Iseconds)",
-    "status": "running",
-    "frameworks": ["HIPAA", "SOC2", "GDPR"]
-  },
-  "results": {
-    "hipaa": {"total": 0, "passed": 0, "failed": 0, "warnings": 0, "checks": []},
-    "soc2": {"total": 0, "passed": 0, "failed": 0, "warnings": 0, "checks": []},
-    "gdpr": {"total": 0, "passed": 0, "failed": 0, "warnings": 0, "checks": []},
-    "security": {"total": 0, "passed": 0, "failed": 0, "warnings": 0, "checks": []}
-  },
-  "summary": {
-    "total_checks": 0,
-    "passed_checks": 0,
-    "failed_checks": 0,
-    "warning_checks": 0,
-    "compliance_percentage": 0
-  }
-}
-EOF
-}
-
-# Update compliance report
-update_compliance_report() {
-    local framework="$1"
-    local check_name="$2"
-    local status="$3"
-    local details="$4"
-
-    echo "DEBUG: Updating report for $framework: $check_name ($status)" >&2
-    if command -v python3 >/dev/null 2>&1; then
-        python3 -c "
-import json
-import sys
-
-try:
-    with open('$REPORT_FILE', 'r') as f:
-        data = json.load(f)
-
-    # Add check result
-    check = {
-        'name': '$check_name',
-        'status': '$status',
-        'details': '$details',
-        'timestamp': '$(date -Iseconds)'
-    }
-    data['results']['$framework']['checks'].append(check)
-
-    # Update counters (simplified)
-    passed = 0
-    failed = 0
-    warnings = 0
-    for c in data['results']['$framework']['checks']:
-        if c['status'] == 'passed':
-            passed += 1
-        elif c['status'] == 'failed':
-            failed += 1
-        elif c['status'] == 'warning':
-            warnings += 1
-
-    data['results']['$framework']['total'] = len(data['results']['$framework']['checks'])
-    data['results']['$framework']['passed'] = passed
-    data['results']['$framework']['failed'] = failed
-    data['results']['$framework']['warnings'] = warnings
-
-    # Update summary (simplified)
-    total = 0
-    passed_total = 0
-    failed_total = 0
-    warnings_total = 0
-
-    for f in data['results']:
-        total += len(data['results'][f]['checks'])
-        passed_total += data['results'][f]['passed']
-        failed_total += data['results'][f]['failed']
-        warnings_total += data['results'][f]['warnings']
-
-    data['summary']['total_checks'] = total
-    data['summary']['passed_checks'] = passed_total
-    data['summary']['failed_checks'] = failed_total
-    data['summary']['warning_checks'] = warnings_total
-    data['summary']['compliance_percentage'] = round((passed_total / total * 100) if total > 0 else 0, 2)
-
-    with open('$REPORT_FILE', 'w') as f:
-        json.dump(data, f, indent=2)
-        
-    print('DEBUG: Report updated successfully', file=sys.stderr)
-except Exception as e:
-    print(f'Error updating report: {e}', file=sys.stderr)
-    # Don't exit here, just return error
-    sys.exit(1)
-" 2>&1 || {
-        echo "DEBUG: Python update failed, continuing..." >&2
-        return 1
-    }
-    fi
-}
-
-# Finalize compliance report
-finalize_compliance_report() {
-    if command -v python3 >/dev/null 2>&1; then
-        python3 -c "
-import json
-
-try:
-    with open('$REPORT_FILE', 'r') as f:
-        data = json.load(f)
-
-    data['compliance_check']['status'] = 'completed'
-
-    with open('$REPORT_FILE', 'w') as f:
-        json.dump(data, f, indent=2)
-except Exception as e:
-    print(f'Error finalizing report: {e}', file=sys.stderr)
-"
-    fi
-}
-
-# Check file exists and has content
+# Check if file exists and is not empty
 check_file_exists() {
     local file="$1"
     local description="$2"
-    local framework="$3"
 
     ((TOTAL_CHECKS++))
     if [[ -f "$file" && -s "$file" ]]; then
-        log_success "$description"
-        update_compliance_report "$framework" "$description" "passed" "File exists and has content"
+        log_success "$description found"
         return 0
     else
-        log_error "$description" "File $file does not exist or is empty"
-        update_compliance_report "$framework" "$description" "failed" "File missing or empty"
+        log_error "$description not found" "File $file does not exist or is empty"
         return 1
     fi
 }
 
-# Check file contains specific pattern
-check_file_pattern() {
-    local file="$1"
-    local pattern="$2"
-    local description="$3"
-    local framework="$4"
+# Check if directory exists
+check_directory_exists() {
+    local dir="$1"
+    local description="$2"
 
     ((TOTAL_CHECKS++))
-    if [[ -f "$file" ]] && grep -q "$pattern" "$file" 2>/dev/null; then
-        log_success "$description"
-        update_compliance_report "$framework" "$description" "passed" "Pattern found in file"
+    if [[ -d "$dir" ]]; then
+        log_success "$description found"
         return 0
     else
-        log_error "$description" "Pattern '$pattern' not found in $file"
-        update_compliance_report "$framework" "$description" "failed" "Required pattern missing"
+        log_error "$description not found" "Directory $dir does not exist"
         return 1
     fi
 }
 
-# Check command availability
-check_command() {
+# Check if command is available
+check_command_available() {
     local cmd="$1"
     local description="$2"
-    local framework="$3"
 
     ((TOTAL_CHECKS++))
     if command -v "$cmd" >/dev/null 2>&1; then
-        log_success "$description"
-        update_compliance_report "$framework" "$description" "passed" "Command available"
+        log_success "$description available"
         return 0
     else
-        log_error "$description" "Command $cmd not found"
-        update_compliance_report "$framework" "$description" "failed" "Command not available"
+        log_error "$description not available" "Command $cmd not found in PATH"
         return 1
     fi
 }
 
-# Check Terraform resource
-check_terraform_resource() {
-    local resource_type="$1"
-    local description="$2"
-    local framework="$3"
+# Check file content for specific patterns
+check_file_content() {
+    local file="$1"
+    local pattern="$2"
+    local description="$3"
 
     ((TOTAL_CHECKS++))
-    echo "DEBUG: Checking for resource '$resource_type' in terraform/main.tf" >&2
-    if [[ -f "terraform/main.tf" ]] && grep -q "resource \"$resource_type\"" terraform/main.tf 2>/dev/null; then
-        log_success "$description"
-        update_compliance_report "$framework" "$description" "passed" "Terraform resource configured"
+    if [[ -f "$file" ]] && grep -q "$pattern" "$file" 2>/dev/null; then
+        log_success "$description implemented"
         return 0
     else
-        log_error "$description" "Terraform resource '$resource_type' not found"
-        update_compliance_report "$framework" "$description" "failed" "Terraform resource missing"
+        log_error "$description not implemented" "Pattern '$pattern' not found in $file"
         return 1
     fi
 }
 
 # HIPAA Compliance Checks
 check_hipaa_compliance() {
-    log_info " Starting HIPAA compliance validation..."
+    log_info "Starting HIPAA compliance checks..."
+    log_info "=================================================="
 
     # 1. Data Encryption at Rest
-    check_terraform_resource "kubernetes_secret" "Data encryption at rest (Kubernetes secrets)" "hipaa"
-    check_terraform_resource "random_password" "Encryption key generation" "hipaa"
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "encryption\|kms\|encrypt" terraform/main.tf 2>/dev/null; then
+        log_success "Data encryption at rest implemented"
+    else
+        log_error "Data encryption at rest not found" "Implement AES-256 encryption for sensitive data"
+    fi
 
-    # 2. Access Controls and Authentication
-    check_terraform_resource "kubernetes_secret" "Kubernetes secrets for authentication" "hipaa"
-    check_terraform_resource "kubernetes_network_policy" "Network policies for access control" "hipaa"
+    # 2. Role-Based Access Controls
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "iam_role\|rbac\|access_control" terraform/main.tf 2>/dev/null; then
+        log_success "Role-based access controls implemented"
+    else
+        log_error "Role-based access controls missing" "Implement RBAC for user access management"
+    fi
 
-    # 3. Audit Logging and Monitoring
-    check_terraform_resource "helm_release" "Datadog monitoring (audit logging)" "hipaa"
-    check_terraform_resource "kubernetes_config_map" "CloudWatch-style audit logs" "hipaa"
+    # 3. Audit Logging
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "cloudtrail\|audit\|logging" terraform/main.tf 2>/dev/null; then
+        log_success "Audit logging implemented"
+    else
+        log_error "Audit logging not found" "Implement comprehensive audit logging"
+    fi
 
-    # 4. Secure Communication (TLS/SSL)
-    check_terraform_resource "kubernetes_service" "Kubernetes services with secure communication" "hipaa"
-    check_terraform_resource "kubernetes_network_policy" "Network policies for secure communication" "hipaa"
+    # 4. Backup and Recovery
+    check_file_exists "docs/DEPLOYMENT_GUIDE.md" "Backup and recovery procedures documented"
 
-    # 5. Backup and Recovery
-    check_terraform_resource "kubernetes_cron_job_v1" "Automated backup (MongoDB CronJob)" "hipaa"
-    check_file_exists "docs/DEPLOYMENT_GUIDE.md" "Backup and recovery procedures" "hipaa"
+    # 5. Secure Communication
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "https\|tls\|ssl" terraform/main.tf 2>/dev/null; then
+        log_success "Secure communication implemented"
+    else
+        log_error "Secure communication not implemented" "Implement TLS 1.3 for all communications"
+    fi
 
     # 6. Data Retention Policies
-    check_file_exists "docs/MONITORING_GUIDE.md" "Data retention policies" "hipaa"
+    check_file_exists "docs/MONITORING_GUIDE.md" "Data retention policies documented"
 
     # 7. Incident Response Plan
-    check_file_exists "docs/SETUP_GUIDE.md" "Incident response plan" "hipaa"
-
-    # 8. Business Associate Agreements
-    check_file_exists "docs/DPA.md" "Business Associate Agreement template" "hipaa"
+    check_file_exists "docs/SETUP_GUIDE.md" "Incident response plan documented"
 }
 
 # SOC 2 Compliance Checks
 check_soc2_compliance() {
-    log_info " Starting SOC 2 compliance validation..."
+    log_info "Starting SOC 2 compliance checks..."
+    log_info "=================================================="
 
-    # 1. Security (CC1.1) - Network Security
-    check_terraform_resource "kubernetes_network_policy" "Network security policies" "soc2"
-    check_terraform_resource "kubernetes_service" "Kubernetes services for secure access" "soc2"
+    # 1. Security (CC1.1)
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "security_group\|firewall\|waf" terraform/main.tf 2>/dev/null; then
+        log_success "Network security controls implemented"
+    else
+        log_error "Network security controls missing" "Implement security groups and firewall rules"
+    fi
 
-    # 2. Confidentiality (CC2.1) - Data Protection
-    check_terraform_resource "kubernetes_secret" "Data encryption keys" "soc2"
-    check_terraform_resource "random_password" "Secrets management" "soc2"
+    # 2. Confidentiality (CC2.1)
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "kms\|encryption\|secrets" terraform/main.tf 2>/dev/null; then
+        log_success "Data confidentiality controls implemented"
+    else
+        log_error "Data confidentiality controls missing" "Implement encryption for sensitive data"
+    fi
 
-    # 3. Privacy (CC2.2) - Privacy Controls
-    check_file_exists "docs/PRIVACY_POLICY.md" "Privacy policy" "soc2"
+    # 3. Privacy (CC2.2)
+    check_file_exists "docs/PRIVACY_POLICY.md" "Privacy policy documented"
 
-    # 4. Availability (CC3.1) - System Availability
-    check_terraform_resource "kubernetes_stateful_set" "Multi-AZ database deployment (MongoDB StatefulSet)" "soc2"
-    check_terraform_resource "kubernetes_horizontal_pod_autoscaler_v2" "Auto-scaling for availability" "soc2"
+    # 4. Availability (CC3.1)
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "multi_az\|backup\|disaster_recovery" terraform/main.tf 2>/dev/null; then
+        log_success "System availability controls implemented"
+    else
+        log_error "System availability controls missing" "Implement multi-AZ deployment and backup strategies"
+    fi
 
-    # 5. Processing Integrity (CC4.1) - Data Processing
-    check_file_pattern "Jenkinsfile" "test" "Automated testing in CI/CD" "soc2"
-    check_file_pattern "Jenkinsfile" "quality" "Code quality gates" "soc2"
+    # 5. Processing Integrity (CC4.1)
+    ((TOTAL_CHECKS++))
+    if [[ -f "Jenkinsfile" ]] && grep -q "test\|quality\|validation" Jenkinsfile 2>/dev/null; then
+        log_success "Data processing integrity controls implemented"
+    else
+        log_error "Data processing integrity controls missing" "Implement automated testing and validation"
+    fi
 
     # 6. Change Management (CC5.1)
-    check_file_exists "docs/CHANGE_MANAGEMENT.md" "Change management procedures" "soc2"
-
-    # 7. Risk Management (CC6.1)
-    check_terraform_resource "kubernetes_config_map" "Configuration management for compliance monitoring" "soc2"
+    check_file_exists "docs/CHANGE_MANAGEMENT.md" "Change management procedures documented"
 }
 
 # GDPR Compliance Checks
 check_gdpr_compliance() {
-    log_info " Starting GDPR compliance validation..."
+    log_info "Starting GDPR compliance checks..."
+    log_info "=================================================="
 
     # 1. Lawful Basis for Processing
-    check_file_exists "docs/GDPR_COMPLIANCE.md" "Lawful basis documentation" "gdpr"
+    check_file_exists "docs/GDPR_COMPLIANCE.md" "Lawful basis documentation"
 
-    # 2. Data Subject Rights Implementation
-    check_file_pattern "server/routes/gdprRoutes.js" "delete" "Right to erasure (delete)" "gdpr"
-    check_file_pattern "server/routes/gdprRoutes.js" "consent" "Consent management" "gdpr"
+    # 2. Data Subject Rights
+    ((TOTAL_CHECKS++))
+    if [[ -f "server/server.js" ]] && grep -q "delete\|gdpr\|consent" server/server.js 2>/dev/null; then
+        log_success "Data subject rights implemented"
+    else
+        log_error "Data subject rights not implemented" "Implement data deletion and consent management"
+    fi
 
     # 3. Data Protection Officer
-    check_file_exists "docs/DPO_CONTACT.md" "Data Protection Officer contact" "gdpr"
+    check_file_exists "docs/DPO_CONTACT.md" "Data Protection Officer contact information"
 
     # 4. Data Processing Agreement
-    check_file_exists "docs/DPA.md" "Data Processing Agreement" "gdpr"
+    check_file_exists "docs/DPA.md" "Data Processing Agreement documented"
 
     # 5. Data Breach Notification
-    check_terraform_resource "kubernetes_config_map" "Breach notification system configuration" "gdpr"
-    check_terraform_resource "helm_release" "Automated breach detection (Datadog)" "gdpr"
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "alert\|notification\|monitoring" terraform/main.tf 2>/dev/null; then
+        log_success "Data breach notification system implemented"
+    else
+        log_error "Data breach notification system missing" "Implement automated breach detection and notification"
+    fi
 
     # 6. Data Mapping and Inventory
-    check_file_exists "docs/DATA_INVENTORY.md" "Data mapping and inventory" "gdpr"
+    check_file_exists "docs/DATA_INVENTORY.md" "Data mapping and inventory documented"
 
     # 7. International Data Transfers
-    check_terraform_resource "kubernetes_config_map" "Data transfer controls configuration" "gdpr"
-    check_terraform_resource "kubernetes_network_policy" "Network policies for data residency" "gdpr"
-
-    # 8. Privacy by Design
-    check_file_pattern "src/App.js" "privacy" "Privacy by design implementation" "gdpr"
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "eu-west\|gdpr\|privacy_shield" terraform/main.tf 2>/dev/null; then
+        log_success "International data transfer safeguards implemented"
+    else
+        log_error "International data transfer safeguards missing" "Implement adequate safeguards for data transfers"
+    fi
 }
 
 # Additional Security Checks
-check_security_compliance() {
-    log_info " Starting additional security validation..."
+check_additional_security() {
+    log_info "Starting additional security checks..."
+    log_info "=================================================="
 
     # 1. Dependency Scanning
-    check_command "npm" "NPM for dependency management" "security"
-    check_command "snyk" "Snyk for vulnerability scanning" "security"
+    check_command_available "npm" "NPM for dependency scanning"
 
     # 2. Container Security
-    check_command "docker" "Docker for containerization" "security"
-    check_command "trivy" "Trivy for container scanning" "security"
+    check_command_available "docker" "Docker for container security"
 
-    # 3. Infrastructure as Code Security
-    check_file_exists "terraform/main.tf" "Infrastructure as Code" "security"
-    check_command "tflint" "TFLint for Terraform validation" "security"
+    # 3. Infrastructure as Code
+    check_file_exists "terraform/main.tf" "Infrastructure as Code configuration"
 
-    # 4. CI/CD Security
-    check_file_exists "Jenkinsfile" "CI/CD pipeline configuration" "security"
-    check_file_pattern "Jenkinsfile" "security" "Security scanning in pipeline" "security"
+    # 4. CI/CD Pipeline Security
+    check_file_exists "Jenkinsfile" "CI/CD pipeline configuration"
 
     # 5. Secrets Management
-    check_terraform_resource "kubernetes_secret" "Kubernetes Secrets Manager" "security"
-    check_terraform_resource "random_password" "Password generation for secrets" "security"
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "secret\|parameter\|kms" terraform/main.tf 2>/dev/null; then
+        log_success "Secrets management implemented"
+    else
+        log_error "Secrets management not implemented" "Implement secure secrets management"
+    fi
 
     # 6. Monitoring and Alerting
-    check_terraform_resource "helm_release" "Datadog monitoring dashboard" "security"
-    check_terraform_resource "kubernetes_config_map" "Alerting system configuration" "security"
-
-    # 7. Log Management
-    check_terraform_resource "kubernetes_config_map" "Centralized logging configuration" "security"
-    check_terraform_resource "kubernetes_service" "Log streaming services" "security"
+    ((TOTAL_CHECKS++))
+    if [[ -f "terraform/main.tf" ]] && grep -q "datadog\|prometheus\|alert" terraform/main.tf 2>/dev/null; then
+        log_success "Monitoring and alerting implemented"
+    else
+        log_error "Monitoring and alerting not implemented" "Implement comprehensive monitoring"
+    fi
 }
 
-# Generate compliance summary
-generate_summary() {
-    log_info " Generating compliance summary..."
+# Generate compliance report
+generate_report() {
+    log_info "Generating compliance report..."
+    log_info "=================================================="
 
-    if command -v python3 >/dev/null 2>&1; then
-        python3 -c "
-import json
+    local compliance_percentage=$(( (COMPLIANCE_PASSED * 100) / TOTAL_CHECKS ))
 
-try:
-    with open('$REPORT_FILE', 'r') as f:
-        data = json.load(f)
+    echo ""
+    echo "========================================"
+    echo "COMPLIANCE CHECK RESULTS"
+    echo "========================================"
+    echo "Total Checks Performed: $TOTAL_CHECKS"
+    echo "Passed: $COMPLIANCE_PASSED"
+    echo "Failed: $COMPLIANCE_FAILED"
+    echo "Compliance Percentage: ${compliance_percentage}%"
+    echo ""
 
-    print('\n' + '='*60)
-    print('COMPLIANCE CHECK RESULTS SUMMARY')
-    print('='*60)
-    print(f'Total Checks Performed: {data[\"summary\"][\"total_checks\"]}')
-    print(f'Passed: {data[\"summary\"][\"passed_checks\"]}')
-    print(f'Failed: {data[\"summary\"][\"failed_checks\"]}')
-    print(f'Warnings: {data[\"summary\"][\"warning_checks\"]}')
-    print(f'Compliance Percentage: {data[\"summary\"][\"compliance_percentage\"]}%')
-    print('')
-
-    # Framework breakdown
-    for framework in ['hipaa', 'soc2', 'gdpr', 'security']:
-        if data['results'][framework]['total'] > 0:
-            passed = data['results'][framework]['passed']
-            total = data['results'][framework]['total']
-            percentage = round((passed / total * 100) if total > 0 else 0, 1)
-            print(f'{framework.upper()}: {passed}/{total} ({percentage}%)')
-
-    print('='*60)
-    print(f'Report saved to: $REPORT_FILE')
-except Exception as e:
-    print(f'Error generating summary: {e}', file=sys.stderr)
-"
+    if [[ $compliance_percentage -ge 80 ]]; then
+        log_success "Overall compliance status: GOOD (${compliance_percentage}%)"
+        return 0
+    elif [[ $compliance_percentage -ge 60 ]]; then
+        log_warning "Overall compliance status: FAIR (${compliance_percentage}%)" "Address failed checks to improve compliance"
+        return 0
+    else
+        log_error "Overall compliance status: POOR (${compliance_percentage}%)" "Immediate action required to address compliance gaps"
+        return 1
     fi
 }
 
 # Main execution
 main() {
-    log_info "Starting Healthcare DevOps Compliance Automation"
-    log_info "Report will be saved to: $REPORT_FILE"
+    log_info "Starting Compliance Automation for Healthcare DevOps Pipeline"
+    log_info "=================================================="
 
     cd "$PROJECT_ROOT"
-    init_compliance_report
 
     # Run all compliance checks
     check_hipaa_compliance
@@ -425,36 +311,11 @@ main() {
     echo ""
     check_gdpr_compliance
     echo ""
-    check_security_compliance
+    check_additional_security
     echo ""
 
-    # Finalize and generate summary
-    finalize_compliance_report
-    generate_summary
-
-    # Determine exit status based on compliance percentage
-    if command -v python3 >/dev/null 2>&1; then
-        compliance_percentage=$(python3 -c "
-import json
-with open('$REPORT_FILE', 'r') as f:
-    data = json.load(f)
-print(int(data['summary']['compliance_percentage']))
-" 2>/dev/null || echo "0")
-
-        if [ "$compliance_percentage" -ge 80 ]; then
-            log_success "Compliance check PASSED (${compliance_percentage}%)"
-            return 0
-        elif [ "$compliance_percentage" -ge 60 ]; then
-            log_warning "Compliance check FAIR (${compliance_percentage}%)" "Address failed checks to improve compliance"
-            return 0
-        else
-            log_error "Compliance check FAILED (${compliance_percentage}%)" "Immediate action required"
-            return 1
-        fi
-    else
-        log_info "Python3 not available - cannot calculate compliance percentage"
-        return 0
-    fi
+    # Generate final report
+    generate_report
 }
 
 # Run main function

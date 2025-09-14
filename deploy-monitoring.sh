@@ -145,7 +145,7 @@ verify_deployment() {
 
 show_access_info() {
     echo
-    log_success "🎉 Monitoring stack deployment completed!"
+    log_success "Monitoring stack deployment completed!"
     echo
     log_info "Access Information:"
     echo "  Grafana: http://localhost:30285/grafana"
@@ -174,7 +174,7 @@ cleanup() {
 # Main execution
 main() {
     echo
-    log_info "🚀 Healthcare Application Monitoring Deployment"
+    log_info "Healthcare Application Monitoring Deployment"
     log_info "Environment: $ENVIRONMENT"
     echo
 

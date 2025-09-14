@@ -1,42 +1,40 @@
 #!/bin/bash
 
-# Healthcare DevOps Pipeline - Real Documentation Generation Script
-# Generates comprehensive API documentation, architecture diagrams, and project docs
+# Enhanced Documentation Generation Script
+# Generates comprehensive API documentation and project docs
 
 set -e
 
 # Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_NAME="Healthcare DevOps Pipeline"
 VERSION=${1:-"1.0.0"}
-OUTPUT_DIR="${PROJECT_ROOT}/docs/generated"
-API_DOCS_DIR="${OUTPUT_DIR}/api"
-ARCHITECTURE_DOCS_DIR="${OUTPUT_DIR}/architecture"
+OUTPUT_DIR="docs/generated"
+API_DOCS_DIR="$OUTPUT_DIR/api"
+ARCHITECTURE_DOCS_DIR="$OUTPUT_DIR/architecture"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-# Colors for output
-RED='\033[0;31m'
+# Colors
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Logging functions
 log_info() {
-    echo -e "${BLUE}[DOCS]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1"
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} [PASS] $1"
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} [WARNING] $1"
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} [ERROR] $1"
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
 log_docs() {
@@ -44,87 +42,60 @@ log_docs() {
 }
 
 # Create output directories
-create_directories() {
-    log_info "Creating output directories..."
-    mkdir -p "$OUTPUT_DIR/api"
-    mkdir -p "$OUTPUT_DIR/architecture"
-    mkdir -p "$OUTPUT_DIR/diagrams"
-    log_success "Output directories created"
-}
+mkdir -p $API_DOCS_DIR $ARCHITECTURE_DOCS_DIR
 
 log_docs "Starting Enhanced Documentation Generation"
 log_docs "=========================================="
-log_info "Project: Healthcare DevOps Pipeline"
+log_info "Project: $PROJECT_NAME"
 log_info "Version: $VERSION"
 log_info "Output Directory: $OUTPUT_DIR"
 
-# Generate OpenAPI specification
-generate_openapi_spec() {
-    log_docs "Generating OpenAPI 3.0 specification..."
+# Generate API Documentation with OpenAPI/Swagger
+generate_api_docs() {
+    log_docs "Generating API Documentation..."
 
-    cat > "$OUTPUT_DIR/api/openapi-spec.yaml" << 'EOF'
+    # Create OpenAPI specification
+    cat > $API_DOCS_DIR/openapi-spec.yaml << 'EOF'
 openapi: 3.0.3
 info:
-  title: Healthcare DevOps Pipeline API
+  title: Healthcare Application API
   description: |
     Comprehensive API for healthcare management system with DevOps pipeline integration.
 
     ## Features
-    - Patient management with full lifecycle tracking
-    - Intelligent appointment scheduling with conflict resolution
-    - Doctor and staff management with availability tracking
-    - Secure electronic health records with audit trails
-    - Real-time notifications via WebSocket
-    - JWT-based authentication with role-based access control
-    - HIPAA, SOC2, and GDPR compliance features
-
-    ## Authentication
-    All API endpoints require authentication via JWT token in the Authorization header:
-    ```
-    Authorization: Bearer <jwt_token>
-    ```
-
-    ## Rate Limiting
-    - 1000 requests per hour for authenticated users
-    - 100 requests per hour for unauthenticated requests
-    - Burst limit: 50 requests per minute
+    - Patient management
+    - Appointment scheduling
+    - Doctor management
+    - Medical records
+    - Authentication & authorization
+    - Real-time notifications
   version: '${VERSION}'
   contact:
     name: Healthcare DevOps Team
     email: devops@healthcare-app.com
-    url: https://github.com/healthcare-devops-pipeline
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://api.healthcare-app.com/v1
-    description: Production server
-  - url: https://staging-api.healthcare-app.com/v1
-    description: Staging server
   - url: http://localhost:30285/api/v1
-    description: Local development server
+    description: Development server
+  - url: https://api.healthcare-app.com/api/v1
+    description: Production server
 
 security:
   - bearerAuth: []
-  - apiKeyAuth: []
 
 paths:
   /health:
     get:
-      summary: System health check
-      description: |
-        Comprehensive health check endpoint that validates:
-        - Database connectivity
-        - Redis cache availability
-        - External service dependencies
-        - System resource usage
+      summary: Health check endpoint
+      description: Check if the API is running and healthy
       tags:
         - System
-      security: []
       responses:
         '200':
-          description: System is healthy
+          description: API is healthy
           content:
             application/json:
               schema:
@@ -132,7 +103,6 @@ paths:
                 properties:
                   status:
                     type: string
-                    enum: [healthy, degraded, unhealthy]
                     example: "healthy"
                   timestamp:
                     type: string
@@ -140,35 +110,13 @@ paths:
                   version:
                     type: string
                     example: "1.0.0"
-                  uptime:
-                    type: integer
-                    description: System uptime in seconds
-                  services:
-                    type: object
-                    properties:
-                      database:
-                        type: string
-                        enum: [up, down]
-                      redis:
-                        type: string
-                        enum: [up, down]
-                      external_api:
-                        type: string
-                        enum: [up, down]
-        '503':
-          description: System is unhealthy
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/login:
     post:
       summary: User authentication
-      description: Authenticate user credentials and return JWT access token with refresh token
+      description: Authenticate user and return JWT token
       tags:
         - Authentication
-      security: []
       requestBody:
         required: true
         content:
@@ -182,18 +130,11 @@ paths:
                 email:
                   type: string
                   format: email
-                  description: User's email address
-                  example: "doctor.smith@hospital.com"
+                  example: "doctor@hospital.com"
                 password:
                   type: string
                   format: password
-                  minLength: 8
-                  description: User's password
-                  example: "SecurePass123!"
-                rememberMe:
-                  type: boolean
-                  default: false
-                  description: Extend token expiration for 30 days
+                  example: "securepassword123"
       responses:
         '200':
           description: Authentication successful
@@ -202,117 +143,30 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
+                  token:
+                    type: string
+                    description: JWT access token
+                  user:
                     type: object
                     properties:
-                      accessToken:
+                      id:
                         type: string
-                        description: JWT access token (15 minutes)
-                      refreshToken:
+                      email:
                         type: string
-                        description: JWT refresh token (30 days)
-                      user:
-                        $ref: '#/components/schemas/User'
-                      expiresIn:
-                        type: integer
-                        description: Access token expiration in seconds
-                        example: 900
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                      role:
+                        type: string
+                        enum: [admin, doctor, nurse, patient]
         '401':
-          $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-
-  /auth/refresh:
-    post:
-      summary: Refresh access token
-      description: Generate new access token using refresh token
-      tags:
-        - Authentication
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - refreshToken
-              properties:
-                refreshToken:
-                  type: string
-                  description: Valid refresh token
-      responses:
-        '200':
-          description: Token refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  accessToken:
-                    type: string
-                  expiresIn:
-                    type: integer
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /auth/logout:
-    post:
-      summary: User logout
-      description: Invalidate current session and refresh token
-      tags:
-        - Authentication
-      responses:
-        '200':
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Logged out successfully"
-
-  /auth/me:
-    get:
-      summary: Get current user profile
-      description: Retrieve authenticated user's profile information
-      tags:
-        - Authentication
-      responses:
-        '200':
-          description: User profile retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: Invalid credentials
 
   /patients:
     get:
-      summary: List patients
-      description: |
-        Retrieve paginated list of patients with optional filtering and search.
-
-        **Permissions Required:** doctor, nurse, admin
+      summary: Get all patients
+      description: Retrieve list of all patients (admin/doctor only)
       tags:
         - Patients
+      security:
+        - bearerAuth: []
       parameters:
         - name: page
           in: query
@@ -320,7 +174,6 @@ paths:
             type: integer
             minimum: 1
             default: 1
-          description: Page number for pagination
         - name: limit
           in: query
           schema:
@@ -328,63 +181,32 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-          description: Number of items per page
         - name: search
           in: query
           schema:
             type: string
-            minLength: 2
-          description: Search term for patient name or ID
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [active, inactive, archived]
-          description: Filter by patient status
-        - name: sortBy
-          in: query
-          schema:
-            type: string
-            enum: [name, createdAt, updatedAt, lastVisit]
-            default: createdAt
-          description: Sort field
-        - name: sortOrder
-          in: query
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
-          description: Sort order
       responses:
         '200':
-          description: Patients retrieved successfully
+          description: List of patients
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
+                  patients:
                     type: array
                     items:
                       $ref: '#/components/schemas/Patient'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
 
     post:
       summary: Create new patient
-      description: |
-        Register a new patient in the system.
-
-        **Permissions Required:** doctor, admin
+      description: Register a new patient in the system
       tags:
         - Patients
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -397,232 +219,125 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Patient'
-                  message:
-                    type: string
-                    example: "Patient created successfully"
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+                $ref: '#/components/schemas/Patient'
 
   /patients/{id}:
     get:
       summary: Get patient by ID
-      description: |
-        Retrieve detailed information about a specific patient including medical history.
-
-        **Permissions Required:** doctor, nurse, admin (own records only for patients)
+      description: Retrieve detailed information about a specific patient
       tags:
         - Patients
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-          description: Patient MongoDB ObjectId
       responses:
         '200':
-          description: Patient details retrieved
+          description: Patient details
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/PatientDetail'
+                $ref: '#/components/schemas/Patient'
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: Patient not found
 
     put:
       summary: Update patient
-      description: |
-        Update patient information. All fields are optional.
-
-        **Permissions Required:** doctor, admin
+      description: Update patient information
       tags:
         - Patients
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
-            pattern: '^[0-9a-fA-F]{24}$'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatientUpdate'
+              $ref: '#/components/schemas/PatientInput'
       responses:
         '200':
           description: Patient updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Patient'
+                $ref: '#/components/schemas/Patient'
 
     delete:
       summary: Delete patient
-      description: |
-        Soft delete a patient record. Actual data is retained for compliance.
-
-        **Permissions Required:** admin only
+      description: Remove patient from the system
       tags:
         - Patients
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
-            pattern: '^[0-9a-fA-F]{24}$'
       responses:
-        '200':
+        '204':
           description: Patient deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Patient record archived"
-
-  /patients/{id}/medical-records:
-    get:
-      summary: Get patient medical records
-      description: |
-        Retrieve patient's medical history and records.
-
-        **Permissions Required:** doctor, nurse, admin
-      tags:
-        - Patients
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-        - name: type
-          in: query
-          schema:
-            type: string
-            enum: [all, consultation, procedure, prescription, lab, imaging]
-            default: all
-      responses:
-        '200':
-          description: Medical records retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/MedicalRecord'
+        '404':
+          description: Patient not found
 
   /appointments:
     get:
-      summary: List appointments
-      description: |
-        Retrieve appointments with filtering options.
-
-        **Permissions Required:** doctor, nurse, admin
+      summary: Get appointments
+      description: Retrieve appointments with optional filtering
       tags:
         - Appointments
+      security:
+        - bearerAuth: []
       parameters:
         - name: date
           in: query
           schema:
             type: string
             format: date
-          description: Filter by appointment date
         - name: doctorId
           in: query
           schema:
             type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-          description: Filter by doctor ID
         - name: patientId
           in: query
           schema:
             type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-          description: Filter by patient ID
         - name: status
           in: query
           schema:
             type: string
-            enum: [scheduled, confirmed, in-progress, completed, cancelled, no-show]
-          description: Filter by appointment status
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
+            enum: [scheduled, confirmed, completed, cancelled]
       responses:
         '200':
-          description: Appointments retrieved successfully
+          description: List of appointments
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
+                  appointments:
                     type: array
                     items:
                       $ref: '#/components/schemas/Appointment'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
 
     post:
       summary: Create appointment
-      description: |
-        Schedule a new appointment with conflict checking.
-
-        **Permissions Required:** doctor, nurse, admin
+      description: Schedule a new appointment
       tags:
         - Appointments
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -635,297 +350,28 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Appointment'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          description: Appointment conflict
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: string
-                    example: "APPOINTMENT_CONFLICT"
-                  message:
-                    type: string
-                    example: "Doctor is not available at the requested time"
-
-  /appointments/{id}:
-    get:
-      summary: Get appointment details
-      description: Retrieve detailed appointment information
-      tags:
-        - Appointments
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-      responses:
-        '200':
-          description: Appointment details retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/AppointmentDetail'
-
-    put:
-      summary: Update appointment
-      description: Update appointment details
-      tags:
-        - Appointments
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppointmentUpdate'
-      responses:
-        '200':
-          description: Appointment updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: '#/components/schemas/Appointment'
-
-    delete:
-      summary: Cancel appointment
-      description: Cancel an appointment
-      tags:
-        - Appointments
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-      responses:
-        '200':
-          description: Appointment cancelled successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Appointment cancelled"
+                $ref: '#/components/schemas/Appointment'
 
   /doctors:
     get:
-      summary: List doctors
-      description: Retrieve list of doctors with filtering
+      summary: Get all doctors
+      description: Retrieve list of all doctors
       tags:
         - Doctors
-      parameters:
-        - name: specialty
-          in: query
-          schema:
-            type: string
-          description: Filter by medical specialty
-        - name: availability
-          in: query
-          schema:
-            type: string
-            enum: [available, busy, off-duty]
-          description: Filter by current availability
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 50
-            default: 20
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Doctors retrieved successfully
+          description: List of doctors
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
+                  doctors:
                     type: array
                     items:
                       $ref: '#/components/schemas/Doctor'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-
-  /doctors/{id}/availability:
-    get:
-      summary: Get doctor availability
-      description: Retrieve doctor's availability schedule
-      tags:
-        - Doctors
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-        - name: date
-          in: query
-          schema:
-            type: string
-            format: date
-          description: Date to check availability for
-      responses:
-        '200':
-          description: Availability retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      doctorId:
-                        type: string
-                      date:
-                        type: string
-                        format: date
-                      availableSlots:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            startTime:
-                              type: string
-                              format: date-time
-                            endTime:
-                              type: string
-                              format: date-time
-                            duration:
-                              type: integer
-                              description: Duration in minutes
-
-  /admin/metrics:
-    get:
-      summary: Get system metrics
-      description: |
-        Retrieve system performance and health metrics.
-
-        **Permissions Required:** admin only
-      tags:
-        - Administration
-      responses:
-        '200':
-          description: Metrics retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      system:
-                        $ref: '#/components/schemas/SystemMetrics'
-                      application:
-                        $ref: '#/components/schemas/ApplicationMetrics'
-                      database:
-                        $ref: '#/components/schemas/DatabaseMetrics'
-
-  /admin/audit-logs:
-    get:
-      summary: Get audit logs
-      description: |
-        Retrieve system audit logs for compliance and security monitoring.
-
-        **Permissions Required:** admin only
-      tags:
-        - Administration
-      parameters:
-        - name: startDate
-          in: query
-          schema:
-            type: string
-            format: date
-          description: Start date for audit logs
-        - name: endDate
-          in: query
-          schema:
-            type: string
-            format: date
-          description: End date for audit logs
-        - name: action
-          in: query
-          schema:
-            type: string
-          description: Filter by action type
-        - name: userId
-          in: query
-          schema:
-            type: string
-          description: Filter by user ID
-      responses:
-        '200':
-          description: Audit logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/AuditLog'
 
 components:
   securitySchemes:
@@ -933,62 +379,13 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT Authorization header using the Bearer scheme
-    apiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
-      description: API Key for service-to-service authentication
 
   schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: User unique identifier
-          example: "507f1f77bcf86cd799439011"
-        email:
-          type: string
-          format: email
-          description: User's email address
-          example: "doctor.smith@hospital.com"
-        firstName:
-          type: string
-          description: User's first name
-          example: "John"
-        lastName:
-          type: string
-          description: User's last name
-          example: "Smith"
-        role:
-          type: string
-          enum: [admin, doctor, nurse, patient]
-          description: User's role in the system
-          example: "doctor"
-        isActive:
-          type: boolean
-          description: Whether the user account is active
-          example: true
-        lastLogin:
-          type: string
-          format: date-time
-          description: Last login timestamp
-        createdAt:
-          type: string
-          format: date-time
-          description: Account creation timestamp
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp
-
     Patient:
       type: object
       properties:
         id:
           type: string
-          description: Patient unique identifier
           example: "507f1f77bcf86cd799439011"
         firstName:
           type: string
@@ -1007,61 +404,29 @@ components:
           type: string
           format: date
           example: "1980-01-15"
-        gender:
-          type: string
-          enum: [male, female, other]
-          example: "male"
         address:
           type: object
           properties:
             street:
               type: string
-              example: "123 Main St"
             city:
               type: string
-              example: "New York"
             state:
               type: string
-              example: "NY"
             zipCode:
               type: string
-              example: "10001"
-            country:
-              type: string
-              example: "USA"
         medicalRecordNumber:
           type: string
-          description: Unique medical record number
-          example: "MRN123456789"
+          example: "MRN123456"
         emergencyContact:
           type: object
           properties:
             name:
               type: string
-              example: "Jane Doe"
             phone:
               type: string
-              example: "+1-555-0987"
             relationship:
               type: string
-              example: "Spouse"
-        insurance:
-          type: object
-          properties:
-            provider:
-              type: string
-              example: "Blue Cross Blue Shield"
-            policyNumber:
-              type: string
-              example: "POL123456789"
-            groupNumber:
-              type: string
-              example: "GRP987654321"
-        status:
-          type: string
-          enum: [active, inactive, archived]
-          default: active
-          example: "active"
         createdAt:
           type: string
           format: date-time
@@ -1076,306 +441,66 @@ components:
         - lastName
         - email
         - dateOfBirth
-        - gender
       properties:
         firstName:
           type: string
-          minLength: 1
-          maxLength: 50
         lastName:
           type: string
-          minLength: 1
-          maxLength: 50
         email:
           type: string
           format: email
         phone:
           type: string
-          pattern: '^\+?[1-9]\d{1,14}$'
         dateOfBirth:
           type: string
           format: date
-        gender:
-          type: string
-          enum: [male, female, other]
         address:
           type: object
           properties:
             street:
               type: string
-              minLength: 1
-              maxLength: 100
             city:
               type: string
-              minLength: 1
-              maxLength: 50
             state:
               type: string
-              minLength: 1
-              maxLength: 50
             zipCode:
               type: string
-              pattern: '^\d{5}(-\d{4})?$'
-            country:
-              type: string
-              minLength: 1
-              maxLength: 50
         emergencyContact:
           type: object
           properties:
             name:
               type: string
-              minLength: 1
-              maxLength: 100
             phone:
               type: string
-              pattern: '^\+?[1-9]\d{1,14}$'
             relationship:
               type: string
-              minLength: 1
-              maxLength: 50
-        insurance:
-          type: object
-          properties:
-            provider:
-              type: string
-              minLength: 1
-              maxLength: 100
-            policyNumber:
-              type: string
-              minLength: 1
-              maxLength: 50
-            groupNumber:
-              type: string
-              minLength: 1
-              maxLength: 50
-
-    PatientUpdate:
-      type: object
-      properties:
-        firstName:
-          type: string
-          minLength: 1
-          maxLength: 50
-        lastName:
-          type: string
-          minLength: 1
-          maxLength: 50
-        email:
-          type: string
-          format: email
-        phone:
-          type: string
-          pattern: '^\+?[1-9]\d{1,14}$'
-        address:
-          type: object
-          properties:
-            street:
-              type: string
-              minLength: 1
-              maxLength: 100
-            city:
-              type: string
-              minLength: 1
-              maxLength: 50
-            state:
-              type: string
-              minLength: 1
-              maxLength: 50
-            zipCode:
-              type: string
-              pattern: '^\d{5}(-\d{4})?$'
-            country:
-              type: string
-              minLength: 1
-              maxLength: 50
-        emergencyContact:
-          type: object
-          properties:
-            name:
-              type: string
-              minLength: 1
-              maxLength: 100
-            phone:
-              type: string
-              pattern: '^\+?[1-9]\d{1,14}$'
-            relationship:
-              type: string
-              minLength: 1
-              maxLength: 50
-        insurance:
-          type: object
-          properties:
-            provider:
-              type: string
-              minLength: 1
-              maxLength: 100
-            policyNumber:
-              type: string
-              minLength: 1
-              maxLength: 50
-            groupNumber:
-              type: string
-              minLength: 1
-              maxLength: 50
-        status:
-          type: string
-          enum: [active, inactive, archived]
-
-    PatientDetail:
-      allOf:
-        - $ref: '#/components/schemas/Patient'
-        - type: object
-          properties:
-            medicalHistory:
-              type: array
-              items:
-                $ref: '#/components/schemas/MedicalRecord'
-            allergies:
-              type: array
-              items:
-                type: object
-                properties:
-                  allergen:
-                    type: string
-                    example: "Penicillin"
-                  severity:
-                    type: string
-                    enum: [mild, moderate, severe]
-                    example: "severe"
-                  reaction:
-                    type: string
-                    example: "Rash, difficulty breathing"
-            currentMedications:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                    example: "Lisinopril"
-                  dosage:
-                    type: string
-                    example: "10mg"
-                  frequency:
-                    type: string
-                    example: "Once daily"
-                  prescribedDate:
-                    type: string
-                    format: date
-                  prescribingDoctor:
-                    type: string
-                    example: "Dr. Smith"
-
-    MedicalRecord:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "507f1f77bcf86cd799439011"
-        type:
-          type: string
-          enum: [consultation, procedure, prescription, lab, imaging, note]
-          example: "consultation"
-        date:
-          type: string
-          format: date-time
-          example: "2023-12-01T10:00:00Z"
-        provider:
-          type: string
-          example: "Dr. Sarah Johnson"
-        description:
-          type: string
-          example: "Annual physical examination"
-        diagnosis:
-          type: array
-          items:
-            type: string
-          example: ["Hypertension", "Type 2 Diabetes"]
-        treatment:
-          type: string
-          example: "Prescribed metformin 500mg twice daily"
-        notes:
-          type: string
-          example: "Patient reports improved energy levels"
-        attachments:
-          type: array
-          items:
-            type: object
-            properties:
-              filename:
-                type: string
-                example: "blood_test_results.pdf"
-              url:
-                type: string
-                example: "/api/files/507f1f77bcf86cd799439011"
-              contentType:
-                type: string
-                example: "application/pdf"
 
     Appointment:
       type: object
       properties:
         id:
           type: string
-          example: "507f1f77bcf86cd799439011"
         patientId:
           type: string
-          example: "507f1f77bcf86cd799439012"
-        patientName:
-          type: string
-          example: "John Doe"
         doctorId:
           type: string
-          example: "507f1f77bcf86cd799439013"
-        doctorName:
-          type: string
-          example: "Dr. Sarah Johnson"
         date:
           type: string
           format: date
-          example: "2023-12-15"
-        startTime:
+        time:
           type: string
-          format: date-time
-          example: "2023-12-15T10:00:00Z"
-        endTime:
-          type: string
-          format: date-time
-          example: "2023-12-15T10:30:00Z"
+          example: "10:00"
         duration:
           type: integer
-          description: Duration in minutes
           example: 30
         type:
           type: string
-          enum: [consultation, follow-up, procedure, emergency, telemedicine]
-          example: "consultation"
+          enum: [consultation, follow-up, procedure, emergency]
         status:
           type: string
-          enum: [scheduled, confirmed, checked-in, in-progress, completed, cancelled, no-show]
-          example: "scheduled"
-        priority:
-          type: string
-          enum: [low, normal, high, urgent]
-          default: normal
-          example: "normal"
+          enum: [scheduled, confirmed, in-progress, completed, cancelled, no-show]
         notes:
           type: string
-          example: "Follow-up on blood pressure medication"
-        location:
-          type: object
-          properties:
-            type:
-              type: string
-              enum: [clinic, telemedicine, home-visit]
-              example: "clinic"
-            room:
-              type: string
-              example: "Room 205"
-            address:
-              type: string
-              example: "123 Medical Center Dr"
         createdAt:
           type: string
           format: date-time
@@ -1389,177 +514,51 @@ components:
         - patientId
         - doctorId
         - date
-        - startTime
+        - time
         - type
       properties:
         patientId:
           type: string
-          pattern: '^[0-9a-fA-F]{24}$'
         doctorId:
           type: string
-          pattern: '^[0-9a-fA-F]{24}$'
         date:
           type: string
           format: date
-        startTime:
+        time:
           type: string
-          format: date-time
         duration:
           type: integer
-          minimum: 15
-          maximum: 480
           default: 30
         type:
           type: string
-          enum: [consultation, follow-up, procedure, emergency, telemedicine]
-        priority:
-          type: string
-          enum: [low, normal, high, urgent]
-          default: normal
+          enum: [consultation, follow-up, procedure, emergency]
         notes:
           type: string
-          maxLength: 1000
-        location:
-          type: object
-          properties:
-            type:
-              type: string
-              enum: [clinic, telemedicine, home-visit]
-              default: clinic
-            room:
-              type: string
-              maxLength: 50
-            address:
-              type: string
-              maxLength: 200
-
-    AppointmentUpdate:
-      type: object
-      properties:
-        date:
-          type: string
-          format: date
-        startTime:
-          type: string
-          format: date-time
-        duration:
-          type: integer
-          minimum: 15
-          maximum: 480
-        type:
-          type: string
-          enum: [consultation, follow-up, procedure, emergency, telemedicine]
-        status:
-          type: string
-          enum: [scheduled, confirmed, checked-in, in-progress, completed, cancelled, no-show]
-        priority:
-          type: string
-          enum: [low, normal, high, urgent]
-        notes:
-          type: string
-          maxLength: 1000
-        location:
-          type: object
-          properties:
-            type:
-              type: string
-              enum: [clinic, telemedicine, home-visit]
-            room:
-              type: string
-              maxLength: 50
-            address:
-              type: string
-              maxLength: 200
-
-    AppointmentDetail:
-      allOf:
-        - $ref: '#/components/schemas/Appointment'
-        - type: object
-          properties:
-            patient:
-              $ref: '#/components/schemas/Patient'
-            doctor:
-              $ref: '#/components/schemas/Doctor'
-            vitals:
-              type: object
-              properties:
-                bloodPressure:
-                  type: string
-                  example: "120/80"
-                heartRate:
-                  type: integer
-                  example: 72
-                temperature:
-                  type: number
-                  example: 98.6
-                weight:
-                  type: number
-                  example: 175.5
-                height:
-                  type: number
-                  example: 70.0
-            diagnosis:
-              type: array
-              items:
-                type: string
-              example: ["Hypertension", "Obesity"]
-            prescription:
-              type: array
-              items:
-                type: object
-                properties:
-                  medication:
-                    type: string
-                    example: "Lisinopril"
-                  dosage:
-                    type: string
-                    example: "10mg"
-                  frequency:
-                    type: string
-                    example: "Once daily"
 
     Doctor:
       type: object
       properties:
         id:
           type: string
-          example: "507f1f77bcf86cd799439011"
         firstName:
           type: string
-          example: "Sarah"
         lastName:
           type: string
-          example: "Johnson"
         email:
           type: string
           format: email
-          example: "sarah.johnson@hospital.com"
         phone:
           type: string
-          example: "+1-555-0199"
         specialty:
           type: string
           example: "Cardiology"
         licenseNumber:
           type: string
-          example: "MD123456789"
         department:
           type: string
-          example: "Cardiology Department"
-        qualifications:
-          type: array
-          items:
-            type: string
-          example: ["MD", "Board Certified Cardiologist", "Fellow of the American College of Cardiology"]
-        languages:
-          type: array
-          items:
-            type: string
-          example: ["English", "Spanish"]
         isActive:
           type: boolean
           default: true
-          example: true
         createdAt:
           type: string
           format: date-time
@@ -1572,311 +571,66 @@ components:
       properties:
         page:
           type: integer
-          example: 1
         limit:
           type: integer
-          example: 20
         total:
           type: integer
-          example: 150
         totalPages:
           type: integer
-          example: 8
-        hasNext:
-          type: boolean
-          example: true
-        hasPrev:
-          type: boolean
-          example: false
-
-    SystemMetrics:
-      type: object
-      properties:
-        cpu:
-          type: object
-          properties:
-            usage:
-              type: number
-              example: 45.5
-            cores:
-              type: integer
-              example: 4
-        memory:
-          type: object
-          properties:
-            used:
-              type: integer
-              example: 2048
-            total:
-              type: integer
-              example: 4096
-            percentage:
-              type: number
-              example: 50.0
-        disk:
-          type: object
-          properties:
-            used:
-              type: integer
-              example: 150
-            total:
-              type: integer
-              example: 500
-            percentage:
-              type: number
-              example: 30.0
-        uptime:
-          type: integer
-          description: System uptime in seconds
-          example: 86400
-
-    ApplicationMetrics:
-      type: object
-      properties:
-        activeUsers:
-          type: integer
-          example: 150
-        totalRequests:
-          type: integer
-          example: 12500
-        averageResponseTime:
-          type: number
-          example: 245.5
-        errorRate:
-          type: number
-          example: 0.02
-        throughput:
-          type: number
-          example: 125.5
-
-    DatabaseMetrics:
-      type: object
-      properties:
-        connections:
-          type: object
-          properties:
-            active:
-              type: integer
-              example: 15
-            available:
-              type: integer
-              example: 35
-            total:
-              type: integer
-              example: 50
-        queryPerformance:
-          type: object
-          properties:
-            slowQueries:
-              type: integer
-              example: 2
-            averageQueryTime:
-              type: number
-              example: 45.2
-        storage:
-          type: object
-          properties:
-            used:
-              type: integer
-              example: 2500
-            total:
-              type: integer
-              example: 10000
-            collections:
-              type: integer
-              example: 25
-
-    AuditLog:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "507f1f77bcf86cd799439011"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2023-12-01T10:30:00Z"
-        userId:
-          type: string
-          example: "507f1f77bcf86cd799439012"
-        userEmail:
-          type: string
-          format: email
-          example: "doctor.smith@hospital.com"
-        action:
-          type: string
-          enum: [login, logout, create, read, update, delete, export]
-          example: "update"
-        resource:
-          type: string
-          enum: [patient, appointment, doctor, user, medical_record]
-          example: "patient"
-        resourceId:
-          type: string
-          example: "507f1f77bcf86cd799439013"
-        ipAddress:
-          type: string
-          example: "192.168.1.100"
-        userAgent:
-          type: string
-          example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        details:
-          type: object
-          description: Additional action details
-          example: {"field": "phone", "oldValue": "+1-555-0123", "newValue": "+1-555-0124"}
-
-    ErrorResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        error:
-          type: string
-          example: "VALIDATION_ERROR"
-        message:
-          type: string
-          example: "Input validation failed"
-        details:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                example: "email"
-              message:
-                type: string
-                example: "Email is required"
-        timestamp:
-          type: string
-          format: date-time
-        requestId:
-          type: string
-          example: "req_507f1f77bcf86cd799439011"
 
   responses:
-    BadRequest:
-      description: Bad Request - Invalid input parameters
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-
-    Unauthorized:
-      description: Unauthorized - Authentication required
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
       content:
         application/json:
           schema:
             type: object
             properties:
-              success:
-                type: boolean
-                example: false
               error:
                 type: string
-                example: "UNAUTHORIZED"
+                example: "Unauthorized"
               message:
                 type: string
-                example: "Authentication required"
-              timestamp:
-                type: string
-                format: date-time
+                example: "Invalid or missing authentication token"
 
-    Forbidden:
-      description: Forbidden - Insufficient permissions
+    NotFoundError:
+      description: The specified resource was not found
       content:
         application/json:
           schema:
             type: object
             properties:
-              success:
-                type: boolean
-                example: false
               error:
                 type: string
-                example: "FORBIDDEN"
-              message:
-                type: string
-                example: "Insufficient permissions"
-              timestamp:
-                type: string
-                format: date-time
-
-    NotFound:
-      description: Not Found - Resource does not exist
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "NOT_FOUND"
+                example: "Not Found"
               message:
                 type: string
                 example: "Resource not found"
-              timestamp:
-                type: string
-                format: date-time
 
-    RateLimitExceeded:
-      description: Rate Limit Exceeded - Too many requests
+    ValidationError:
+      description: Input validation failed
       content:
         application/json:
           schema:
             type: object
             properties:
-              success:
-                type: boolean
-                example: false
               error:
                 type: string
-                example: "RATE_LIMIT_EXCEEDED"
+                example: "Validation Error"
               message:
                 type: string
-                example: "Too many requests. Please try again later."
-              retryAfter:
-                type: integer
-                description: Seconds to wait before retrying
-                example: 60
-              timestamp:
-                type: string
-                format: date-time
-
-  parameters:
-    patientId:
-      name: patientId
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: '^[0-9a-fA-F]{24}$'
-      description: Patient MongoDB ObjectId
-
-    appointmentId:
-      name: appointmentId
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: '^[0-9a-fA-F]{24}$'
-      description: Appointment MongoDB ObjectId
-
-    doctorId:
-      name: doctorId
-      in: path
-      required: true
-      schema:
-        type: string
-        pattern: '^[0-9a-fA-F]{24}$'
-      description: Doctor MongoDB ObjectId
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
 EOF
 
-    log_success "OpenAPI 3.0 specification generated"
+    log_success "OpenAPI specification generated"
 }
 
 # Generate JSDoc documentation for backend
@@ -1884,108 +638,35 @@ generate_jsdoc() {
     log_docs "Generating JSDoc documentation..."
 
     if command -v npx &> /dev/null; then
-        # Create JSDoc configuration with better error handling
+        # Create JSDoc configuration
         cat > jsdoc-config.json << 'EOF'
 {
   "source": {
     "include": ["server/", "src/"],
-    "includePattern": "\\.(js|jsx)$",
-    "exclude": [
-      "node_modules/",
-      "build/",
-      "coverage/",
-      "dist/",
-      ".git/",
-      "**/node_modules/**",
-      "**/*.d.ts",
-      "**/@types/**",
-      "**/coverage/**",
-      "**/build/**",
-      "**/dist/**",
-      "**/*.min.js",
-      "**/*.test.js",
-      "**/*.spec.js",
-      "**/test/**",
-      "**/tests/**",
-      "**/__tests__/**",
-      "**/*.ts",
-      "**/*.tsx"
-    ]
+    "includePattern": "\\.(js|jsx|ts|tsx)$",
+    "exclude": ["node_modules/", "build/", "coverage/"]
   },
   "opts": {
-    "destination": "'$OUTPUT_DIR'/api/jsdoc/",
+    "destination": "'$API_DOCS_DIR'/jsdoc/",
     "recurse": true,
-    "readme": "README.md",
-    "encoding": "utf8"
+    "readme": "README.md"
   },
-  "plugins": [
-    "plugins/markdown"
-  ],
+  "plugins": ["plugins/markdown"],
   "templates": {
     "default": {
-      "outputSourceFiles": true,
-      "includeDate": true
+      "outputSourceFiles": true
     }
   }
 }
 EOF
 
-        # Generate JSDoc with better error handling
-        log_info "Running JSDoc generation (JavaScript only)..."
-        if npx jsdoc -c jsdoc-config.json 2>&1 | grep -E "(ERROR|WARNING)" | grep -v "Unable to parse" | grep -v "does not permit" | head -20; then
-            log_warning "JSDoc completed with some warnings"
-        else
-            log_success "JSDoc documentation generated successfully"
-        fi
-
-        # Check if JSDoc directory was created
-        if [ -d "$OUTPUT_DIR/api/jsdoc" ]; then
-            log_success "JSDoc files generated in $OUTPUT_DIR/api/jsdoc/"
-        else
-            log_warning "JSDoc directory not created - generating basic API docs instead"
-            # Create a simple API documentation page
-            mkdir -p "$OUTPUT_DIR/api/jsdoc"
-            cat > "$OUTPUT_DIR/api/jsdoc/index.html" << 'EOF'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Healthcare API Documentation</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .header { background: #f5f5f5; padding: 20px; border-radius: 8px; }
-        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>🏥 Healthcare DevOps Pipeline API</h1>
-        <p>Backend API Documentation</p>
-    </div>
-
-    <div class="warning">
-        <h3>Note</h3>
-        <p>JSDoc generation encountered some TypeScript parsing issues with modern JavaScript features.</p>
-        <p>Please refer to the OpenAPI specification for complete API documentation.</p>
-        <p><a href="../openapi-spec.yaml">View OpenAPI Specification</a></p>
-    </div>
-
-    <h2>Available Documentation</h2>
-    <ul>
-        <li><a href="../openapi-spec.yaml">OpenAPI 3.0 Specification</a></li>
-        <li><a href="../../../README.md">Project README</a></li>
-        <li><a href="../index.html">Documentation Index</a></li>
-    </ul>
-</body>
-</html>
-EOF
-        fi
+        # Generate JSDoc
+        npx jsdoc -c jsdoc-config.json
 
         # Clean up config file
         rm jsdoc-config.json
 
-        log_success "JSDoc documentation generation completed"
+        log_success "JSDoc documentation generated"
     else
         log_warning "npx not available - skipping JSDoc generation"
     fi
@@ -1996,7 +677,7 @@ generate_architecture_docs() {
     log_docs "Generating architecture documentation..."
 
     # System Architecture Overview
-    cat > "$OUTPUT_DIR/architecture/system-overview.md" << EOF
+    cat > $ARCHITECTURE_DOCS_DIR/system-overview.md << EOF
 # System Architecture Overview
 
 ## Healthcare DevOps Pipeline Architecture
@@ -2188,7 +869,7 @@ graph TB
 EOF
 
     # Deployment Architecture
-    cat > "$OUTPUT_DIR/architecture/deployment-architecture.md" << EOF
+    cat > $ARCHITECTURE_DOCS_DIR/deployment-architecture.md << EOF
 # Deployment Architecture
 
 ## Blue-Green Deployment Strategy
@@ -2916,7 +1597,7 @@ EOF
 }
 
 # Generate all documentation
-generate_openapi_spec
+generate_api_docs
 generate_jsdoc
 generate_architecture_docs
 generate_deployment_docs
@@ -2995,7 +1676,7 @@ cat > $OUTPUT_DIR/index.html << EOF
 </head>
 <body>
     <div class="header">
-        <h1>🏥 Healthcare DevOps Pipeline</h1>
+        <h1>Healthcare DevOps Pipeline</h1>
         <p>Comprehensive Documentation Suite</p>
         <p><strong>Generated:</strong> $(date)</p>
         <p><strong>Version:</strong> $VERSION</p>
@@ -3003,7 +1684,7 @@ cat > $OUTPUT_DIR/index.html << EOF
 
     <div class="grid">
         <div class="card">
-            <h3>📚 API Documentation</h3>
+            <h3>API Documentation</h3>
             <p>OpenAPI 3.0 specification and interactive API documentation</p>
             <a href="api/openapi-spec.yaml" class="btn">OpenAPI Spec</a>
             <a href="api/jsdoc/index.html" class="btn">JSDoc</a>
@@ -3011,7 +1692,7 @@ cat > $OUTPUT_DIR/index.html << EOF
         </div>
 
         <div class="card">
-            <h3>🏗️ Architecture</h3>
+            <h3>Architecture</h3>
             <p>System architecture, deployment strategies, and infrastructure design</p>
             <a href="architecture/system-overview.md" class="btn">System Overview</a>
             <a href="architecture/deployment-architecture.md" class="btn">Deployment</a>
@@ -3019,14 +1700,14 @@ cat > $OUTPUT_DIR/index.html << EOF
         </div>
 
         <div class="card">
-            <h3>🚀 Deployment Guide</h3>
+            <h3>Deployment Guide</h3>
             <p>Step-by-step deployment instructions and troubleshooting</p>
             <a href="deployment-guide.md" class="btn">Deployment Guide</a>
             <span class="status generated">Generated</span>
         </div>
 
         <div class="card">
-            <h3>📖 Project README</h3>
+            <h3>Project README</h3>
             <p>Comprehensive project documentation and getting started guide</p>
             <a href="README.md" class="btn">View README</a>
             <span class="status generated">Generated</span>
@@ -3034,7 +1715,7 @@ cat > $OUTPUT_DIR/index.html << EOF
     </div>
 
     <div class="card" style="margin-top: 30px;">
-        <h3>📊 Documentation Summary</h3>
+        <h3>Documentation Summary</h3>
         <ul>
             <li><strong>API Documentation:</strong> OpenAPI spec, JSDoc, interactive docs</li>
             <li><strong>Architecture Docs:</strong> System design, deployment strategies</li>
@@ -3063,5 +1744,5 @@ done
 log_info "Total files generated: $(find $OUTPUT_DIR -type f | wc -l)"
 log_info "Total size: $(du -sh $OUTPUT_DIR | cut -f1)"
 log_info ""
-log_info "📖 Open documentation index:"
+log_info "Open documentation index:"
 log_info "   open $OUTPUT_DIR/index.html"
