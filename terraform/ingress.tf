@@ -135,7 +135,7 @@ resource "kubernetes_secret" "monitoring_auth" {
 resource "kubernetes_ingress_v1" "healthcare_app" {
   metadata {
     name      = "healthcare-ingress"
-    namespace = var.environment == "production" ? "healthcare-production" : "healthcare-staging"
+    namespace = "${var.namespace}-${var.environment}"
     labels    = merge(local.common_labels, { component = "application" })
     annotations = {
       "kubernetes.io/ingress.class"                    = "nginx"
@@ -244,12 +244,12 @@ resource "kubernetes_namespace" "healthcare_app" {
   count = var.environment == "production" ? 1 : 0  # Only create for production
 
   metadata {
-    name = "healthcare-production"
+    name = "${var.namespace}-${var.environment}"
     labels = {
       "app.kubernetes.io/name"       = "healthcare-app"
       "app.kubernetes.io/component"  = "application"
       "app.kubernetes.io/part-of"    = "healthcare-system"
-      environment                    = "production"
+      environment                    = var.environment
     }
   }
 }
