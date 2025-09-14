@@ -202,6 +202,9 @@ locals {
   # Use provided password or generate random one
   mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
   
+  # Extract base environment for monitoring services (remove -green suffix)
+  base_environment = split("-", var.environment)[0]
+  
   # Encryption configuration (simplified without AWS KMS)
   encryption_enabled = var.enable_encryption
   kms_key_arn = var.enable_encryption ? "local-encryption-key" : ""
@@ -427,7 +430,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           env {
             name  = "MONGODB_HOST"
-            value = "localhost"
+            value = "127.0.0.1"  # Use localhost since backend runs in same pod as MongoDB
           }
 
           env {
@@ -463,7 +466,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           env {
             name  = "JAEGER_AGENT_HOST"
-            value = "jaeger.monitoring-staging.svc.cluster.local"
+            value = "jaeger.monitoring-${local.base_environment}.svc.cluster.local"
           }
 
           env {
@@ -1025,7 +1028,7 @@ resource "kubernetes_service" "grafana_healthcare" {
 
   spec {
     type          = "ExternalName"
-    external_name = "grafana.monitoring-staging.svc.cluster.local"
+    external_name = "grafana.monitoring-${local.base_environment}.svc.cluster.local"
 
     port {
       port = 3000
@@ -1042,7 +1045,7 @@ resource "kubernetes_service" "prometheus_healthcare" {
 
   spec {
     type          = "ExternalName"
-    external_name = "prometheus.monitoring-staging.svc.cluster.local"
+    external_name = "prometheus.monitoring-${local.base_environment}.svc.cluster.local"
 
     port {
       port = 9090
@@ -1059,7 +1062,7 @@ resource "kubernetes_service" "alertmanager_healthcare" {
 
   spec {
     type          = "ExternalName"
-    external_name = "alertmanager.monitoring-staging.svc.cluster.local"
+    external_name = "alertmanager.monitoring-${local.base_environment}.svc.cluster.local"
 
     port {
       port = 9093
@@ -1077,7 +1080,7 @@ resource "kubernetes_service" "jaeger_healthcare" {
 
   spec {
     type          = "ExternalName"
-    external_name = "jaeger.monitoring-staging.svc.cluster.local"
+    external_name = "jaeger.monitoring-${local.base_environment}.svc.cluster.local"
 
     port {
       port = 14268
