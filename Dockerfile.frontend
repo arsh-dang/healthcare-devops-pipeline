@@ -4,6 +4,11 @@ FROM node:20-alpine AS build
 # Set working directory
 WORKDIR /app
 
+# Configure DNS for Alpine package manager
+RUN echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
+    echo 'nameserver 1.1.1.1' >> /etc/resolv.conf && \
+    echo 'nameserver 8.8.4.4' >> /etc/resolv.conf
+
 # Install curl for network operations
 RUN apk add --no-cache curl
 
