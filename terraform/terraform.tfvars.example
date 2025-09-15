@@ -1,46 +1,100 @@
-# Example Terraform variables file for production deployment
-# Copy this to terraform.tfvars and customize for your environment
+# Healthcare Application Terraform Variables
+# Production Environment Configuration
 
-# Environment configuration
-environment = "production"
-app_version = "v1.2.3"
+# Environment Configuration
+environment = "production-green"
+app_version = "v1.0.0"
 
-# Docker images
-frontend_image = "your-registry/healthcare-app-frontend:v1.2.3"
-backend_image = "your-registry/healthcare-app-backend:v1.2.3"
+# Application Configuration
+frontend_image = "healthcare-app-frontend:v1.0.0"
+backend_image  = "healthcare-app-backend:v1.0.0"
 
-# MongoDB Configuration (HD-grade approach)
-# Option 1: Use a known password (recommended for production)
-mongodb_root_password = "YourSecurePassword123!"
-
-# Option 2: Leave empty for auto-generation (less predictable)
-# mongodb_root_password = ""
-
-# Monitoring
-enable_monitoring = true
-enable_datadog = true
-datadog_api_key = "your-datadog-api-key"
-
-# Resource scaling for production
+# Resource Configuration
 replica_count = {
-  frontend = 3
-  backend = 5
+  frontend = 2
+  backend  = 3
 }
 
-# SMTP Email Configuration (REQUIRED for alerts)
-smtp_server = "smtp.gmail.com"
-smtp_port = "587"
-smtp_username = "your-email@gmail.com"  # Replace with your Gmail
-smtp_password = "your-app-password"     # Generate app password in Gmail settings
-smtp_from_email = "alerts@healthcare.company.com"
+# Monitoring Configuration
+enable_monitoring = true
+enable_datadog    = false
 
-# Alert Email Recipients
-alert_email_critical = "critical-alerts@healthcare.company.com"
-alert_email_warning = "alerts@healthcare.company.com"
-alert_email_team = "team@healthcare.company.com"
+# Database Configuration
+mongodb_root_password = ""  # Will be auto-generated if empty
 
-# Slack Configuration (OPTIONAL - leave as default if not using Slack)
-slack_webhook_critical = "https://hooks.slack.com/services/YOUR/CRITICAL/WEBHOOK"
-slack_webhook_warning = "https://hooks.slack.com/services/YOUR/WARNING/WEBHOOK"
-slack_channel_critical = "#healthcare-critical"
-slack_channel_warning = "#healthcare-alerts"
+# Security Configuration
+enable_encryption           = true
+enable_network_policies     = true
+enable_data_transfer_controls = true
+
+# Alerting Configuration
+# SMTP Configuration for Email Alerts
+smtp_host     = "smtp.gmail.com"
+smtp_port     = "587"
+smtp_username = ""  # Replace with your SMTP username
+smtp_password = ""  # Replace with your SMTP password
+smtp_tls      = true
+alert_email_from = "healthcare-alerts@company.com"
+
+# Slack Webhook URLs (Replace with your actual webhook URLs)
+slack_webhook_critical = ""  # Replace with your critical alerts webhook
+slack_webhook_warning  = ""  # Replace with your warning alerts webhook
+slack_webhook_general  = ""  # Replace with your general alerts webhook
+slack_webhook_database = ""  # Replace with your database alerts webhook
+slack_webhook_frontend = ""  # Replace with your frontend alerts webhook
+slack_webhook_backend  = ""  # Replace with your backend alerts webhook
+
+# Slack Channels
+slack_channel_critical  = "#healthcare-critical"
+slack_channel_warning   = "#healthcare-alerts"
+slack_channel_general   = "#healthcare-notifications"
+slack_channel_database  = "#database-alerts"
+slack_channel_frontend  = "#frontend-alerts"
+slack_channel_backend   = "#backend-alerts"
+
+# Email Alert Recipients
+critical_alert_email = "healthcare-critical@company.com"
+warning_alert_email  = "healthcare-alerts@company.com"
+general_alert_email  = "healthcare-team@company.com"
+database_alert_email = "database-team@company.com"
+frontend_alert_email = "frontend-team@company.com"
+backend_alert_email  = "backend-team@company.com"
+
+# Kubernetes Configuration (if using external cluster)
+kubeconfig_path = ""
+kubernetes_host = ""
+kubernetes_cluster_ca_certificate = ""
+kubernetes_client_certificate = ""
+kubernetes_client_key = ""
+
+# Resource Limits
+resource_limits = {
+  frontend = {
+    cpu_request    = "50m"
+    memory_request = "64Mi"
+    cpu_limit      = "200m"
+    memory_limit   = "128Mi"
+  }
+  backend = {
+    cpu_request    = "200m"
+    memory_request = "256Mi"
+    cpu_limit      = "1000m"
+    memory_limit   = "1Gi"
+  }
+  mongodb = {
+    cpu_request    = "500m"
+    memory_request = "1Gi"
+    cpu_limit      = "2000m"
+    memory_limit   = "4Gi"
+  }
+}
+
+# Monitoring Configuration
+monitoring_retention_days = 15
+
+# Network Security
+allowed_ip_ranges = [
+  "10.0.0.0/8",
+  "172.16.0.0/12",
+  "192.168.0.0/16"
+]

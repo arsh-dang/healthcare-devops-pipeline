@@ -1,0 +1,112 @@
+config:
+  target: 'http://frontend:30285'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: Warm up
+    - duration: 300
+      arrivalRate: 50
+      name: Load testing
+    - duration: 120
+      arrivalRate: 100
+      name: Stress testing
+    - duration: 60
+      arrivalRate: 200
+      name: Spike testing
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: 'User registration and login'
+    weight: 30
+    flow:
+      - post:
+          url: '/api/auth/register'
+          json:
+            email: 'user_{{ $randomInt }}@test.com'
+            password: 'testpassword123'
+            name: 'Test User {{ $randomInt }}'
+          expect:
+            - statusCode: 201
+          capture:
+            json: '$.user.id'
+            as: 'userId'
+      - think: 2
+      - post:
+          url: '/api/auth/login'
+          json:
+            email: 'user_{{ $randomInt }}@test.com'
+            password: 'testpassword123'
+          expect:
+            - statusCode: 200
+          capture:
+            json: '$.token'
+            as: 'authToken'
+
+  - name: 'Browse healthcare data'
+    weight: 40
+    flow:
+      - get:
+          url: '/api/healthcare/patients'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: '/api/healthcare/appointments'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: '/api/healthcare/records/{{ userId }}'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          expect:
+            - statusCode: 200
+
+  - name: 'Update patient information'
+    weight: 20
+    flow:
+      - put:
+          url: '/api/healthcare/patients/{{ userId }}'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          json:
+            name: 'Updated User {{ $randomInt }}'
+            phone: '+1-555-{{ $randomInt }}'
+          expect:
+            - statusCode: 200
+      - think: 3
+      - post:
+          url: '/api/healthcare/appointments'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          json:
+            patientId: '{{ userId }}'
+            doctorId: 'doc_{{ $randomInt }}'
+            date: '2024-12-{{ $randomInt }}-10:00:00Z'
+            type: 'consultation'
+          expect:
+            - statusCode: 201
+
+  - name: 'Monitoring endpoints'
+    weight: 10
+    flow:
+      - get:
+          url: '/grafana/'
+          expect:
+            - statusCode: 302
+      - think: 1
+      - get:
+          url: '/prometheus/'
+          expect:
+            - statusCode: 302
+      - think: 1
+      - get:
+          url: '/alertmanager/'
+          expect:
+            - statusCode: 200

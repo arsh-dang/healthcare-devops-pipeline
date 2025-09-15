@@ -156,6 +156,12 @@ variable "enable_data_transfer_controls" {
   default     = true
 }
 
+variable "enable_data_transfer_controls" {
+  description = "Enable data transfer controls for GDPR compliance"
+  type        = bool
+  default     = true
+}
+
 variable "kubeconfig_path" {
   description = "Path to kubeconfig file (leave empty to use default)"
   type        = string
@@ -184,6 +190,162 @@ variable "kubernetes_client_key" {
   description = "Kubernetes client key"
   type        = string
   default     = ""
+}
+
+# Alerting Configuration Variables
+variable "smtp_host" {
+  description = "SMTP server host for email alerts"
+  type        = string
+  default     = "smtp.gmail.com"
+}
+
+variable "smtp_port" {
+  description = "SMTP server port"
+  type        = string
+  default     = "587"
+}
+
+variable "smtp_username" {
+  description = "SMTP authentication username"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "smtp_password" {
+  description = "SMTP authentication password"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "smtp_tls" {
+  description = "Enable TLS for SMTP"
+  type        = bool
+  default     = true
+}
+
+variable "alert_email_from" {
+  description = "Email address for sending alerts"
+  type        = string
+  default     = "healthcare-alerts@company.com"
+}
+
+# Slack Webhook Variables
+variable "slack_webhook_critical" {
+  description = "Slack webhook URL for critical alerts"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "slack_webhook_warning" {
+  description = "Slack webhook URL for warning alerts"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "slack_webhook_general" {
+  description = "Slack webhook URL for general alerts"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "slack_webhook_database" {
+  description = "Slack webhook URL for database alerts"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "slack_webhook_frontend" {
+  description = "Slack webhook URL for frontend alerts"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "slack_webhook_backend" {
+  description = "Slack webhook URL for backend alerts"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+# Slack Channel Variables
+variable "slack_channel_critical" {
+  description = "Slack channel for critical alerts"
+  type        = string
+  default     = "#healthcare-critical"
+}
+
+variable "slack_channel_warning" {
+  description = "Slack channel for warning alerts"
+  type        = string
+  default     = "#healthcare-alerts"
+}
+
+variable "slack_channel_general" {
+  description = "Slack channel for general alerts"
+  type        = string
+  default     = "#healthcare-notifications"
+}
+
+variable "slack_channel_database" {
+  description = "Slack channel for database alerts"
+  type        = string
+  default     = "#database-alerts"
+}
+
+variable "slack_channel_frontend" {
+  description = "Slack channel for frontend alerts"
+  type        = string
+  default     = "#frontend-alerts"
+}
+
+variable "slack_channel_backend" {
+  description = "Slack channel for backend alerts"
+  type        = string
+  default     = "#backend-alerts"
+}
+
+# Email Alert Recipients
+variable "critical_alert_email" {
+  description = "Email address for critical alerts"
+  type        = string
+  default     = "healthcare-critical@company.com"
+}
+
+variable "warning_alert_email" {
+  description = "Email address for warning alerts"
+  type        = string
+  default     = "healthcare-alerts@company.com"
+}
+
+variable "general_alert_email" {
+  description = "Email address for general alerts"
+  type        = string
+  default     = "healthcare-team@company.com"
+}
+
+variable "database_alert_email" {
+  description = "Email address for database alerts"
+  type        = string
+  default     = "database-team@company.com"
+}
+
+variable "frontend_alert_email" {
+  description = "Email address for frontend alerts"
+  type        = string
+  default     = "frontend-team@company.com"
+}
+
+variable "backend_alert_email" {
+  description = "Email address for backend alerts"
+  type        = string
+  default     = "backend-team@company.com"
 }
 
 # Local values for computed configurations
@@ -1664,8 +1826,570 @@ resource "kubernetes_network_policy" "allow_frontend_to_backend" {
   }
 }
 
-# MongoDB Backup CronJob
-resource "kubernetes_cron_job_v1" "mongodb_backup" {
+# Alertmanager Configuration via Terraform
+resource "kubernetes_config_map" "alertmanager_config" {
+  metadata {
+    name      = "alertmanager-config"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.monitoring_labels, { component = "alertmanager" })
+  }
+
+  data = {
+    "alertmanager.yml" = <<-EOT
+global:
+  smtp_smarthost: '${var.smtp_host}:${var.smtp_port}'
+  smtp_from: '${var.alert_email_from}'
+  smtp_auth_username: '${var.smtp_username}'
+  smtp_auth_password: '${var.smtp_password}'
+  smtp_require_tls: ${var.smtp_tls}
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'healthcare-team'
+  routes:
+  - match:
+      severity: critical
+    receiver: 'healthcare-critical'
+    continue: true
+  - match:
+      severity: warning
+    receiver: 'healthcare-warning'
+    continue: true
+  - match:
+      service: database
+    receiver: 'database-team'
+    continue: true
+  - match:
+      service: frontend
+    receiver: 'frontend-team'
+    continue: true
+  - match:
+      service: backend
+    receiver: 'backend-team'
+    continue: true
+
+receivers:
+- name: 'healthcare-critical'
+  slack_configs:
+  - api_url: '${var.slack_webhook_critical}'
+    channel: '${var.slack_channel_critical}'
+    title: '{{ .GroupLabels.alertname }}'
+    text: |
+      🚨 *CRITICAL ALERT* 🚨
+      *Alert:* {{ .GroupLabels.alertname }}
+      *Severity:* {{ .GroupLabels.severity }}
+      *Service:* {{ .GroupLabels.service }}
+      *Instance:* {{ .Labels.instance }}
+      *Description:* {{ .Annotations.description }}
+      *Value:* {{ .Value }}
+      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+      *Environment:* ${var.environment}
+    color: 'danger'
+  email_configs:
+  - to: '${var.critical_alert_email}'
+    headers:
+      Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+    html: |
+      <h1 style="color: #ff0000;">🚨 CRITICAL ALERT 🚨</h1>
+      <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
+      <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
+      <p><strong>Service:</strong> {{ .GroupLabels.service }}</p>
+      <p><strong>Instance:</strong> {{ .Labels.instance }}</p>
+      <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+      <p><strong>Value:</strong> {{ .Value }}</p>
+      <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
+      <p><strong>Environment:</strong> ${var.environment}</p>
+
+- name: 'healthcare-warning'
+  slack_configs:
+  - api_url: '${var.slack_webhook_warning}'
+    channel: '${var.slack_channel_warning}'
+    title: '{{ .GroupLabels.alertname }}'
+    text: |
+      ⚠️ *WARNING ALERT* ⚠️
+      *Alert:* {{ .GroupLabels.alertname }}
+      *Severity:* {{ .GroupLabels.severity }}
+      *Service:* {{ .GroupLabels.service }}
+      *Instance:* {{ .Labels.instance }}
+      *Description:* {{ .Annotations.description }}
+      *Value:* {{ .Value }}
+      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+      *Environment:* ${var.environment}
+    color: 'warning'
+  email_configs:
+  - to: '${var.warning_alert_email}'
+    headers:
+      Subject: '⚠️ WARNING: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+
+- name: 'healthcare-team'
+  slack_configs:
+  - api_url: '${var.slack_webhook_general}'
+    channel: '${var.slack_channel_general}'
+    title: '{{ .GroupLabels.alertname }}'
+    text: |
+      📢 *HEALTHCARE ALERT* 📢
+      *Alert:* {{ .GroupLabels.alertname }}
+      *Severity:* {{ .GroupLabels.severity }}
+      *Service:* {{ .GroupLabels.service }}
+      *Description:* {{ .Annotations.description }}
+      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    color: 'good'
+  email_configs:
+  - to: '${var.general_alert_email}'
+    headers:
+      Subject: '📢 Alert: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+
+- name: 'database-team'
+  slack_configs:
+  - api_url: '${var.slack_webhook_database}'
+    channel: '${var.slack_channel_database}'
+    title: 'Database Alert: {{ .GroupLabels.alertname }}'
+    text: |
+      🗄️ *DATABASE ALERT* 🗄️
+      *Alert:* {{ .GroupLabels.alertname }}
+      *Severity:* {{ .GroupLabels.severity }}
+      *Service:* {{ .GroupLabels.service }}
+      *Instance:* {{ .Labels.instance }}
+      *Description:* {{ .Annotations.description }}
+      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    color: 'danger'
+  email_configs:
+  - to: '${var.database_alert_email}'
+    headers:
+      Subject: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
+
+- name: 'frontend-team'
+  slack_configs:
+  - api_url: '${var.slack_webhook_frontend}'
+    channel: '${var.slack_channel_frontend}'
+    title: 'Frontend Alert: {{ .GroupLabels.alertname }}'
+    text: |
+      🌐 *FRONTEND ALERT* 🌐
+      *Alert:* {{ .GroupLabels.alertname }}
+      *Severity:* {{ .GroupLabels.severity }}
+      *Service:* {{ .GroupLabels.service }}
+      *Instance:* {{ .Labels.instance }}
+      *Description:* {{ .Annotations.description }}
+      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    color: 'warning'
+  email_configs:
+  - to: '${var.frontend_alert_email}'
+    headers:
+      Subject: '🌐 Frontend Alert: {{ .GroupLabels.alertname }}'
+
+- name: 'backend-team'
+  slack_configs:
+  - api_url: '${var.slack_webhook_backend}'
+    channel: '${var.slack_channel_backend}'
+    title: 'Backend Alert: {{ .GroupLabels.alertname }}'
+    text: |
+      ⚙️ *BACKEND ALERT* ⚙️
+      *Alert:* {{ .GroupLabels.alertname }}
+      *Severity:* {{ .GroupLabels.severity }}
+      *Service:* {{ .GroupLabels.service }}
+      *Instance:* {{ .Labels.instance }}
+      *Description:* {{ .Annotations.description }}
+      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+    color: 'warning'
+  email_configs:
+  - to: '${var.backend_alert_email}'
+    headers:
+      Subject: '⚙️ Backend Alert: {{ .GroupLabels.alertname }}'
+
+inhibit_rules:
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  equal: ['alertname', 'service']
+
+- source_match:
+    alertname: 'DatabaseDown'
+  target_match:
+    alertname: 'BackendServiceDown'
+  equal: ['instance']
+EOT
+  }
+}
+
+# Prometheus Alerting Rules via Terraform
+resource "kubernetes_config_map" "prometheus_alerting_rules" {
+  metadata {
+    name      = "prometheus-alerting-rules"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.monitoring_labels, { component = "prometheus" })
+  }
+
+  data = {
+    "alerting_rules.yml" = <<-EOT
+groups:
+- name: healthcare.alerts
+  rules:
+
+  # Critical Alerts
+  - alert: DatabaseDown
+    expr: up{job="mongodb"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: database
+    annotations:
+      summary: "Database is down"
+      description: "MongoDB has been down for more than 1 minute."
+
+  - alert: BackendServiceDown
+    expr: up{job="backend"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: backend
+    annotations:
+      summary: "Backend service is down"
+      description: "Backend service has been down for more than 1 minute."
+
+  - alert: FrontendServiceDown
+    expr: up{job="frontend"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: frontend
+    annotations:
+      summary: "Frontend service is down"
+      description: "Frontend service has been down for more than 1 minute."
+
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: critical
+      service: backend
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ \$value | printf \"%.2f\" }}% over the last 5 minutes."
+
+  # Warning Alerts
+  - alert: HighCPUUsage
+    expr: rate(container_cpu_usage_seconds_total{pod=~".*"}[5m]) > 0.8
+    for: 5m
+    labels:
+      severity: warning
+      service: infrastructure
+    annotations:
+      summary: "High CPU usage detected"
+      description: "CPU usage is above 80% for pod {{ \$labels.pod }}."
+
+  - alert: HighMemoryUsage
+    expr: container_memory_usage_bytes{pod=~".*"} / container_spec_memory_limit_bytes > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      service: infrastructure
+    annotations:
+      summary: "High memory usage detected"
+      description: "Memory usage is above 90% for pod {{ \$labels.pod }}."
+
+  - alert: SlowResponseTime
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+    for: 3m
+    labels:
+      severity: warning
+      service: backend
+    annotations:
+      summary: "Slow response time detected"
+      description: "95th percentile response time is above 2 seconds."
+
+  - alert: DatabaseConnectionPoolExhausted
+    expr: mongodb_connections{state="active"} / mongodb_connections{state="available"} > 0.9
+    for: 2m
+    labels:
+      severity: warning
+      service: database
+    annotations:
+      summary: "Database connection pool nearly exhausted"
+      description: "Active database connections are above 90% of available connections."
+
+  # Info Alerts
+  - alert: DeploymentCompleted
+    expr: kube_deployment_status_replicas_available{deployment=~".*"} == kube_deployment_status_replicas_desired{deployment=~".*"}
+    for: 1m
+    labels:
+      severity: info
+      service: infrastructure
+    annotations:
+      summary: "Deployment completed successfully"
+      description: "Deployment {{ \$labels.deployment }} has completed successfully."
+
+  - alert: PodRestarted
+    expr: increase(kube_pod_container_status_restarts_total[10m]) > 0
+    for: 0m
+    labels:
+      severity: info
+      service: infrastructure
+    annotations:
+      summary: "Pod restarted"
+      description: "Pod {{ \$labels.pod }} in namespace {{ \$labels.namespace }} has restarted."
+
+  # Database-specific alerts
+  - alert: DatabaseSlowQueries
+    expr: rate(mongodb_op_counters_total{type="query"}[5m]) > 1000
+    for: 5m
+    labels:
+      severity: warning
+      service: database
+    annotations:
+      summary: "High number of database queries"
+      description: "Database is experiencing high query load: {{ \$value }} queries per second."
+
+  - alert: DatabaseDiskSpaceLow
+    expr: (1 - (mongodb_db_stats_storageSize / mongodb_db_stats_totalSize)) < 0.1
+    for: 5m
+    labels:
+      severity: critical
+      service: database
+    annotations:
+      summary: "Database disk space low"
+      description: "Database disk usage is above 90%."
+
+  # Application-specific alerts
+  - alert: HealthCheckFailed
+    expr: probe_success == 0
+    for: 1m
+    labels:
+      severity: critical
+      service: healthcheck
+    annotations:
+      summary: "Health check failed"
+      description: "Health check for {{ \$labels.instance }} has failed."
+
+  - alert: CertificateExpiryWarning
+    expr: probe_ssl_earliest_cert_expiry - time() < 604800
+    for: 0m
+    labels:
+      severity: warning
+      service: security
+    annotations:
+      summary: "SSL certificate expiring soon"
+      description: "SSL certificate for {{ \$labels.instance }} expires in less than 7 days."
+
+  # Performance alerts
+  - alert: HighRequestRate
+    expr: rate(http_requests_total[5m]) > 1000
+    for: 2m
+    labels:
+      severity: info
+      service: performance
+    annotations:
+      summary: "High request rate detected"
+      description: "Request rate is above 1000 requests per second."
+
+  - alert: QueueBacklogHigh
+    expr: http_requests_in_flight > 50
+    for: 2m
+    labels:
+      severity: warning
+      service: performance
+    annotations:
+      summary: "High request queue backlog"
+      description: "Number of requests in flight is above 50."
+EOT
+  }
+}
+
+# Grafana Dashboard Configuration via Terraform
+resource "kubernetes_config_map" "grafana_dashboards" {
+  metadata {
+    name      = "grafana-dashboards"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = merge(local.monitoring_labels, { component = "grafana" })
+  }
+
+  data = {
+    "performance-dashboard.json" = <<-EOT
+{
+  "dashboard": {
+    "id": null,
+    "title": "Healthcare Application Performance Dashboard",
+    "tags": ["healthcare", "performance", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Application Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "seconds",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "Requests per second"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\\"5..\\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "Error rate %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "CPU Usage by Pod",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{pod=~\\".*\\"}[5m]) * 100",
+            "legendFormat": "{{pod}} CPU %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage by Pod",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{pod=~\\".*\\"} / container_spec_memory_limit_bytes * 100",
+            "legendFormat": "{{pod}} Memory %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "mongodb_connections{state=\\"active\\"}",
+            "legendFormat": "Active connections"
+          },
+          {
+            "expr": "mongodb_connections{state=\\"available\\"}",
+            "legendFormat": "Available connections"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mongodb_op_counters_total{type=\\"query\\"}[5m])",
+            "legendFormat": "Queries per second"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Pod Restarts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(kube_pod_container_status_restarts_total[5m])",
+            "legendFormat": "{{pod}} restarts"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total[5m])",
+            "legendFormat": "{{pod}} receive"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total[5m])",
+            "legendFormat": "{{pod}} transmit"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "bytes",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Disk I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_fs_reads_bytes_total[5m])",
+            "legendFormat": "{{pod}} reads"
+          },
+          {
+            "expr": "rate(container_fs_writes_bytes_total[5m])",
+            "legendFormat": "{{pod}} writes"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "bytes",
+            "min": 0
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}
+EOT
+  }
+}
   metadata {
     name      = "mongodb-backup"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1688,7 +2412,49 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
               name  = "mongodb-backup"
               image = "mongo:7.0.1"
               command = ["sh", "-c"]
-              args = ["mongodump --host mongodb --username admin --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/backup_$(date +%Y%m%d_%H%M%S)"]
+              args = [
+                <<-EOT
+                # Create backup directory with timestamp
+                BACKUP_DIR="/backup/backup_$(date +%Y%m%d_%H%M%S)"
+                mkdir -p $BACKUP_DIR
+                
+                # Perform MongoDB backup
+                mongodump \
+                  --host mongodb \
+                  --username admin \
+                  --password $MONGO_PASSWORD \
+                  --authenticationDatabase admin \
+                  --db healthcare-app \
+                  --out $BACKUP_DIR \
+                  --gzip
+                
+                # Create backup metadata
+                cat > $BACKUP_DIR/backup-info.json << EOF
+                {
+                  "timestamp": "$(date -Iseconds)",
+                  "database": "healthcare-app",
+                  "size": "$(du -sh $BACKUP_DIR | cut -f1)",
+                  "files": $(find $BACKUP_DIR -name "*.bson.gz" | wc -l),
+                  "environment": "${var.environment}",
+                  "version": "${var.app_version}"
+                }
+                EOF
+                
+                # Verify backup integrity
+                if [ -f "$BACKUP_DIR/healthcare-app/users.bson.gz" ]; then
+                  echo "Backup completed successfully"
+                  echo "Backup location: $BACKUP_DIR"
+                  echo "Backup size: $(du -sh $BACKUP_DIR | cut -f1)"
+                else
+                  echo "Backup failed - missing expected files"
+                  exit 1
+                fi
+                
+                # List backup contents
+                echo "Backup contents:"
+                find $BACKUP_DIR -type f -name "*.bson.gz" | head -10
+                EOT
+              ]
 
               env {
                 name = "MONGO_USERNAME"
@@ -1709,11 +2475,24 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
                 name       = "backup-storage"
                 mount_path = "/backup"
               }
+
+              resources {
+                requests = {
+                  cpu    = "100m"
+                  memory = "256Mi"
+                }
+                limits = {
+                  cpu    = "500m"
+                  memory = "1Gi"
+                }
+              }
             }
 
             volume {
               name = "backup-storage"
-              empty_dir {}
+              persistent_volume_claim {
+                claim_name = kubernetes_persistent_volume_claim.backup_storage.metadata[0].name
+              }
             }
 
             restart_policy = "OnFailure"
@@ -1721,6 +2500,165 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
         }
       }
     }
+  }
+}
+
+# Persistent Volume Claim for backup storage
+resource "kubernetes_persistent_volume_claim" "backup_storage" {
+  metadata {
+    name      = "mongodb-backup-storage"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "50Gi"
+      }
+    }
+    storage_class_name = "local-path"
+  }
+}
+
+# Backup cleanup CronJob (retain last 7 days)
+resource "kubernetes_cron_job_v1" "backup_cleanup" {
+  metadata {
+    name      = "mongodb-backup-cleanup"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    schedule = "0 3 * * *"  # Daily at 3 AM (1 hour after backup)
+    job_template {
+      metadata {
+        labels = local.mongodb_labels
+      }
+      spec {
+        template {
+          metadata {
+            labels = local.mongodb_labels
+          }
+          spec {
+            container {
+              name  = "backup-cleanup"
+              image = "busybox:latest"
+              command = ["sh", "-c"]
+              args = [
+                <<-EOT
+                echo "Starting backup cleanup..."
+                
+                # List all backups
+                echo "Current backups:"
+                ls -la /backup/ | grep backup_ | head -20
+                
+                # Keep only last 7 days of backups
+                find /backup/ -name "backup_*" -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
+                
+                # Keep only last 10 backups regardless of age
+                cd /backup/
+                ls -dt backup_*/ | tail -n +11 | xargs rm -rf 2>/dev/null || true
+                
+                echo "Cleanup completed. Remaining backups:"
+                ls -la /backup/ | grep backup_ | wc -l
+                du -sh /backup/*
+                EOT
+              ]
+
+              volume_mount {
+                name       = "backup-storage"
+                mount_path = "/backup"
+              }
+
+              resources {
+                requests = {
+                  cpu    = "50m"
+                  memory = "64Mi"
+                }
+                limits = {
+                  cpu    = "100m"
+                  memory = "128Mi"
+                }
+              }
+            }
+
+            volume {
+              name = "backup-storage"
+              persistent_volume_claim {
+                claim_name = kubernetes_persistent_volume_claim.backup_storage.metadata[0].name
+              }
+            }
+
+            restart_policy = "OnFailure"
+          }
+        }
+      }
+    }
+  }
+}
+
+# Database restore Job template (can be triggered manually)
+resource "kubernetes_job" "mongodb_restore_template" {
+  metadata {
+    name      = "mongodb-restore-template"
+    namespace = kubernetes_namespace.healthcare.metadata[0].name
+    labels    = local.mongodb_labels
+  }
+
+  spec {
+    template {
+      metadata {
+        labels = local.mongodb_labels
+      }
+      spec {
+        container {
+          name  = "mongodb-restore"
+          image = "mongo:7.0.1"
+          command = ["sh", "-c"]
+          args = [
+            <<-EOT
+            echo "MongoDB Restore Job Template"
+            echo "To restore from a backup, run:"
+            echo "kubectl create job restore-job --from=cronjob/mongodb-backup -n ${kubernetes_namespace.healthcare.metadata[0].name}"
+            echo ""
+            echo "Then modify the job to use mongorestore instead of mongodump"
+            echo "To restore from a backup, modify the job spec to use mongorestore instead of mongodump"
+            echo "Use the appropriate backup directory path from the backup logs"
+            EOT
+          ]
+
+          env {
+            name = "MONGO_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.app_secrets.metadata[0].name
+                key  = "mongodb-root-password"
+              }
+            }
+          }
+
+          resources {
+            requests = {
+              cpu    = "100m"
+              memory = "128Mi"
+            }
+            limits = {
+              cpu    = "200m"
+              memory = "256Mi"
+            }
+          }
+        }
+
+        restart_policy = "Never"
+      }
+    }
+  }
+
+  # Set to 0 replicas so this is just a template
+  lifecycle {
+    ignore_changes = [spec[0].template[0].spec[0].restart_policy]
   }
 }
 

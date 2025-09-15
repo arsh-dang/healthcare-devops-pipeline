@@ -1,0 +1,179 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Healthcare Application Performance Dashboard",
+    "tags": ["healthcare", "performance", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Application Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "seconds",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "Requests per second"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "Error rate %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "CPU Usage by Pod",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{pod=~\".*\"}[5m]) * 100",
+            "legendFormat": "{{pod}} CPU %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage by Pod",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{pod=~\".*\"} / container_spec_memory_limit_bytes * 100",
+            "legendFormat": "{{pod}} Memory %"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "mongodb_connections{state=\"active\"}",
+            "legendFormat": "Active connections"
+          },
+          {
+            "expr": "mongodb_connections{state=\"available\"}",
+            "legendFormat": "Available connections"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(mongodb_op_counters_total{type=\"query\"}[5m])",
+            "legendFormat": "Queries per second"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Pod Restarts",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(kube_pod_container_status_restarts_total[5m])",
+            "legendFormat": "{{pod}} restarts"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total[5m])",
+            "legendFormat": "{{pod}} receive"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total[5m])",
+            "legendFormat": "{{pod}} transmit"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "bytes",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Disk I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_fs_reads_bytes_total[5m])",
+            "legendFormat": "{{pod}} reads"
+          },
+          {
+            "expr": "rate(container_fs_writes_bytes_total[5m])",
+            "legendFormat": "{{pod}} writes"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "bytes",
+            "min": 0
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}
