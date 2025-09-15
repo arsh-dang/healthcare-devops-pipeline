@@ -140,19 +140,14 @@ mongoose
     console.error('Failed to connect to MongoDB', err);
   });
 
-// Start the server only if not in test environment
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    // eslint-disable-next-line no-console
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+// Start the server regardless of MongoDB connection status
+app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
+  console.log(`Server running on port ${PORT}`);
+});
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   // eslint-disable-next-line no-console
   console.error("Unhandled Promise Rejection:", err);
 });
-
-// Export app for testing
-module.exports = app;

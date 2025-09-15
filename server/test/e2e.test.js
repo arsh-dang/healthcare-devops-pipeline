@@ -6,57 +6,31 @@ const Appointment = require('../models/appointment');
 // Advanced E2E test suite with database integration
 describe('E2E Appointment Workflow Tests', () => {
   let server;
-  let originalMongoUri;
+  let appointmentId;
 
   beforeAll(async () => {
     jest.setTimeout(30000); // Increase timeout for database operations
-
-    // Set test environment to prevent server auto-start
-    process.env.NODE_ENV = 'test';
-
-    // Store original MongoDB URI to restore later
-    originalMongoUri = process.env.MONGODB_URI;
-
-    // Use test database
-    process.env.MONGODB_URI = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/healthcare-test';
-
-    // Force close any existing connections
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.connection.close();
+    
+    // Connect to test database only if not already connected
+    if (mongoose.connection.readyState === 0) {
+      const mongoUri = process.env.MONGODB_TEST_URI || 'mongodb://localhost:27017/healthcare-test';
+      await mongoose.connect(mongoUri);
     }
-
-    // Connect to test database
-    await mongoose.connect(process.env.MONGODB_URI);
-
-    // Start server on a random port
+    
+    // Start server
     server = app.listen(0);
   });
 
   afterAll(async () => {
-    // Restore original MongoDB URI
-    process.env.MONGODB_URI = originalMongoUri;
-
-    // Restore NODE_ENV
-    process.env.NODE_ENV = process.env.NODE_ENV === 'test' ? undefined : process.env.NODE_ENV;
-
-    // Close server first
-    if (server) {
-      await new Promise((resolve) => {
-        server.close((err) => {
-          if (err) console.error('Error closing server:', err);
-          resolve();
-        });
-      });
-    }
-
-    // Close database connection
+    // Cleanup
     if (mongoose.connection.readyState !== 0) {
+      await Appointment.deleteMany({});
       await mongoose.connection.close();
     }
-
-    // Force close any remaining connections
-    await mongoose.disconnect();
-  }, 10000);
+    if (server) {
+      server.close();
+    }
+  });
 
   beforeEach(async () => {
     // Clear appointments before each test
@@ -65,18 +39,9 @@ describe('E2E Appointment Workflow Tests', () => {
     }
   });
 
-  afterEach(async () => {
-    // Clear appointments after each test to ensure clean state
-    if (mongoose.connection.readyState !== 0) {
-      await Appointment.deleteMany({});
-    }
-
-    // Clear any pending timers
-    jest.clearAllTimers();
-  });
-
   describe('Complete Appointment Booking Flow', () => {
     test('should complete full appointment booking workflow', async () => {
+      let appointmentId;
       // Step 1: Check initial empty state
       const initialResponse = await request(app).get('/api/appointments');
       expect(initialResponse.status).toBe(200);
