@@ -104,15 +104,15 @@ variable "resource_limits" {
   }))
   default = {
     frontend = {
-      cpu_request    = "100m"
-      memory_request = "128Mi"
-      cpu_limit      = "500m"
-      memory_limit   = "512Mi"
+      cpu_request    = "50m"
+      memory_request = "64Mi"
+      cpu_limit      = "200m"
+      memory_limit   = "128Mi"
     }
     backend = {
       cpu_request    = "200m"
       memory_request = "256Mi"
-      cpu_limit      = "300m"
+      cpu_limit      = "1000m"
       memory_limit   = "1Gi"
     }
     mongodb = {
@@ -194,28 +194,25 @@ locals {
     managed-by  = "terraform"
   }
 
-  frontend_labels   = merge(local.common_labels, { component = "frontend" })
-  backend_labels    = merge(local.common_labels, { component = "backend" })
-  mongodb_labels    = merge(local.common_labels, { component = "mongodb" })
+  frontend_labels = merge(local.common_labels, { component = "frontend" })
+  backend_labels  = merge(local.common_labels, { component = "backend" })
+  mongodb_labels  = merge(local.common_labels, { component = "mongodb" })
   monitoring_labels = merge(local.common_labels, { component = "monitoring" })
-
+  
   # Use provided password or generate random one
   mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
-
-  # Extract base environment for monitoring services (remove -green suffix)
-  base_environment = split("-", var.environment)[0]
-
+  
   # Encryption configuration (simplified without AWS KMS)
   encryption_enabled = var.enable_encryption
-  kms_key_arn        = var.enable_encryption ? "local-encryption-key" : ""
+  kms_key_arn = var.enable_encryption ? "local-encryption-key" : ""
 }
 
 # Random password for MongoDB (only if not provided via variable)
 resource "random_password" "mongodb_password" {
   count = var.mongodb_root_password == "" ? 1 : 0
-
+  
   length  = 32
-  special = false # Changed to false to avoid special characters like % that can cause issues
+  special = false  # Changed to false to avoid special characters like % that can cause issues
   upper   = true
   lower   = true
   numeric = true
@@ -246,7 +243,7 @@ resource "random_password" "mongodb_password" {
 # Kubernetes Namespace for application
 resource "kubernetes_namespace" "healthcare" {
   metadata {
-    name   = "${var.namespace}-${var.environment}"
+    name = "${var.namespace}-${var.environment}"
     labels = local.common_labels
   }
 
@@ -297,9 +294,9 @@ resource "kubernetes_secret" "app_secrets" {
 # Random encryption key for additional data protection
 resource "random_password" "encryption_key" {
   count = var.enable_encryption ? 1 : 0
-
+  
   length  = 32
-  special = false # Changed to false to avoid special characters
+  special = false  # Changed to false to avoid special characters
   upper   = true
   lower   = true
   numeric = true
@@ -318,18 +315,18 @@ resource "kubernetes_stateful_set" "mongodb" {
     replicas     = 1
 
     selector {
-      match_labels = local.mongodb_labels
+      match_labels = merge(local.mongodb_labels, local.backend_labels)
     }
 
     template {
       metadata {
-        labels = local.mongodb_labels
+        labels = merge(local.mongodb_labels, local.backend_labels)  # Include both mongodb and backend labels
       }
 
       spec {
         container {
-          name              = "mongodb"
-          image             = "mongo:7.0.1"
+          name  = "mongodb"
+          image = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
 
           env {
@@ -364,11 +361,11 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           resources {
             requests = {
-              cpu    = "100m"
+              cpu    = "500m"
               memory = "1Gi"
             }
             limits = {
-              cpu    = "500m"
+              cpu    = "2"
               memory = "4Gi"
             }
           }
@@ -413,8 +410,8 @@ resource "kubernetes_stateful_set" "mongodb" {
         }
 
         container {
-          name              = "backend"
-          image             = var.backend_image
+          name  = "backend"
+          image = var.backend_image
           image_pull_policy = "IfNotPresent"
 
           port {
@@ -430,7 +427,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           env {
             name  = "MONGODB_HOST"
-            value = "127.0.0.1" # Use localhost since backend runs in same pod as MongoDB
+            value = "localhost"
           }
 
           env {
@@ -458,40 +455,20 @@ resource "kubernetes_stateful_set" "mongodb" {
             value = "healthcare-app"
           }
 
-          # Jaeger distributed tracing environment variables
+          # Datadog APM environment variables (Core APM available for free tier)
           env {
-            name  = "JAEGER_SERVICE_NAME"
+            name  = "DD_TRACE_ENABLED"
+            value = var.enable_datadog ? "true" : "false"
+          }
+
+          env {
+            name  = "DD_ENV"
+            value = var.environment
+          }
+
+          env {
+            name  = "DD_SERVICE"
             value = "healthcare-backend"
-          }
-
-          env {
-            name  = "JAEGER_AGENT_HOST"
-            value = "jaeger.monitoring-${local.base_environment}.svc.cluster.local"
-          }
-
-          env {
-            name  = "JAEGER_AGENT_PORT"
-            value = "14268"
-          }
-
-          env {
-            name  = "JAEGER_SAMPLER_TYPE"
-            value = "const"
-          }
-
-          env {
-            name  = "JAEGER_SAMPLER_PARAM"
-            value = "1"
-          }
-
-          env {
-            name  = "JAEGER_REPORTER_LOG_SPANS"
-            value = "true"
-          }
-
-          env {
-            name  = "JAEGER_PROPAGATION"
-            value = "jaeger,b3"
           }
 
           # Note: Datadog RUM is not available for student accounts
@@ -532,7 +509,7 @@ resource "kubernetes_stateful_set" "mongodb" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 20 # Reduced from 30
+            initial_delay_seconds = 20  # Reduced from 30
             period_seconds        = 10
             timeout_seconds       = 3
             failure_threshold     = 3
@@ -543,10 +520,10 @@ resource "kubernetes_stateful_set" "mongodb" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 15 # Reduced from 30
-            period_seconds        = 5  # Reduced from 10
-            timeout_seconds       = 3  # Reduced from 5
-            failure_threshold     = 3  # Reduced from 6
+            initial_delay_seconds = 15  # Reduced from 30
+            period_seconds        = 5    # Reduced from 10
+            timeout_seconds       = 3    # Reduced from 5
+            failure_threshold     = 3    # Reduced from 6
           }
 
           # Volume mount for temporary files (read-only root filesystem)
@@ -566,7 +543,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
     volume_claim_template {
       metadata {
-        name   = "mongodb-data"
+        name = "mongodb-data"
         labels = local.mongodb_labels
       }
       spec {
@@ -582,7 +559,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
     volume_claim_template {
       metadata {
-        name   = "mongodb-logs"
+        name = "mongodb-logs"
         labels = local.mongodb_labels
       }
       spec {
@@ -898,12 +875,12 @@ resource "kubernetes_deployment" "frontend" {
 
       spec {
         container {
-          name              = "frontend"
-          image             = var.frontend_image
+          name  = "frontend"
+          image = var.frontend_image
           image_pull_policy = "IfNotPresent"
 
           port {
-            container_port = 30285
+            container_port = 3001
             name           = "http"
           }
 
@@ -923,7 +900,7 @@ resource "kubernetes_deployment" "frontend" {
 
           liveness_probe {
             http_get {
-              path = "/health"
+              path = "/"
               port = "http"
             }
             initial_delay_seconds = 60
@@ -934,7 +911,7 @@ resource "kubernetes_deployment" "frontend" {
 
           readiness_probe {
             http_get {
-              path = "/health"
+              path = "/"
               port = "http"
             }
             initial_delay_seconds = 30
@@ -1000,7 +977,7 @@ resource "kubernetes_deployment" "frontend" {
 # Services
 resource "kubernetes_service" "mongodb" {
   metadata {
-    name      = "mongodb-staging"
+    name      = var.environment == "production" ? "mongodb" : "mongodb-staging"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.mongodb_labels
   }
@@ -1018,82 +995,6 @@ resource "kubernetes_service" "mongodb" {
   }
 }
 
-# Monitoring services in healthcare namespace for ingress routing
-resource "kubernetes_service" "grafana_healthcare" {
-  metadata {
-    name      = "grafana"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = merge(local.common_labels, { component = "grafana" })
-  }
-
-  spec {
-    type          = "ExternalName"
-    external_name = "grafana.monitoring-${local.base_environment}.svc.cluster.local"
-
-    port {
-      port = 3000
-    }
-  }
-}
-
-resource "kubernetes_service" "prometheus_healthcare" {
-  metadata {
-    name      = "prometheus"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = merge(local.common_labels, { component = "prometheus" })
-  }
-
-  spec {
-    type          = "ExternalName"
-    external_name = "prometheus.monitoring-${local.base_environment}.svc.cluster.local"
-
-    port {
-      port = 9090
-    }
-  }
-}
-
-resource "kubernetes_service" "alertmanager_healthcare" {
-  metadata {
-    name      = "alertmanager"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = merge(local.common_labels, { component = "alertmanager" })
-  }
-
-  spec {
-    type          = "ExternalName"
-    external_name = "alertmanager.monitoring-${local.base_environment}.svc.cluster.local"
-
-    port {
-      port = 9093
-    }
-  }
-}
-
-# Jaeger service for distributed tracing
-resource "kubernetes_service" "jaeger_healthcare" {
-  metadata {
-    name      = "jaeger"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = merge(local.common_labels, { component = "jaeger" })
-  }
-
-  spec {
-    type          = "ExternalName"
-    external_name = "jaeger.monitoring-${local.base_environment}.svc.cluster.local"
-
-    port {
-      port = 14268
-      name = "collect"
-    }
-
-    port {
-      port = 16686
-      name = "query"
-    }
-  }
-}
-
 # Enhanced Datadog Agent via Helm (when enabled)
 resource "helm_release" "datadog" {
   count      = var.enable_datadog ? 1 : 0
@@ -1105,13 +1006,13 @@ resource "helm_release" "datadog" {
   values = [
     yamlencode({
       datadog = {
-        apiKey   = var.datadog_api_key
-        appKey   = var.datadog_app_key != "" ? var.datadog_app_key : null
-        hostname = "healthcare-cluster-${var.environment}"
-        site     = "datadoghq.com"
-        env      = var.environment
-        service  = "healthcare-app"
-        version  = var.app_version
+        apiKey    = var.datadog_api_key
+        appKey    = var.datadog_app_key != "" ? var.datadog_app_key : null
+        hostname  = "healthcare-cluster-${var.environment}"
+        site      = "datadoghq.com"
+        env       = var.environment
+        service   = "healthcare-app"
+        version   = var.app_version
 
         # Enhanced APM configuration
         apm = {
@@ -1129,18 +1030,18 @@ resource "helm_release" "datadog" {
 
         # Enhanced logging configuration
         logs = {
-          enabled                    = true
-          containerCollectAll        = true
+          enabled = true
+          containerCollectAll = true
           containerCollectUsingFiles = true
-          autoMultiLineDetection     = true
+          autoMultiLineDetection = true
         }
 
         # System probe for network monitoring
         systemProbe = {
-          enabled              = true
+          enabled = true
           enableTCPQueueLength = true
-          enableOOMKill        = true
-          collectDNSStats      = true
+          enableOOMKill = true
+          collectDNSStats = true
         }
 
         # Security monitoring
@@ -1155,13 +1056,13 @@ resource "helm_release" "datadog" {
 
         # Process monitoring
         processAgent = {
-          enabled           = true
+          enabled = true
           processCollection = true
         }
 
         # Enhanced metrics collection
         dogstatsd = {
-          useHostPort     = true
+          useHostPort = true
           useSocketVolume = true
         }
 
@@ -1217,19 +1118,19 @@ resource "helm_release" "datadog" {
         # Volume mounts for enhanced monitoring
         volumeMounts = [
           {
-            name      = "hostroot"
-            mountPath = "/host/root"
-            readOnly  = true
+            name       = "hostroot"
+            mountPath  = "/host/root"
+            readOnly   = true
           },
           {
-            name      = "proc"
-            mountPath = "/host/proc"
-            readOnly  = true
+            name       = "proc"
+            mountPath  = "/host/proc"
+            readOnly   = true
           },
           {
-            name      = "sys"
-            mountPath = "/host/sys"
-            readOnly  = true
+            name       = "sys"
+            mountPath  = "/host/sys"
+            readOnly   = true
           }
         ]
 
@@ -1268,12 +1169,12 @@ resource "helm_release" "datadog" {
   ]
 
   # Increased timeout for Helm operations to handle slow deployments
-  timeout = 2400 # 40 minutes
+  timeout = 2400  # 40 minutes
 
   # Additional options for robustness
-  atomic            = false
-  wait              = false
-  cleanup_on_fail   = true
+  atomic           = false
+  wait             = false
+  cleanup_on_fail  = true
   dependency_update = true
 }
 
@@ -1289,7 +1190,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.mongodb_labels # Backend runs as sidecar in MongoDB pod
+    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
 
     port {
       port        = 5001
@@ -1312,7 +1213,7 @@ resource "kubernetes_service" "frontend" {
     selector = local.frontend_labels
 
     port {
-      port        = 30285
+      port        = 3001
       target_port = "http"
       protocol    = "TCP"
     }
@@ -1365,7 +1266,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "mongodb_hpa" {
 # Network Policies for security
 resource "kubernetes_network_policy" "default_deny" {
   count = var.enable_network_policies ? 1 : 0
-
+  
   metadata {
     name      = "default-deny-all"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1380,7 +1281,7 @@ resource "kubernetes_network_policy" "default_deny" {
 # Allow internal communication within namespace
 resource "kubernetes_network_policy" "allow_internal" {
   count = var.enable_network_policies ? 1 : 0
-
+  
   metadata {
     name      = "allow-internal-communication"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1426,7 +1327,7 @@ resource "kubernetes_network_policy" "allow_internal" {
 # Security group for database access
 resource "kubernetes_network_policy" "mongodb_security" {
   count = var.enable_network_policies ? 1 : 0
-
+  
   metadata {
     name      = "mongodb-security-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1470,7 +1371,7 @@ resource "kubernetes_network_policy" "mongodb_security" {
 # Web application firewall simulation via network policy
 resource "kubernetes_network_policy" "waf_frontend" {
   count = var.enable_network_policies ? 1 : 0
-
+  
   metadata {
     name      = "frontend-waf-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1484,7 +1385,7 @@ resource "kubernetes_network_policy" "waf_frontend" {
 
     ingress {
       ports {
-        port     = "30285"
+        port     = "3001"
         protocol = "TCP"
       }
       from {
@@ -1492,7 +1393,7 @@ resource "kubernetes_network_policy" "waf_frontend" {
           cidr = "0.0.0.0/0"
           except = [
             "10.0.0.0/8",
-            "172.16.0.0/12",
+            "172.16.0.0/12", 
             "192.168.0.0/16"
           ]
         }
@@ -1504,7 +1405,7 @@ resource "kubernetes_network_policy" "waf_frontend" {
 # Backend API security
 resource "kubernetes_network_policy" "backend_security" {
   count = var.enable_network_policies ? 1 : 0
-
+  
   metadata {
     name      = "backend-security-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1512,7 +1413,7 @@ resource "kubernetes_network_policy" "backend_security" {
 
   spec {
     pod_selector {
-      match_labels = local.backend_labels # Backend runs as sidecar in MongoDB pod
+      match_labels = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
     }
     policy_types = ["Ingress"]
 
@@ -1633,7 +1534,7 @@ resource "kubernetes_network_policy" "allow_frontend_ingress" {
 
     ingress {
       ports {
-        port     = "30285"
+        port     = "3001"
         protocol = "TCP"
       }
       from {
@@ -1717,6 +1618,33 @@ resource "kubernetes_network_policy" "allow_frontend_to_backend" {
       }
     }
 
+    # Allow egress to monitoring namespace for service access
+    egress {
+      to {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "monitoring-production-green"
+          }
+        }
+      }
+      ports {
+        port     = "3000"
+        protocol = "TCP"
+      }
+      ports {
+        port     = "9090"
+        protocol = "TCP"
+      }
+      ports {
+        port     = "9093"
+        protocol = "TCP"
+      }
+      ports {
+        port     = "16686"
+        protocol = "TCP"
+      }
+    }
+
     # Allow external access for image pulls and other necessary traffic
     egress {
       to {
@@ -1745,7 +1673,7 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
   }
 
   spec {
-    schedule = "0 2 * * *" # Daily at 2 AM
+    schedule = "0 2 * * *"  # Daily at 2 AM
     job_template {
       metadata {
         labels = local.mongodb_labels
@@ -1757,13 +1685,13 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
           }
           spec {
             container {
-              name    = "mongodb-backup"
-              image   = "mongo:7.0.1"
+              name  = "mongodb-backup"
+              image = "mongo:7.0.1"
               command = ["sh", "-c"]
-              args    = ["mongodump --host mongodb --username admin --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/backup_$(date +%Y%m%d_%H%M%S)"]
+              args = ["mongodump --host mongodb --username admin --password $MONGO_PASSWORD --authenticationDatabase admin --db healthcare-app --out /backup/backup_$(date +%Y%m%d_%H%M%S)"]
 
               env {
-                name  = "MONGO_USERNAME"
+                name = "MONGO_USERNAME"
                 value = "admin"
               }
 
@@ -1864,7 +1792,7 @@ resource "kubernetes_cluster_role_binding" "datadog_cluster_agent" {
 # Data Transfer Controls for GDPR Compliance
 resource "kubernetes_config_map" "data_transfer_policy" {
   count = var.enable_data_transfer_controls ? 1 : 0
-
+  
   metadata {
     name      = "data-transfer-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1873,11 +1801,11 @@ resource "kubernetes_config_map" "data_transfer_policy" {
 
   data = {
     "transfer-policy.json" = jsonencode({
-      version      = "1.0"
+      version = "1.0"
       organization = "Healthcare App Corporation"
       data_transfer_rules = [
         {
-          purpose     = "EU-US Data Transfers"
+          purpose = "EU-US Data Transfers"
           legal_basis = "Standard Contractual Clauses"
           safeguards = [
             "SCCs implemented",
@@ -1886,10 +1814,10 @@ resource "kubernetes_config_map" "data_transfer_policy" {
             "Regular audits"
           ]
           restricted_countries = []
-          approval_required    = false
+          approval_required = false
         },
         {
-          purpose     = "Third-party processing"
+          purpose = "Third-party processing"
           legal_basis = "Legitimate interest"
           safeguards = [
             "DPA executed",
@@ -1898,13 +1826,13 @@ resource "kubernetes_config_map" "data_transfer_policy" {
             "Audit rights"
           ]
           restricted_countries = ["CN", "RU", "IR", "KP"]
-          approval_required    = true
+          approval_required = true
         }
       ]
       audit_trail = {
-        enabled        = true
-        retention_days = 2555 # 7 years
-        log_transfers  = true
+        enabled = true
+        retention_days = 2555  # 7 years
+        log_transfers = true
       }
     })
   }
@@ -1922,87 +1850,53 @@ resource "kubernetes_config_map" "gdpr_rights_config" {
     "rights-implementation.json" = jsonencode({
       data_subject_rights = {
         access = {
-          enabled              = true
-          max_response_days    = 30
+          enabled = true
+          max_response_days = 30
           automated_processing = true
         }
         rectification = {
-          enabled              = true
-          max_response_days    = 30
+          enabled = true
+          max_response_days = 30
           automated_processing = true
         }
         erasure = {
-          enabled              = true
-          max_response_days    = 30
+          enabled = true
+          max_response_days = 30
           automated_processing = true
-          exceptions           = ["legal-obligation", "public-interest", "research"]
+          exceptions = ["legal-obligation", "public-interest", "research"]
         }
         restriction = {
-          enabled              = true
-          max_response_days    = 30
+          enabled = true
+          max_response_days = 30
           automated_processing = true
         }
         portability = {
-          enabled              = true
-          max_response_days    = 30
-          formats              = ["json", "xml", "csv"]
+          enabled = true
+          max_response_days = 30
+          formats = ["json", "xml", "csv"]
           automated_processing = true
         }
         objection = {
-          enabled              = true
-          max_response_days    = 30
+          enabled = true
+          max_response_days = 30
           automated_processing = true
         }
       }
       consent_management = {
-        enabled               = true
-        granular_consent      = true
-        withdrawal_enabled    = true
-        consent_log_retention = 2555 # 7 years
+        enabled = true
+        granular_consent = true
+        withdrawal_enabled = true
+        consent_log_retention = 2555  # 7 years
       }
       breach_notification = {
-        enabled                              = true
+        enabled = true
         supervisory_authority_deadline_hours = 72
-        affected_individuals_deadline_days   = 1
-        automated_detection                  = true
+        affected_individuals_deadline_days = 1
+        automated_detection = true
       }
     })
   }
 }
-
-# Backend Secret (converted from YAML)
-resource "kubernetes_secret" "backend_secret" {
-  metadata {
-    name      = "backend-secret"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = local.common_labels
-  }
-
-  type = "Opaque"
-
-  data = {
-    jwt-secret    = "SnVzdEFTZWN1cmVTZWNyZXRGb3JKV1RUb2tlbnM="                                                             # JustASecureSecretForJWTTokens
-    cookie-secret = "Q3J5cHRvZ3JhcGhpY2FsbHlTZWN1cmVDb29raWVTZWNyZXQ="                                                     # CryptographicallySecureCookieSecret
-    api-key       = "c3VwZXItc2VjcmV0LWFwaS1rZXktMTIzNDU="                                                                 # super-secret-api-key-12345
-    mongodb-uri   = "bW9uZ29kYjovL2FkbWluOnBhc3N3b3JkMTIzQG1vbmdvZGI6MjcwMTcvaGVhbHRoY2FyZS1hcHA/YXV0aFNvdXJjZT1hZG1pbg==" # mongodb://admin:password123@mongodb:27017/healthcare-app?authSource=admin
-  }
-}
-
-# Healthcare ConfigMap (converted from YAML)
-resource "kubernetes_config_map" "healthcare_config" {
-  metadata {
-    name      = "healthcare-config"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = local.common_labels
-  }
-
-  data = {
-    NODE_ENV      = var.environment
-    API_URL       = "/api"
-    DATABASE_NAME = "healthcare-app"
-  }
-}
-
 output "mongodb_password" {
   description = "MongoDB root password (sensitive - only shown for convenience)"
   value       = local.mongodb_password
