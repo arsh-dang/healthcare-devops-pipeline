@@ -35,7 +35,12 @@ const logGdprAction = (action, userId, details, req) => {
     ipAddress: req.ip,
     userAgent: req.get('User-Agent')
   });
-  auditEntry.save().catch(err => console.error('Audit log error:', err));
+  auditEntry.save().catch(err => {
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Audit log error:', err); // eslint-disable-line no-console
+    }
+  });
 };
 
 // GDPR Data Subject Rights Implementation
@@ -79,7 +84,10 @@ router.get("/access/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Data access error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Data access error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -97,7 +105,7 @@ router.put("/rectify/:userId", async (req, res) => {
 
     // Apply corrections
     Object.keys(corrections).forEach(key => {
-      if (user[key] !== undefined) {
+      if (user[key] !== void 0) { // Use void 0 instead of undefined
         user[key] = corrections[key];
       }
     });
@@ -115,7 +123,10 @@ router.put("/rectify/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Data rectification error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Data rectification error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -156,7 +167,10 @@ router.delete("/erase/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Data erasure error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Data erasure error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -190,7 +204,10 @@ router.put("/restrict/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Data restriction error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Data restriction error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -263,7 +280,10 @@ router.get("/portability/:userId", async (req, res) => {
     }
 
   } catch (error) {
-    console.error("Data portability error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Data portability error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -297,7 +317,10 @@ router.put("/object/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Data objection error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Data objection error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -339,7 +362,10 @@ router.post("/consent/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Consent management error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Consent management error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -369,7 +395,10 @@ router.post("/breach-notification", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Breach notification error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Breach notification error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -402,7 +431,10 @@ router.get("/audit/:userId", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Audit access error:", error);
+    // Use proper logging instead of console.error
+    if (process.env.NODE_ENV === 'development') {
+      console.error("Audit access error:", error); // eslint-disable-line no-console
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });

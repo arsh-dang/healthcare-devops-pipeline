@@ -16,181 +16,6 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-# Alertmanager ConfigMap
-resource "kubernetes_config_map" "alertmanager_config" {
-  metadata {
-    name      = "alertmanager-config"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "alertmanager" })
-  }
-
-  data = {
-    "alertmanager.yml" = yamlencode({
-      global = {
-        smtp_smarthost     = "${var.smtp_server}:${var.smtp_port}"
-        smtp_from          = var.smtp_from_email
-        smtp_auth_username = var.smtp_username != "" ? var.smtp_username : null
-        smtp_auth_password = var.smtp_password != "" ? var.smtp_password : null
-      }
-
-      route = {
-        group_by        = ["alertname", "job", "severity"]
-        group_wait      = "10s"
-        group_interval  = "10s"
-        repeat_interval = "1h"
-        receiver        = "healthcare-info"
-
-        routes = [
-          {
-            match = {
-              severity = "critical"
-            }
-            receiver = "healthcare-critical"
-          },
-          {
-            match = {
-              severity = "warning"
-            }
-            receiver = "healthcare-warning"
-          },
-          {
-            match = {
-              severity = "info"
-            }
-            receiver = "healthcare-info"
-          }
-        ]
-      }
-
-      receivers = [
-        {
-          name = "healthcare-critical"
-          email_configs = var.smtp_username != "" ? [
-            {
-              to            = var.alert_email_critical
-              send_resolved = true
-              headers = {
-                subject = "{{ .GroupLabels.alertname }} - CRITICAL"
-              }
-              html = <<-EOT
-                <h2>CRITICAL ALERT</h2>
-                <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
-                <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
-                <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
-                <p><strong>Environment:</strong> ${var.environment}</p>
-                <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-                <p><a href="http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana">View in Grafana</a></p>
-              EOT
-            }
-          ] : []
-          slack_configs = var.slack_webhook_critical != "" ? [
-            {
-              api_url       = var.slack_webhook_critical
-              channel       = var.slack_channel_critical
-              send_resolved = true
-              title         = "CRITICAL: {{ .GroupLabels.alertname }}"
-              text          = <<-EOT
-                *Alert:* {{ .GroupLabels.alertname }}
-                *Severity:* {{ .GroupLabels.severity }}
-                *Description:* {{ .CommonAnnotations.description }}
-                *Environment:* ${var.environment}
-                *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-                <http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana|View in Grafana>
-              EOT
-            }
-          ] : []
-        },
-        {
-          name = "healthcare-warning"
-          email_configs = var.smtp_username != "" ? [
-            {
-              to            = var.alert_email_warning
-              send_resolved = true
-              headers = {
-                subject = "{{ .GroupLabels.alertname }} - WARNING"
-              }
-              html = <<-EOT
-                <h2>WARNING ALERT</h2>
-                <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
-                <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
-                <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
-                <p><strong>Environment:</strong> ${var.environment}</p>
-                <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-                <p><a href="http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana">View in Grafana</a></p>
-              EOT
-            }
-          ] : []
-          slack_configs = var.slack_webhook_warning != "" ? [
-            {
-              api_url       = var.slack_webhook_warning
-              channel       = var.slack_channel_warning
-              send_resolved = true
-              title         = "WARNING: {{ .GroupLabels.alertname }}"
-              text          = <<-EOT
-                *Alert:* {{ .GroupLabels.alertname }}
-                *Severity:* {{ .GroupLabels.severity }}
-                *Description:* {{ .CommonAnnotations.description }}
-                *Environment:* ${var.environment}
-                *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-                <http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana|View in Grafana>
-              EOT
-            }
-          ] : []
-        },
-        {
-          name = "healthcare-info"
-          email_configs = var.smtp_username != "" ? [
-            {
-              to            = var.alert_email_info
-              send_resolved = true
-              headers = {
-                subject = "{{ .GroupLabels.alertname }} - INFO"
-              }
-              html = <<-EOT
-                <h2>ℹ️ INFO ALERT</h2>
-                <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
-                <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
-                <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
-                <p><strong>Environment:</strong> ${var.environment}</p>
-                <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-                <p><a href="http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana">View in Grafana</a></p>
-              EOT
-            }
-          ] : []
-          slack_configs = var.slack_webhook_info != "" ? [
-            {
-              api_url       = var.slack_webhook_info
-              channel       = var.slack_channel_info
-              send_resolved = true
-              title         = "ℹ️ INFO: {{ .GroupLabels.alertname }}"
-              text          = <<-EOT
-                *Alert:* {{ .GroupLabels.alertname }}
-                *Severity:* {{ .GroupLabels.severity }}
-                *Description:* {{ .CommonAnnotations.description }}
-                *Environment:* ${var.environment}
-                *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-                <http://monitoring-${var.environment == "production" ? "company.com" : "staging.local"}/grafana|View in Grafana>
-              EOT
-            }
-          ] : []
-        }
-      ]
-
-      inhibit_rules = [
-        {
-          source_match = {
-            severity = "critical"
-          }
-          target_match = {
-            severity = "warning"
-          }
-          equal = ["alertname", "namespace"]
-        }
-      ]
-    })
-  }
-}
-
 # Alertmanager Deployment
 resource "kubernetes_deployment" "alertmanager" {
   metadata {
@@ -350,6 +175,53 @@ resource "kubernetes_service" "alertmanager" {
   }
 }
 
+# Alertmanager Configuration
+resource "kubernetes_config_map" "alertmanager_config" {
+  metadata {
+    name      = "alertmanager-config"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "alertmanager" })
+  }
+
+  data = {
+    "alertmanager.yml" = <<-EOT
+global:
+  smtp_smarthost: '${var.smtp_server}:${var.smtp_port}'
+  smtp_from: '${var.smtp_from_email}'
+  smtp_require_tls: ${var.smtp_server != "" ? "true" : "false"}
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'healthcare-team'
+
+receivers:
+- name: 'healthcare-team'
+  email_configs:
+  - to: '${var.alert_email_critical != "" ? var.alert_email_critical : var.alert_email_team}'
+    headers:
+      Subject: 'Healthcare Alert: {{ .GroupLabels.alertname }}'
+    body: |
+      Alert: {{ .GroupLabels.alertname }}
+      Severity: {{ .GroupLabels.severity }}
+      Service: {{ .GroupLabels.service }}
+      Description: {{ .Annotations.description }}
+      Value: {{ .Value }}
+      Time: {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+      Environment: ${var.environment}
+
+inhibit_rules:
+- source_match:
+    severity: 'critical'
+  target_match:
+    severity: 'warning'
+  equal: ['alertname', 'service']
+EOT
+  }
+}
+
 # MongoDB Exporter Secret (copy from healthcare namespace)
 resource "kubernetes_secret" "mongodb_exporter_secret" {
   metadata {
@@ -506,8 +378,8 @@ resource "kubernetes_config_map" "prometheus_config" {
   data = {
     "prometheus.yml" = yamlencode({
       global = {
-        scrape_interval     = var.environment == "production" ? "15s" : "30s"
-        evaluation_interval = var.environment == "production" ? "15s" : "30s"
+        scrape_interval     = "15s"
+        evaluation_interval = "15s"
       }
 
       rule_files = [
@@ -1055,12 +927,12 @@ resource "kubernetes_deployment" "prometheus" {
 
           resources {
             requests = {
-              cpu    = var.environment == "production" ? "500m" : "200m"
-              memory = var.environment == "production" ? "1Gi" : "512Mi"
+              cpu    = "100m"
+              memory = "256Mi"
             }
             limits = {
-              cpu    = var.environment == "production" ? "1000m" : "500m"
-              memory = var.environment == "production" ? "2Gi" : "1Gi"
+              cpu    = "200m"
+              memory = "512Mi"
             }
           }
 
@@ -1413,12 +1285,12 @@ resource "kubernetes_deployment" "grafana" {
 
           resources {
             requests = {
-              cpu    = var.environment == "production" ? "200m" : "100m"
-              memory = var.environment == "production" ? "256Mi" : "128Mi"
+              cpu    = "200m"
+              memory = "256Mi"
             }
             limits = {
-              cpu    = var.environment == "production" ? "500m" : "200m"
-              memory = var.environment == "production" ? "512Mi" : "256Mi"
+              cpu    = "500m"
+              memory = "512Mi"
             }
           }
 
@@ -1570,7 +1442,7 @@ resource "kubernetes_daemonset" "node_exporter" {
         labels = merge(local.common_labels, { component = "node-exporter" })
         annotations = {
           "prometheus.io/scrape" = "true"
-          "prometheus.io/port"   = "9100"
+          "prometheus.io/port"   = "9101"
         }
       }
 
@@ -1584,12 +1456,11 @@ resource "kubernetes_daemonset" "node_exporter" {
 
           args = [
             "--path.rootfs=/host",
-            "--web.listen-address=0.0.0.0:9100"
+            "--web.listen-address=0.0.0.0:9101"
           ]
 
           port {
-            container_port = 9100
-            host_port      = 9100
+            container_port = 9101
             name           = "metrics"
           }
 

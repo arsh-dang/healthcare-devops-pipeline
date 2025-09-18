@@ -30,7 +30,7 @@ wait_for_deployment() {
 
     echo "Waiting for ${deployment_name} to be ready..."
     kubectl wait --for=condition=available --timeout="${timeout}s" deployment/"${deployment_name}" -n "${namespace}"
-    echo " ${deployment_name} is ready"
+    echo "${deployment_name} is ready"
 }
 
 # Function to validate service endpoints
@@ -44,9 +44,9 @@ validate_service() {
 
     # Try to connect to the service
     if timeout 10 bash -c "echo > /dev/tcp/${service_name}.${namespace}.svc.cluster.local/${port}" 2>/dev/null; then
-        echo " ${service_name} service is accessible on port ${port}"
+        echo "${service_name} service is accessible on port ${port}"
     else
-        echo " ${service_name} service is not accessible on port ${port}"
+        echo "${service_name} service is not accessible on port ${port}"
         return 1
     fi
 }
@@ -54,11 +54,11 @@ validate_service() {
 # Check if monitoring namespace exists
 echo "Checking monitoring namespace..."
 if ! resource_exists namespace "${MONITORING_NAMESPACE}"; then
-    echo " Monitoring namespace ${MONITORING_NAMESPACE} does not exist"
+    echo "Monitoring namespace ${MONITORING_NAMESPACE} does not exist"
     echo "Please run Terraform apply first to create the monitoring infrastructure"
     exit 1
 fi
-echo " Monitoring namespace exists"
+echo "Monitoring namespace exists"
 
 # Check core monitoring components
 echo ""
@@ -75,18 +75,18 @@ COMPONENTS=(
 for component in "${COMPONENTS[@]}"; do
     IFS=':' read -r name type <<< "${component}"
     if resource_exists "${type}" "${name}" "${MONITORING_NAMESPACE}"; then
-        echo " ${name} ${type} exists"
+        echo "${name} ${type} exists"
         if [ "${type}" = "deployment" ]; then
             wait_for_deployment "${name}" "${MONITORING_NAMESPACE}"
         fi
     else
-        echo " ${name} ${type} does not exist"
+        echo "${name} ${type} does not exist"
     fi
 done
 
 # Check enhanced monitoring components
 echo ""
-echo " Checking enhanced monitoring components..."
+echo "Checking enhanced monitoring components..."
 
 ENHANCED_COMPONENTS=(
     "nginx-ingress-controller:deployment"
@@ -98,18 +98,18 @@ ENHANCED_COMPONENTS=(
 for component in "${ENHANCED_COMPONENTS[@]}"; do
     IFS=':' read -r name type <<< "${component}"
     if resource_exists "${type}" "${name}" "${MONITORING_NAMESPACE}"; then
-        echo " ${name} ${type} exists"
+        echo "${name} ${type} exists"
         if [ "${type}" = "deployment" ]; then
             wait_for_deployment "${name}" "${MONITORING_NAMESPACE}"
         fi
     else
-        echo "WARNING: ${name} ${type} does not exist (may be disabled)"
+        echo "${name} ${type} does not exist (may be disabled)"
     fi
 done
 
 # Validate service endpoints
 echo ""
-echo " Validating service endpoints..."
+echo "Validating service endpoints..."
 
 SERVICES=(
     "prometheus:9090"
@@ -123,13 +123,13 @@ for service in "${SERVICES[@]}"; do
     if resource_exists service "${name}" "${MONITORING_NAMESPACE}"; then
         validate_service "${name}" "${MONITORING_NAMESPACE}" "${port}" || true
     else
-        echo "WARNING: ${name} service does not exist"
+        echo "${name} service does not exist"
     fi
 done
 
 # Check enhanced services
 echo ""
-echo " Checking enhanced service endpoints..."
+echo "Checking enhanced service endpoints..."
 
 ENHANCED_SERVICES=(
     "ingress-nginx-controller:80"
@@ -142,42 +142,42 @@ for service in "${ENHANCED_SERVICES[@]}"; do
     if resource_exists service "${name}" "${MONITORING_NAMESPACE}"; then
         validate_service "${name}" "${MONITORING_NAMESPACE}" "${port}" || true
     else
-        echo "WARNING: ${name} service does not exist (may be disabled)"
+        echo "${name} service does not exist (may be disabled)"
     fi
 done
 
 # Test synthetic monitoring
 echo ""
-echo " Testing synthetic monitoring..."
+echo "Testing synthetic monitoring..."
 
 if resource_exists deployment "synthetic-monitoring" "${MONITORING_NAMESPACE}"; then
-    echo " Testing synthetic health checks..."
+    echo "Testing synthetic health checks..."
 
     # Test backend health check
     if kubectl run test-backend-health --image=curlimages/curl:8.1.2 --rm -i --restart=Never -- \
         curl -s --max-time 10 http://healthcare-backend.${NAMESPACE}.svc.cluster.local:5001/health >/dev/null 2>&1; then
-        echo " Backend health check endpoint is accessible"
+        echo "Backend health check endpoint is accessible"
     else
-        echo " Backend health check endpoint is not accessible"
+        echo "Backend health check endpoint is not accessible"
     fi
 
     # Test frontend availability
     if kubectl run test-frontend-health --image=curlimages/curl:8.1.2 --rm -i --restart=Never -- \
         curl -s --max-time 10 http://healthcare-frontend.${NAMESPACE}.svc.cluster.local:30285 >/dev/null 2>&1; then
-        echo " Frontend service is accessible"
+        echo "Frontend service is accessible"
     else
-        echo " Frontend service is not accessible"
+        echo "Frontend service is not accessible"
     fi
 else
-    echo "WARNING: Synthetic monitoring is not deployed"
+    echo "Synthetic monitoring is not deployed"
 fi
 
 # Check Prometheus targets
 echo ""
-echo " Checking Prometheus targets..."
+echo "Checking Prometheus targets..."
 
 if resource_exists deployment "prometheus" "${MONITORING_NAMESPACE}"; then
-    echo " Checking Prometheus target health..."
+    echo "Checking Prometheus target health..."
 
     # Get Prometheus pod name
     PROMETHEUS_POD=$(kubectl get pods -n "${MONITORING_NAMESPACE}" -l component=prometheus -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
@@ -190,20 +190,20 @@ if resource_exists deployment "prometheus" "${MONITORING_NAMESPACE}"; then
         if echo "${TARGETS}" | grep -q "up"; then
             UP_TARGETS=$(echo "${TARGETS}" | grep -c "up" || echo "0")
             TOTAL_TARGETS=$(echo "${TARGETS}" | wc -l | tr -d ' ' || echo "0")
-            echo " Prometheus has ${UP_TARGETS}/${TOTAL_TARGETS} healthy targets"
+            echo "Prometheus has ${UP_TARGETS}/${TOTAL_TARGETS} healthy targets"
         else
-            echo " No healthy Prometheus targets found"
+            echo "No healthy Prometheus targets found"
         fi
     else
-        echo " Prometheus pod not found"
+        echo "Prometheus pod not found"
     fi
 else
-    echo "WARNING: Prometheus is not deployed"
+    echo "Prometheus is not deployed"
 fi
 
 # Summary
 echo ""
-echo " Deployment Summary"
+echo "Deployment Summary"
 echo "===================="
 
 echo "Core Monitoring Components:"
@@ -218,7 +218,7 @@ kubectl get services -n "${MONITORING_NAMESPACE}" -o name | sed 's/.*\///' | whi
 done
 
 echo ""
-echo " Next Steps:"
+echo "Next Steps:"
 echo "1. Access Grafana: kubectl port-forward -n ${MONITORING_NAMESPACE} svc/grafana 3000:3000"
 echo "2. Access Prometheus: kubectl port-forward -n ${MONITORING_NAMESPACE} svc/prometheus 9090:9090"
 echo "3. Access Jaeger: kubectl port-forward -n ${MONITORING_NAMESPACE} svc/jaeger 16686:16686"
@@ -226,5 +226,5 @@ echo "4. Check Grafana dashboards for enhanced monitoring visualizations"
 echo "5. Review Alertmanager for active alerts"
 
 echo ""
-echo " Monitoring enhancements deployment validation completed!"</content>
+echo "Monitoring enhancements deployment validation completed!"</content>
 <parameter name="filePath">/Users/arshdang/Documents/SIT223/7.3HD/healthcare-app/terraform/deploy-monitoring.sh

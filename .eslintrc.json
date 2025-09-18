@@ -1,38 +1,32 @@
 {
+  "extends": ["react-app"],
+  "rules": {
+    "no-unused-vars": "error",
+    "no-console": "error",
+    "no-debugger": "error",
+    "no-alert": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+    "strict": ["error", "never"],
+    "no-undef": "error",
+    "no-undefined": "error",
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error",
+    "react/prop-types": "warn"
+  },
   "env": {
     "browser": true,
-    "es2021": true,
     "node": true,
+    "es6": true,
     "jest": true
   },
-  "extends": [
-    "eslint:recommended",
-    "react-app",
-    "react-app/jest"
-  ],
   "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
     "ecmaFeatures": {
       "jsx": true
-    },
-    "ecmaVersion": 12,
-    "sourceType": "module"
-  },
-  "plugins": [
-    "react"
-  ],
-  "rules": {
-    "no-unused-vars": "warn",
-    "no-console": "warn",
-    "react/prop-types": "warn",
-    "react/jsx-uses-react": "off",
-    "react/react-in-jsx-scope": "off"
-  },
-  "overrides": [
-    {
-      "files": ["**/*.test.js", "**/*.spec.js"],
-      "rules": {
-        "no-console": "off"
-      }
     }
-  ]
+  }
 }

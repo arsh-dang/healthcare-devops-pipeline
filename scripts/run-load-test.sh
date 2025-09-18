@@ -234,9 +234,9 @@ log_info "Results saved to: $REPORT_DIR"
 log_info "Performance report: $REPORT_DIR/performance_report.md"
 
 if [ "$ERROR_COUNT" -eq 0 ] && [ "$BACKEND_ERROR_COUNT" -eq 0 ] && [ "$RESTARTS" -eq 0 ]; then
-    log_success "✅ All tests passed with no errors or restarts"
+    log_success "All tests passed with no errors or restarts"
 else
-    log_warning "⚠️  Test completed with some issues detected"
+    log_warning "Test completed with some issues detected"
 fi
 
 # Cleanup

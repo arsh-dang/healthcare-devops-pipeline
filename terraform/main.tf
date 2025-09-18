@@ -152,14 +152,6 @@ variable "allowed_ip_ranges" {
 
 variable "enable_data_transfer_controls" {
   description = "Enable data transfer controls for GDPR compliance"
-  type        = bool
-  default     = true
-}
-
-variable "enable_data_transfer_controls" {
-  description = "Enable data transfer controls for GDPR compliance"
-  type        = bool
-  default     = true
 }
 
 variable "kubeconfig_path" {
@@ -193,37 +185,6 @@ variable "kubernetes_client_key" {
 }
 
 # Alerting Configuration Variables
-variable "smtp_host" {
-  description = "SMTP server host for email alerts"
-  type        = string
-  default     = "smtp.gmail.com"
-}
-
-variable "smtp_port" {
-  description = "SMTP server port"
-  type        = string
-  default     = "587"
-}
-
-variable "smtp_username" {
-  description = "SMTP authentication username"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "smtp_password" {
-  description = "SMTP authentication password"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "smtp_tls" {
-  description = "Enable TLS for SMTP"
-  type        = bool
-  default     = true
-}
 
 variable "alert_email_from" {
   description = "Email address for sending alerts"
@@ -356,25 +317,25 @@ locals {
     managed-by  = "terraform"
   }
 
-  frontend_labels = merge(local.common_labels, { component = "frontend" })
-  backend_labels  = merge(local.common_labels, { component = "backend" })
-  mongodb_labels  = merge(local.common_labels, { component = "mongodb" })
+  frontend_labels   = merge(local.common_labels, { component = "frontend" })
+  backend_labels    = merge(local.common_labels, { component = "backend" })
+  mongodb_labels    = merge(local.common_labels, { component = "mongodb" })
   monitoring_labels = merge(local.common_labels, { component = "monitoring" })
-  
+
   # Use provided password or generate random one
   mongodb_password = var.mongodb_root_password != "" ? var.mongodb_root_password : random_password.mongodb_password[0].result
-  
+
   # Encryption configuration (simplified without AWS KMS)
   encryption_enabled = var.enable_encryption
-  kms_key_arn = var.enable_encryption ? "local-encryption-key" : ""
+  kms_key_arn        = var.enable_encryption ? "local-encryption-key" : ""
 }
 
 # Random password for MongoDB (only if not provided via variable)
 resource "random_password" "mongodb_password" {
   count = var.mongodb_root_password == "" ? 1 : 0
-  
+
   length  = 32
-  special = false  # Changed to false to avoid special characters like % that can cause issues
+  special = false # Changed to false to avoid special characters like % that can cause issues
   upper   = true
   lower   = true
   numeric = true
@@ -405,7 +366,7 @@ resource "random_password" "mongodb_password" {
 # Kubernetes Namespace for application
 resource "kubernetes_namespace" "healthcare" {
   metadata {
-    name = "${var.namespace}-${var.environment}"
+    name   = "${var.namespace}-${var.environment}"
     labels = local.common_labels
   }
 
@@ -456,9 +417,9 @@ resource "kubernetes_secret" "app_secrets" {
 # Random encryption key for additional data protection
 resource "random_password" "encryption_key" {
   count = var.enable_encryption ? 1 : 0
-  
+
   length  = 32
-  special = false  # Changed to false to avoid special characters
+  special = false # Changed to false to avoid special characters
   upper   = true
   lower   = true
   numeric = true
@@ -482,13 +443,13 @@ resource "kubernetes_stateful_set" "mongodb" {
 
     template {
       metadata {
-        labels = merge(local.mongodb_labels, local.backend_labels)  # Include both mongodb and backend labels
+        labels = merge(local.mongodb_labels, local.backend_labels) # Include both mongodb and backend labels
       }
 
       spec {
         container {
-          name  = "mongodb"
-          image = "mongo:7.0.1"
+          name              = "mongodb"
+          image             = "mongo:7.0.1"
           image_pull_policy = "IfNotPresent"
 
           env {
@@ -572,8 +533,8 @@ resource "kubernetes_stateful_set" "mongodb" {
         }
 
         container {
-          name  = "backend"
-          image = var.backend_image
+          name              = "backend"
+          image             = var.backend_image
           image_pull_policy = "IfNotPresent"
 
           port {
@@ -671,7 +632,7 @@ resource "kubernetes_stateful_set" "mongodb" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 20  # Reduced from 30
+            initial_delay_seconds = 20 # Reduced from 30
             period_seconds        = 10
             timeout_seconds       = 3
             failure_threshold     = 3
@@ -682,10 +643,10 @@ resource "kubernetes_stateful_set" "mongodb" {
               path = "/health"
               port = "http"
             }
-            initial_delay_seconds = 15  # Reduced from 30
-            period_seconds        = 5    # Reduced from 10
-            timeout_seconds       = 3    # Reduced from 5
-            failure_threshold     = 3    # Reduced from 6
+            initial_delay_seconds = 15 # Reduced from 30
+            period_seconds        = 5  # Reduced from 10
+            timeout_seconds       = 3  # Reduced from 5
+            failure_threshold     = 3  # Reduced from 6
           }
 
           # Volume mount for temporary files (read-only root filesystem)
@@ -705,7 +666,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
     volume_claim_template {
       metadata {
-        name = "mongodb-data"
+        name   = "mongodb-data"
         labels = local.mongodb_labels
       }
       spec {
@@ -721,7 +682,7 @@ resource "kubernetes_stateful_set" "mongodb" {
 
     volume_claim_template {
       metadata {
-        name = "mongodb-logs"
+        name   = "mongodb-logs"
         labels = local.mongodb_labels
       }
       spec {
@@ -1037,8 +998,8 @@ resource "kubernetes_deployment" "frontend" {
 
       spec {
         container {
-          name  = "frontend"
-          image = var.frontend_image
+          name              = "frontend"
+          image             = var.frontend_image
           image_pull_policy = "IfNotPresent"
 
           port {
@@ -1168,13 +1129,13 @@ resource "helm_release" "datadog" {
   values = [
     yamlencode({
       datadog = {
-        apiKey    = var.datadog_api_key
-        appKey    = var.datadog_app_key != "" ? var.datadog_app_key : null
-        hostname  = "healthcare-cluster-${var.environment}"
-        site      = "datadoghq.com"
-        env       = var.environment
-        service   = "healthcare-app"
-        version   = var.app_version
+        apiKey   = var.datadog_api_key
+        appKey   = var.datadog_app_key != "" ? var.datadog_app_key : null
+        hostname = "healthcare-cluster-${var.environment}"
+        site     = "datadoghq.com"
+        env      = var.environment
+        service  = "healthcare-app"
+        version  = var.app_version
 
         # Enhanced APM configuration
         apm = {
@@ -1192,18 +1153,18 @@ resource "helm_release" "datadog" {
 
         # Enhanced logging configuration
         logs = {
-          enabled = true
-          containerCollectAll = true
+          enabled                    = true
+          containerCollectAll        = true
           containerCollectUsingFiles = true
-          autoMultiLineDetection = true
+          autoMultiLineDetection     = true
         }
 
         # System probe for network monitoring
         systemProbe = {
-          enabled = true
+          enabled              = true
           enableTCPQueueLength = true
-          enableOOMKill = true
-          collectDNSStats = true
+          enableOOMKill        = true
+          collectDNSStats      = true
         }
 
         # Security monitoring
@@ -1218,13 +1179,13 @@ resource "helm_release" "datadog" {
 
         # Process monitoring
         processAgent = {
-          enabled = true
+          enabled           = true
           processCollection = true
         }
 
         # Enhanced metrics collection
         dogstatsd = {
-          useHostPort = true
+          useHostPort     = true
           useSocketVolume = true
         }
 
@@ -1280,19 +1241,19 @@ resource "helm_release" "datadog" {
         # Volume mounts for enhanced monitoring
         volumeMounts = [
           {
-            name       = "hostroot"
-            mountPath  = "/host/root"
-            readOnly   = true
+            name      = "hostroot"
+            mountPath = "/host/root"
+            readOnly  = true
           },
           {
-            name       = "proc"
-            mountPath  = "/host/proc"
-            readOnly   = true
+            name      = "proc"
+            mountPath = "/host/proc"
+            readOnly  = true
           },
           {
-            name       = "sys"
-            mountPath  = "/host/sys"
-            readOnly   = true
+            name      = "sys"
+            mountPath = "/host/sys"
+            readOnly  = true
           }
         ]
 
@@ -1331,12 +1292,12 @@ resource "helm_release" "datadog" {
   ]
 
   # Increased timeout for Helm operations to handle slow deployments
-  timeout = 2400  # 40 minutes
+  timeout = 2400 # 40 minutes
 
   # Additional options for robustness
-  atomic           = false
-  wait             = false
-  cleanup_on_fail  = true
+  atomic            = false
+  wait              = false
+  cleanup_on_fail   = true
   dependency_update = true
 }
 
@@ -1352,7 +1313,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
+    selector = local.mongodb_labels # Backend runs as sidecar in MongoDB pod
 
     port {
       port        = 5001
@@ -1428,7 +1389,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "mongodb_hpa" {
 # Network Policies for security
 resource "kubernetes_network_policy" "default_deny" {
   count = var.enable_network_policies ? 1 : 0
-  
+
   metadata {
     name      = "default-deny-all"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1443,7 +1404,7 @@ resource "kubernetes_network_policy" "default_deny" {
 # Allow internal communication within namespace
 resource "kubernetes_network_policy" "allow_internal" {
   count = var.enable_network_policies ? 1 : 0
-  
+
   metadata {
     name      = "allow-internal-communication"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1489,7 +1450,7 @@ resource "kubernetes_network_policy" "allow_internal" {
 # Security group for database access
 resource "kubernetes_network_policy" "mongodb_security" {
   count = var.enable_network_policies ? 1 : 0
-  
+
   metadata {
     name      = "mongodb-security-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1533,7 +1494,7 @@ resource "kubernetes_network_policy" "mongodb_security" {
 # Web application firewall simulation via network policy
 resource "kubernetes_network_policy" "waf_frontend" {
   count = var.enable_network_policies ? 1 : 0
-  
+
   metadata {
     name      = "frontend-waf-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1555,7 +1516,7 @@ resource "kubernetes_network_policy" "waf_frontend" {
           cidr = "0.0.0.0/0"
           except = [
             "10.0.0.0/8",
-            "172.16.0.0/12", 
+            "172.16.0.0/12",
             "192.168.0.0/16"
           ]
         }
@@ -1567,7 +1528,7 @@ resource "kubernetes_network_policy" "waf_frontend" {
 # Backend API security
 resource "kubernetes_network_policy" "backend_security" {
   count = var.enable_network_policies ? 1 : 0
-  
+
   metadata {
     name      = "backend-security-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -1575,7 +1536,7 @@ resource "kubernetes_network_policy" "backend_security" {
 
   spec {
     pod_selector {
-      match_labels = local.mongodb_labels  # Backend runs as sidecar in MongoDB pod
+      match_labels = local.mongodb_labels # Backend runs as sidecar in MongoDB pod
     }
     policy_types = ["Ingress"]
 
@@ -1823,195 +1784,6 @@ resource "kubernetes_network_policy" "allow_frontend_to_backend" {
         protocol = "TCP"
       }
     }
-  }
-}
-
-# Alertmanager Configuration via Terraform
-resource "kubernetes_config_map" "alertmanager_config" {
-  metadata {
-    name      = "alertmanager-config"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = merge(local.monitoring_labels, { component = "alertmanager" })
-  }
-
-  data = {
-    "alertmanager.yml" = <<-EOT
-global:
-  smtp_smarthost: '${var.smtp_host}:${var.smtp_port}'
-  smtp_from: '${var.alert_email_from}'
-  smtp_auth_username: '${var.smtp_username}'
-  smtp_auth_password: '${var.smtp_password}'
-  smtp_require_tls: ${var.smtp_tls}
-
-route:
-  group_by: ['alertname']
-  group_wait: 10s
-  group_interval: 10s
-  repeat_interval: 1h
-  receiver: 'healthcare-team'
-  routes:
-  - match:
-      severity: critical
-    receiver: 'healthcare-critical'
-    continue: true
-  - match:
-      severity: warning
-    receiver: 'healthcare-warning'
-    continue: true
-  - match:
-      service: database
-    receiver: 'database-team'
-    continue: true
-  - match:
-      service: frontend
-    receiver: 'frontend-team'
-    continue: true
-  - match:
-      service: backend
-    receiver: 'backend-team'
-    continue: true
-
-receivers:
-- name: 'healthcare-critical'
-  slack_configs:
-  - api_url: '${var.slack_webhook_critical}'
-    channel: '${var.slack_channel_critical}'
-    title: '{{ .GroupLabels.alertname }}'
-    text: |
-      🚨 *CRITICAL ALERT* 🚨
-      *Alert:* {{ .GroupLabels.alertname }}
-      *Severity:* {{ .GroupLabels.severity }}
-      *Service:* {{ .GroupLabels.service }}
-      *Instance:* {{ .Labels.instance }}
-      *Description:* {{ .Annotations.description }}
-      *Value:* {{ .Value }}
-      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-      *Environment:* ${var.environment}
-    color: 'danger'
-  email_configs:
-  - to: '${var.critical_alert_email}'
-    headers:
-      Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
-    html: |
-      <h1 style="color: #ff0000;">🚨 CRITICAL ALERT 🚨</h1>
-      <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
-      <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
-      <p><strong>Service:</strong> {{ .GroupLabels.service }}</p>
-      <p><strong>Instance:</strong> {{ .Labels.instance }}</p>
-      <p><strong>Description:</strong> {{ .Annotations.description }}</p>
-      <p><strong>Value:</strong> {{ .Value }}</p>
-      <p><strong>Time:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05" }}</p>
-      <p><strong>Environment:</strong> ${var.environment}</p>
-
-- name: 'healthcare-warning'
-  slack_configs:
-  - api_url: '${var.slack_webhook_warning}'
-    channel: '${var.slack_channel_warning}'
-    title: '{{ .GroupLabels.alertname }}'
-    text: |
-      ⚠️ *WARNING ALERT* ⚠️
-      *Alert:* {{ .GroupLabels.alertname }}
-      *Severity:* {{ .GroupLabels.severity }}
-      *Service:* {{ .GroupLabels.service }}
-      *Instance:* {{ .Labels.instance }}
-      *Description:* {{ .Annotations.description }}
-      *Value:* {{ .Value }}
-      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-      *Environment:* ${var.environment}
-    color: 'warning'
-  email_configs:
-  - to: '${var.warning_alert_email}'
-    headers:
-      Subject: '⚠️ WARNING: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
-
-- name: 'healthcare-team'
-  slack_configs:
-  - api_url: '${var.slack_webhook_general}'
-    channel: '${var.slack_channel_general}'
-    title: '{{ .GroupLabels.alertname }}'
-    text: |
-      📢 *HEALTHCARE ALERT* 📢
-      *Alert:* {{ .GroupLabels.alertname }}
-      *Severity:* {{ .GroupLabels.severity }}
-      *Service:* {{ .GroupLabels.service }}
-      *Description:* {{ .Annotations.description }}
-      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    color: 'good'
-  email_configs:
-  - to: '${var.general_alert_email}'
-    headers:
-      Subject: '📢 Alert: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
-
-- name: 'database-team'
-  slack_configs:
-  - api_url: '${var.slack_webhook_database}'
-    channel: '${var.slack_channel_database}'
-    title: 'Database Alert: {{ .GroupLabels.alertname }}'
-    text: |
-      🗄️ *DATABASE ALERT* 🗄️
-      *Alert:* {{ .GroupLabels.alertname }}
-      *Severity:* {{ .GroupLabels.severity }}
-      *Service:* {{ .GroupLabels.service }}
-      *Instance:* {{ .Labels.instance }}
-      *Description:* {{ .Annotations.description }}
-      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    color: 'danger'
-  email_configs:
-  - to: '${var.database_alert_email}'
-    headers:
-      Subject: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
-
-- name: 'frontend-team'
-  slack_configs:
-  - api_url: '${var.slack_webhook_frontend}'
-    channel: '${var.slack_channel_frontend}'
-    title: 'Frontend Alert: {{ .GroupLabels.alertname }}'
-    text: |
-      🌐 *FRONTEND ALERT* 🌐
-      *Alert:* {{ .GroupLabels.alertname }}
-      *Severity:* {{ .GroupLabels.severity }}
-      *Service:* {{ .GroupLabels.service }}
-      *Instance:* {{ .Labels.instance }}
-      *Description:* {{ .Annotations.description }}
-      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    color: 'warning'
-  email_configs:
-  - to: '${var.frontend_alert_email}'
-    headers:
-      Subject: '🌐 Frontend Alert: {{ .GroupLabels.alertname }}'
-
-- name: 'backend-team'
-  slack_configs:
-  - api_url: '${var.slack_webhook_backend}'
-    channel: '${var.slack_channel_backend}'
-    title: 'Backend Alert: {{ .GroupLabels.alertname }}'
-    text: |
-      ⚙️ *BACKEND ALERT* ⚙️
-      *Alert:* {{ .GroupLabels.alertname }}
-      *Severity:* {{ .GroupLabels.severity }}
-      *Service:* {{ .GroupLabels.service }}
-      *Instance:* {{ .Labels.instance }}
-      *Description:* {{ .Annotations.description }}
-      *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    color: 'warning'
-  email_configs:
-  - to: '${var.backend_alert_email}'
-    headers:
-      Subject: '⚙️ Backend Alert: {{ .GroupLabels.alertname }}'
-
-inhibit_rules:
-- source_match:
-    severity: 'critical'
-  target_match:
-    severity: 'warning'
-  equal: ['alertname', 'service']
-
-- source_match:
-    alertname: 'DatabaseDown'
-  target_match:
-    alertname: 'BackendServiceDown'
-  equal: ['instance']
-EOT
   }
 }
 
@@ -2390,6 +2162,8 @@ resource "kubernetes_config_map" "grafana_dashboards" {
 EOT
   }
 }
+# MongoDB Backup CronJob
+resource "kubernetes_cron_job_v1" "mongodb_backup" {
   metadata {
     name      = "mongodb-backup"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -2397,7 +2171,7 @@ EOT
   }
 
   spec {
-    schedule = "0 2 * * *"  # Daily at 2 AM
+    schedule = "0 2 * * *" # Daily at 2 AM
     job_template {
       metadata {
         labels = local.mongodb_labels
@@ -2409,8 +2183,8 @@ EOT
           }
           spec {
             container {
-              name  = "mongodb-backup"
-              image = "mongo:7.0.1"
+              name    = "mongodb-backup"
+              image   = "mongo:7.0.1"
               command = ["sh", "-c"]
               args = [
                 <<-EOT
@@ -2457,7 +2231,7 @@ EOT
               ]
 
               env {
-                name = "MONGO_USERNAME"
+                name  = "MONGO_USERNAME"
                 value = "admin"
               }
 
@@ -2531,7 +2305,7 @@ resource "kubernetes_cron_job_v1" "backup_cleanup" {
   }
 
   spec {
-    schedule = "0 3 * * *"  # Daily at 3 AM (1 hour after backup)
+    schedule = "0 3 * * *" # Daily at 3 AM (1 hour after backup)
     job_template {
       metadata {
         labels = local.mongodb_labels
@@ -2543,8 +2317,8 @@ resource "kubernetes_cron_job_v1" "backup_cleanup" {
           }
           spec {
             container {
-              name  = "backup-cleanup"
-              image = "busybox:latest"
+              name    = "backup-cleanup"
+              image   = "busybox:latest"
               command = ["sh", "-c"]
               args = [
                 <<-EOT
@@ -2614,8 +2388,8 @@ resource "kubernetes_job" "mongodb_restore_template" {
       }
       spec {
         container {
-          name  = "mongodb-restore"
-          image = "mongo:7.0.1"
+          name    = "mongodb-restore"
+          image   = "mongo:7.0.1"
           command = ["sh", "-c"]
           args = [
             <<-EOT
@@ -2730,7 +2504,7 @@ resource "kubernetes_cluster_role_binding" "datadog_cluster_agent" {
 # Data Transfer Controls for GDPR Compliance
 resource "kubernetes_config_map" "data_transfer_policy" {
   count = var.enable_data_transfer_controls ? 1 : 0
-  
+
   metadata {
     name      = "data-transfer-policy"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
@@ -2739,11 +2513,11 @@ resource "kubernetes_config_map" "data_transfer_policy" {
 
   data = {
     "transfer-policy.json" = jsonencode({
-      version = "1.0"
+      version      = "1.0"
       organization = "Healthcare App Corporation"
       data_transfer_rules = [
         {
-          purpose = "EU-US Data Transfers"
+          purpose     = "EU-US Data Transfers"
           legal_basis = "Standard Contractual Clauses"
           safeguards = [
             "SCCs implemented",
@@ -2752,10 +2526,10 @@ resource "kubernetes_config_map" "data_transfer_policy" {
             "Regular audits"
           ]
           restricted_countries = []
-          approval_required = false
+          approval_required    = false
         },
         {
-          purpose = "Third-party processing"
+          purpose     = "Third-party processing"
           legal_basis = "Legitimate interest"
           safeguards = [
             "DPA executed",
@@ -2764,13 +2538,13 @@ resource "kubernetes_config_map" "data_transfer_policy" {
             "Audit rights"
           ]
           restricted_countries = ["CN", "RU", "IR", "KP"]
-          approval_required = true
+          approval_required    = true
         }
       ]
       audit_trail = {
-        enabled = true
-        retention_days = 2555  # 7 years
-        log_transfers = true
+        enabled        = true
+        retention_days = 2555 # 7 years
+        log_transfers  = true
       }
     })
   }
@@ -2788,49 +2562,49 @@ resource "kubernetes_config_map" "gdpr_rights_config" {
     "rights-implementation.json" = jsonencode({
       data_subject_rights = {
         access = {
-          enabled = true
-          max_response_days = 30
+          enabled              = true
+          max_response_days    = 30
           automated_processing = true
         }
         rectification = {
-          enabled = true
-          max_response_days = 30
+          enabled              = true
+          max_response_days    = 30
           automated_processing = true
         }
         erasure = {
-          enabled = true
-          max_response_days = 30
+          enabled              = true
+          max_response_days    = 30
           automated_processing = true
-          exceptions = ["legal-obligation", "public-interest", "research"]
+          exceptions           = ["legal-obligation", "public-interest", "research"]
         }
         restriction = {
-          enabled = true
-          max_response_days = 30
+          enabled              = true
+          max_response_days    = 30
           automated_processing = true
         }
         portability = {
-          enabled = true
-          max_response_days = 30
-          formats = ["json", "xml", "csv"]
+          enabled              = true
+          max_response_days    = 30
+          formats              = ["json", "xml", "csv"]
           automated_processing = true
         }
         objection = {
-          enabled = true
-          max_response_days = 30
+          enabled              = true
+          max_response_days    = 30
           automated_processing = true
         }
       }
       consent_management = {
-        enabled = true
-        granular_consent = true
-        withdrawal_enabled = true
-        consent_log_retention = 2555  # 7 years
+        enabled               = true
+        granular_consent      = true
+        withdrawal_enabled    = true
+        consent_log_retention = 2555 # 7 years
       }
       breach_notification = {
-        enabled = true
+        enabled                              = true
         supervisory_authority_deadline_hours = 72
-        affected_individuals_deadline_days = 1
-        automated_detection = true
+        affected_individuals_deadline_days   = 1
+        automated_detection                  = true
       }
     })
   }

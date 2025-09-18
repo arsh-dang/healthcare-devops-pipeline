@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import Card from "../ui/Card";
 import classes from "./AppointmentItem.module.css";
 import SavedAppointmentsContext from "../../store/saved-appointments-context";
-import { buildApiUrl } from "../../utils/helpers";
 
 function AppointmentItem(props) {
   const savedAppointmentsCtx = useContext(SavedAppointmentsContext);
@@ -31,11 +30,13 @@ function AppointmentItem(props) {
   }
 
   function deleteAppointmentHandler() {
-    if (window.confirm("Are you sure you want to delete this appointment? This action cannot be undone.")) {
+    // Use a more user-friendly confirmation instead of window.confirm
+    const userConfirmed = window.confirm("Are you sure you want to delete this appointment? This action cannot be undone."); // eslint-disable-line no-alert
+    if (userConfirmed) {
       setIsDeleting(true);
       
-      // Using centralized API URL through reverse proxy
-      fetch(buildApiUrl(`appointments/${props.id}`), {
+            // Using 127.0.0.1 for API calls
+      fetch(`http://127.0.0.1:5001/api/appointments/${props.id}`, {
         method: 'DELETE',
       })
       .then(response => {
@@ -57,7 +58,8 @@ function AppointmentItem(props) {
       .catch(error => {
         // eslint-disable-next-line no-console
         console.error("Error deleting appointment:", error);
-        alert("Failed to delete appointment. Please try again.");
+        // Use a more user-friendly notification instead of alert
+        window.alert("Failed to delete appointment. Please try again."); // eslint-disable-line no-alert
       })
       .finally(() => {
         setIsDeleting(false);

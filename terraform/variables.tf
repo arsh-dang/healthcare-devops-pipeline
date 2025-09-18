@@ -80,26 +80,10 @@ variable "alert_email_info" {
   type        = string
   default     = ""
 }
-
 variable "alert_email_team" {
   description = "Email address for team notifications"
   type        = string
   default     = ""
-}
-
-# Slack Integration
-variable "slack_webhook_critical" {
-  description = "Slack webhook URL for critical alerts"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "slack_webhook_warning" {
-  description = "Slack webhook URL for warning alerts"
-  type        = string
-  default     = ""
-  sensitive   = true
 }
 
 variable "slack_webhook_info" {
@@ -109,20 +93,15 @@ variable "slack_webhook_info" {
   sensitive   = true
 }
 
-variable "slack_channel_critical" {
-  description = "Slack channel for critical alerts"
-  type        = string
-  default     = "#alerts-critical"
-}
-
-variable "slack_channel_warning" {
-  description = "Slack channel for warning alerts"
-  type        = string
-  default     = "#alerts-warning"
-}
-
 variable "slack_channel_info" {
   description = "Slack channel for info alerts"
   type        = string
   default     = "#alerts-info"
+}
+
+
+variable "smtp_tls" {
+  description = "Enable TLS for SMTP"
+  type        = bool
+  default     = true
 }

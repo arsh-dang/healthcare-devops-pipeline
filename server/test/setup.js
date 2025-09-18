@@ -19,11 +19,11 @@ afterAll(async () => {
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+  console.error('Uncaught Exception:', err); // eslint-disable-line no-console
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason); // eslint-disable-line no-console
   process.exit(1);
 });

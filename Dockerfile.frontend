@@ -1,25 +1,21 @@
 # Use Node.js as base image
 FROM node:20-alpine AS build
 
-# Install pnpm globally using npm (simpler and more reliable)
-RUN npm install -g pnpm --registry=https://registry.npmjs.org/
-
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy package files first for better caching
+COPY package.json ./
 
-# Install dependencies using pnpm
-RUN pnpm install --no-frozen-lockfile
+# Install dependencies using yarn with frozen lockfile for reproducible builds
+RUN yarn install --frozen-lockfile
 
 # Copy the rest of the code
 COPY public/ public/
 COPY src/ src/
 
 # Build the app for production
-# Build the app for production
-RUN pnpm build
+RUN yarn build
 
 # Production stage
 FROM nginx:1.25.3-alpine

@@ -72,7 +72,7 @@ terraform apply tfplan
 - **Security Monitoring**: Runtime threats, compliance violations
 - **Business Metrics**: User sessions, healthcare KPIs, SLIs/SLOs
 
-### Advanced Alerting
+### 🚨 Advanced Alerting
 - **10 Alert Rules** covering all critical aspects
 - **Severity-based Routing**: Critical, Warning, Info levels
 - **Multiple Channels**: Email and Slack notifications

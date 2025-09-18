@@ -324,7 +324,7 @@ echo "Low Vulnerabilities: $LOW_VULN"
 echo "=================================================="
 
 if [ $HIGH_VULN -eq 0 ]; then
-    log_success "✅ No high-severity vulnerabilities found"
+    log_success "No high-severity vulnerabilities found"
 else
-    log_error "❌ $HIGH_VULN high-severity vulnerabilities require attention"
+    log_error "$HIGH_VULN high-severity vulnerabilities require attention"
 fi

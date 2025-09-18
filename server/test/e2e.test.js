@@ -6,7 +6,6 @@ const Appointment = require('../models/appointment');
 // Advanced E2E test suite with database integration
 describe('E2E Appointment Workflow Tests', () => {
   let server;
-  let appointmentId;
 
   beforeAll(async () => {
     jest.setTimeout(30000); // Increase timeout for database operations

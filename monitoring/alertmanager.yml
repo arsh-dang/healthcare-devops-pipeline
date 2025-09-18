@@ -40,7 +40,7 @@ receivers:
     channel: '#healthcare-critical'
     title: '{{ .GroupLabels.alertname }}'
     text: |
-      🚨 *CRITICAL ALERT* 🚨
+      CRITICAL ALERT
       *Alert:* {{ .GroupLabels.alertname }}
       *Severity:* {{ .GroupLabels.severity }}
       *Service:* {{ .GroupLabels.service }}
@@ -50,22 +50,12 @@ receivers:
       *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
       *Environment:* Production
     color: 'danger'
-    fields:
-    - title: 'Alert Name'
-      value: '{{ .GroupLabels.alertname }}'
-      short: true
-    - title: 'Severity'
-      value: '{{ .GroupLabels.severity }}'
-      short: true
-    - title: 'Service'
-      value: '{{ .GroupLabels.service }}'
-      short: true
   email_configs:
   - to: 'healthcare-critical@company.com'
     headers:
-      Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+      Subject: 'CRITICAL: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
     html: |
-      <h1 style="color: #ff0000;">🚨 CRITICAL ALERT 🚨</h1>
+      <h1 style="color: #ff0000;">CRITICAL ALERT</h1>
       <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
       <p><strong>Severity:</strong> {{ .GroupLabels.severity }}</p>
       <p><strong>Service:</strong> {{ .GroupLabels.service }}</p>
@@ -83,7 +73,7 @@ receivers:
     channel: '#healthcare-alerts'
     title: '{{ .GroupLabels.alertname }}'
     text: |
-      ⚠️ *WARNING ALERT* ⚠️
+      WARNING ALERT
       *Alert:* {{ .GroupLabels.alertname }}
       *Severity:* {{ .GroupLabels.severity }}
       *Service:* {{ .GroupLabels.service }}
@@ -96,7 +86,7 @@ receivers:
   email_configs:
   - to: 'healthcare-alerts@company.com'
     headers:
-      Subject: '⚠️ WARNING: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+      Subject: 'WARNING: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
 
 - name: 'healthcare-team'
   slack_configs:
@@ -104,7 +94,7 @@ receivers:
     channel: '#healthcare-notifications'
     title: '{{ .GroupLabels.alertname }}'
     text: |
-      📢 *HEALTHCARE ALERT* 📢
+      HEALTHCARE ALERT
       *Alert:* {{ .GroupLabels.alertname }}
       *Severity:* {{ .GroupLabels.severity }}
       *Service:* {{ .GroupLabels.service }}
@@ -114,7 +104,7 @@ receivers:
   email_configs:
   - to: 'healthcare-team@company.com'
     headers:
-      Subject: '📢 Alert: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+      Subject: 'Alert: {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
 
 - name: 'database-team'
   slack_configs:
@@ -122,7 +112,7 @@ receivers:
     channel: '#database-alerts'
     title: 'Database Alert: {{ .GroupLabels.alertname }}'
     text: |
-      🗄️ *DATABASE ALERT* 🗄️
+      DATABASE ALERT
       *Alert:* {{ .GroupLabels.alertname }}
       *Severity:* {{ .GroupLabels.severity }}
       *Service:* {{ .GroupLabels.service }}
@@ -133,7 +123,7 @@ receivers:
   email_configs:
   - to: 'database-team@company.com'
     headers:
-      Subject: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
+      Subject: 'Database Alert: {{ .GroupLabels.alertname }}'
 
 - name: 'frontend-team'
   slack_configs:
@@ -141,7 +131,7 @@ receivers:
     channel: '#frontend-alerts'
     title: 'Frontend Alert: {{ .GroupLabels.alertname }}'
     text: |
-      🌐 *FRONTEND ALERT* 🌐
+      FRONTEND ALERT
       *Alert:* {{ .GroupLabels.alertname }}
       *Severity:* {{ .GroupLabels.severity }}
       *Service:* {{ .GroupLabels.service }}
@@ -152,7 +142,7 @@ receivers:
   email_configs:
   - to: 'frontend-team@company.com'
     headers:
-      Subject: '🌐 Frontend Alert: {{ .GroupLabels.alertname }}'
+      Subject: 'Frontend Alert: {{ .GroupLabels.alertname }}'
 
 - name: 'backend-team'
   slack_configs:
@@ -160,7 +150,7 @@ receivers:
     channel: '#backend-alerts'
     title: 'Backend Alert: {{ .GroupLabels.alertname }}'
     text: |
-      ⚙️ *BACKEND ALERT* ⚙️
+      BACKEND ALERT
       *Alert:* {{ .GroupLabels.alertname }}
       *Severity:* {{ .GroupLabels.severity }}
       *Service:* {{ .GroupLabels.service }}
@@ -171,7 +161,7 @@ receivers:
   email_configs:
   - to: 'backend-team@company.com'
     headers:
-      Subject: '⚙️ Backend Alert: {{ .GroupLabels.alertname }}'
+      Subject: 'Backend Alert: {{ .GroupLabels.alertname }}'
 
 inhibit_rules:
 - source_match:
