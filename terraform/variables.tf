@@ -105,3 +105,8 @@ variable "smtp_tls" {
   type        = bool
   default     = true
 }
+variable "enable_nginx_proxy_manager" {
+  description = "Enable Nginx Proxy Manager for external routing"
+  type        = bool
+  default     = true
+}

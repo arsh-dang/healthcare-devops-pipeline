@@ -148,10 +148,10 @@ show_access_info() {
     log_success "Monitoring stack deployment completed!"
     echo
     log_info "Access Information:"
-    echo "  Grafana: http://localhost:30285/grafana"
-    echo "  Prometheus: http://localhost:30285/prometheus"
-    echo "  Alertmanager: http://localhost:30285/alertmanager"
-    echo "  MongoDB Exporter: http://localhost:30285/mongodb-exporter"
+    echo "  Grafana: http://localhost:30285/staging/grafana"
+    echo "  Prometheus: http://localhost:30285/staging/prometheus"
+    echo "  Alertmanager: http://localhost:30285/staging/alertmanager"
+    echo "  MongoDB Exporter: http://localhost:30285/staging/mongodb-exporter"
     echo
     log_info "Default Credentials:"
     echo "  Grafana: admin / admin (change immediately!)"
