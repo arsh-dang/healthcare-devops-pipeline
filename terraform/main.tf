@@ -2264,11 +2264,8 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
 
             volume {
               name = "backup-storage"
-              persistent_volume_claim {
-                claim_name = kubernetes_persistent_volume_claim.backup_storage.metadata[0].name
-              }
+              empty_dir {}
             }
-
             restart_policy = "OnFailure"
           }
         }
@@ -2277,24 +2274,6 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
   }
 }
 
-# Persistent Volume Claim for backup storage
-resource "kubernetes_persistent_volume_claim" "backup_storage" {
-  metadata {
-    name      = "mongodb-backup-storage"
-    namespace = kubernetes_namespace.healthcare.metadata[0].name
-    labels    = local.mongodb_labels
-  }
-
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    resources {
-      requests = {
-        storage = "50Gi"
-      }
-    }
-    storage_class_name = "local-path"
-  }
-}
 
 # Backup cleanup CronJob (retain last 7 days)
 resource "kubernetes_cron_job_v1" "backup_cleanup" {
@@ -2360,11 +2339,8 @@ resource "kubernetes_cron_job_v1" "backup_cleanup" {
 
             volume {
               name = "backup-storage"
-              persistent_volume_claim {
-                claim_name = kubernetes_persistent_volume_claim.backup_storage.metadata[0].name
-              }
+              empty_dir {}
             }
-
             restart_policy = "OnFailure"
           }
         }
