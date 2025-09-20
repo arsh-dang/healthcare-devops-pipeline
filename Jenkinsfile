@@ -313,18 +313,18 @@ node {
                                         
                                         # Check if we have pnpm-lock.yaml (pnpm project) or package-lock.json (npm project)
                                         if [ -f "pnpm-lock.yaml" ]; then
-                                            echo "Found pnpm-lock.yaml - trying npm install with fallbacks"
+                                            echo "Found pnpm-lock.yaml - using pnpm"
                                             
-                                            # Clear npm cache first to avoid compatibility issues
-                                            npm cache clean --force || echo "Cache clean failed, continuing..."
+                                            # Clear pnpm cache first to avoid compatibility issues
+                                            pnpm store prune || echo "Cache prune failed, continuing..."
                                             
-                                            # Try npm install, if it fails, try without lockfile
-                                            if ! npm install --prefer-offline; then
-                                                echo "npm install failed, trying without prefer-offline..."
-                                                if ! npm install; then
-                                                    echo "npm install still failing, removing lockfile and trying again..."
-                                                    rm -f package-lock.json
-                                                    npm install || echo "npm install failed, creating dummy build"
+                                            # Try pnpm install
+                                            if ! pnpm install --no-frozen-lockfile; then
+                                                echo "pnpm install failed, trying with frozen lockfile..."
+                                                if ! pnpm install --frozen-lockfile; then
+                                                    echo "pnpm install still failing, removing lockfile and trying again..."
+                                                    rm -f pnpm-lock.yaml
+                                                    pnpm install || echo "pnpm install failed, creating dummy build"
                                                 fi
                                             fi
                                             
@@ -338,7 +338,7 @@ node {
                                         
                                         # Try to build, but don't fail if build script doesn't exist
                                         echo "Building production frontend..."
-                                        if npm run build; then
+                                        if pnpm run build; then
                                             echo "Frontend build completed successfully"
                                             ls -la build/ || echo "Build directory not found"
                                             
@@ -356,8 +356,8 @@ node {
                                                     }" || echo "Failed to send Datadog metric"
                                             fi
                                         else
-                                            echo "npm run build failed, checking if build script exists..."
-                                            npm run --silent 2>/dev/null | grep "build" || echo "No build script found in package.json"
+                                            echo "pnpm run build failed, checking if build script exists..."
+                                            pnpm run --silent 2>/dev/null | grep "build" || echo "No build script found in package.json"
                                             
                                             # Send build failure metric
                                             if [ -n "$DATADOG_API_KEY" ]; then
@@ -921,15 +921,15 @@ node {
                                         echo "Running frontend unit tests..."
                                         # Make sure dependencies are installed first
                                         if [ -f "pnpm-lock.yaml" ]; then
-                                            npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                            pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         elif [ -f "package-lock.json" ]; then
                                             npm ci --cache .npm --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
                                         else
-                                            npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                            pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         fi
                                         
                                         # Run tests and capture results
-                                        if npm test -- --coverage --watchAll=false --testResultsProcessor="jest-junit" --json --outputFile=test-results.json; then
+                                        if pnpm test -- --coverage --watchAll=false --testResultsProcessor="jest-junit" --json --outputFile=test-results.json; then
                                             echo "Unit tests passed"
                                             TEST_STATUS="success"
                                             TEST_COUNT=$(jq '.numTotalTests' test-results.json 2>/dev/null || echo "0")
@@ -998,14 +998,14 @@ node {
                                         echo "Running integration tests..."
                                         # Make sure dependencies are installed first
                                         if [ -f "pnpm-lock.yaml" ]; then
-                                            npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                            pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         elif [ -f "package-lock.json" ]; then
                                             npm ci --cache .npm --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"  
                                         else
-                                            npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                            pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         fi
                                         
-                                        if npm run test:integration; then
+                                        if pnpm run test:integration; then
                                             echo "Integration tests passed"
                                             INT_TEST_STATUS="success"
                                         else
@@ -1431,7 +1431,7 @@ node {
                                         npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
                                         
                                         # Run ESLint
-                                        if npm run lint 2>/dev/null; then
+                                        if pnpm run lint 2>/dev/null; then
                                             ESLINT_STATUS="success"
                                             echo "ESLint analysis completed successfully"
                                         else
@@ -1844,8 +1844,8 @@ node {
                                         echo "Running npm audit for dependency vulnerabilities..."
                                         
                                         # Run npm audit and capture results
-                                        if npm audit --audit-level=moderate --json > npm-audit-results.json 2>/dev/null; then
-                                            VULNERABILITIES=$(jq '.metadata.vulnerabilities.total' npm-audit-results.json 2>/dev/null || echo "0")
+                                        if pnpm audit --audit-level=moderate --json > pnpm-audit-results.json 2>/dev/null; then
+                                            VULNERABILITIES=$(jq '.metadata.vulnerabilities.total' pnpm-audit-results.json 2>/dev/null || echo "0")
                                             echo "Found $VULNERABILITIES vulnerabilities"
                                             SCAN_STATUS="completed"
                                         else
