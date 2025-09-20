@@ -81,6 +81,24 @@ resource "kubernetes_ingress_v1" "frontend" {
             }
           }
         }
+
+        # Default path for blue-green deployments and other environments
+        dynamic "path" {
+          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+          content {
+            path      = "/"
+            path_type = "Prefix"
+
+            backend {
+              service {
+                name = kubernetes_service.frontend.metadata[0].name
+                port {
+                  number = 3001
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -131,6 +149,24 @@ resource "kubernetes_ingress_v1" "backend" {
 
         dynamic "path" {
           for_each = var.environment == "production" ? [1] : []
+          content {
+            path      = "/api(/|$)(.*)"
+            path_type = "ImplementationSpecific"
+
+            backend {
+              service {
+                name = kubernetes_service.backend.metadata[0].name
+                port {
+                  number = 5001
+                }
+              }
+            }
+          }
+        }
+
+        # Default path for blue-green deployments and other environments
+        dynamic "path" {
+          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
           content {
             path      = "/api(/|$)(.*)"
             path_type = "ImplementationSpecific"
@@ -211,6 +247,24 @@ resource "kubernetes_ingress_v1" "monitoring" {
           }
         }
 
+        # Default Grafana path for blue-green deployments
+        dynamic "path" {
+          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+          content {
+            path      = "/grafana"
+            path_type = "Prefix"
+
+            backend {
+              service {
+                name = kubernetes_service.grafana.metadata[0].name
+                port {
+                  number = 3000
+                }
+              }
+            }
+          }
+        }
+
         dynamic "path" {
           for_each = var.environment == "staging" ? [1] : []
           content {
@@ -230,6 +284,24 @@ resource "kubernetes_ingress_v1" "monitoring" {
 
         dynamic "path" {
           for_each = var.environment == "production" ? [1] : []
+          content {
+            path      = "/prometheus"
+            path_type = "Prefix"
+
+            backend {
+              service {
+                name = kubernetes_service.prometheus.metadata[0].name
+                port {
+                  number = 9090
+                }
+              }
+            }
+          }
+        }
+
+        # Default Prometheus path for blue-green deployments
+        dynamic "path" {
+          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
           content {
             path      = "/prometheus"
             path_type = "Prefix"
@@ -279,6 +351,24 @@ resource "kubernetes_ingress_v1" "monitoring" {
           }
         }
 
+        # Default Alertmanager path for blue-green deployments
+        dynamic "path" {
+          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+          content {
+            path      = "/alertmanager"
+            path_type = "Prefix"
+
+            backend {
+              service {
+                name = kubernetes_service.alertmanager.metadata[0].name
+                port {
+                  number = 9093
+                }
+              }
+            }
+          }
+        }
+
         dynamic "path" {
           for_each = var.environment == "staging" ? [1] : []
           content {
@@ -298,6 +388,24 @@ resource "kubernetes_ingress_v1" "monitoring" {
 
         dynamic "path" {
           for_each = var.environment == "production" ? [1] : []
+          content {
+            path      = "/mongodb-exporter"
+            path_type = "Prefix"
+
+            backend {
+              service {
+                name = kubernetes_service.mongodb_exporter.metadata[0].name
+                port {
+                  number = 9216
+                }
+              }
+            }
+          }
+        }
+
+        # Default MongoDB Exporter path for blue-green deployments
+        dynamic "path" {
+          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
           content {
             path      = "/mongodb-exporter"
             path_type = "Prefix"
