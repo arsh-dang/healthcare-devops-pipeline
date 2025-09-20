@@ -14,18 +14,10 @@ resource "kubernetes_namespace" "ingress_nginx" {
   }
 }
 
-# Ensure monitoring namespace exists (in case monitoring.tf is not applied yet)
-resource "kubernetes_namespace" "monitoring" {
+# Data source to ensure monitoring namespace exists (defined in monitoring.tf)
+data "kubernetes_namespace" "monitoring" {
   metadata {
     name = "monitoring-${var.environment}"
-    labels = {
-      component = "monitoring"
-      purpose   = "observability"
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [metadata[0].labels]
   }
 }
 
@@ -162,7 +154,7 @@ resource "kubernetes_ingress_v1" "backend" {
 resource "kubernetes_ingress_v1" "monitoring" {
   metadata {
     name      = "monitoring-ingress"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    namespace = data.kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "monitoring" })
     annotations = {
       "kubernetes.io/ingress.class"                = "nginx"
@@ -348,7 +340,7 @@ resource "kubernetes_secret" "monitoring_auth" {
 
   metadata {
     name      = "monitoring-auth"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    namespace = data.kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "monitoring" })
   }
 
