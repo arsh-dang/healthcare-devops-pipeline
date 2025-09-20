@@ -399,7 +399,7 @@ display_completion() {
     echo "  4. Start development environment: docker-compose up -d"
     echo "  5. Access application at: http://localhost:30285"
     echo ""
-    echo "📚 Useful commands:"
+    echo "Useful commands:"
     echo "  • View logs: docker-compose logs -f"
     echo "  • Stop services: docker-compose down"
     echo "  • Deploy monitoring: ./scripts/deploy-monitoring.sh staging"

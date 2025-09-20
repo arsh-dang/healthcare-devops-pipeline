@@ -86,6 +86,32 @@ app.use("/api/appointments", appointmentRoutes);
 // GDPR Compliance Routes
 app.use("/api/gdpr", require("./routes/gdprRoutes"));
 
+// API routes for ingress rewriting
+app.get("/api/", (req, res) => {
+  res.send("Healthcare Appointment API is running");
+});
+
+app.get("/api/health", (req, res) => {
+  // Check MongoDB connection status
+  const mongoStatus = mongoose.connection.readyState;
+  const isMongoConnected = mongoStatus === 1; // 1 = connected
+
+  if (isMongoConnected) {
+    res.status(200).json({ status: "ok", mongodb: "connected" });
+  } else {
+    res.status(503).json({ status: "error", mongodb: "disconnected" });
+  }
+});
+
+app.get("/api/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
+});
+
 // Root route
 app.get("/", (req, res) => {
   res.send("Healthcare Appointment API is running");

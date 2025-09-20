@@ -32,16 +32,16 @@ The healthcare application green environment has been successfully deployed and 
 
 ## Validation Results
 
-### ✅ Pod Status (100% Success Rate)
+### ✓ Pod Status (100% Success Rate)
 
 | Service | Status | Ready | Notes |
 |---------|--------|-------|-------|
-| frontend | Running | 1/1 | ✅ Operational |
-| prometheus | Running | 1/1 | ✅ Operational |
-| grafana | Running | 1/1 | ✅ Operational |
-| alertmanager | Running | 1/1 | ✅ Operational |
-| jaeger | Running | 1/1 | ✅ Operational |
-| mongodb-staging-0 | Running | 1/1 | ✅ Operational |
+| frontend | Running | 1/1 | ✓ Operational |
+| prometheus | Running | 1/1 | ✓ Operational |
+| grafana | Running | 1/1 | ✓ Operational |
+| alertmanager | Running | 1/1 | ✓ Operational |
+| jaeger | Running | 1/1 | ✓ Operational |
+| mongodb-staging-0 | Running | 1/1 | ✓ Operational |
 | mongodb-staging-1 | Pending | 0/1 | Resource constraints (expected in Colima) |
 
 ### Service Endpoints (100% Available)

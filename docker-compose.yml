@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
@@ -22,7 +20,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles: ["full", "backend-only"]
 
   # Backend API
   backend:
@@ -40,7 +37,7 @@ services:
       MONGODB_PASSWORD: ${MONGODB_PASSWORD:-securepassword123}
       MONGODB_DATABASE: ${MONGODB_DATABASE:-healthcare-app}
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:30285}
       LOG_LEVEL: ${LOG_LEVEL:-debug}
       DD_TRACE_ENABLED: ${DD_TRACE_ENABLED:-false}
     depends_on:
@@ -50,17 +47,13 @@ services:
       - healthcare-network
     volumes:
       - /app/node_modules
-      - ./server:/app/server:ro
-    ports:
-      - "5001:5001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:30285/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    profiles: ["full", "backend-only"]
 
-  # Frontend React App (Development)
+  # Frontend React App
   frontend:
     build:
       context: .
@@ -68,14 +61,15 @@ services:
     container_name: healthcare-frontend
     restart: unless-stopped
     environment:
-      REACT_APP_API_BASE_URL: ${API_BASE_URL:-http://localhost:5001/api}
+      REACT_APP_API_BASE_URL: ${API_BASE_URL:-http://localhost:30285/api}
       REACT_APP_VERSION: ${REACT_APP_VERSION:-1.0.0}
       DD_RUM_ENABLED: ${DD_RUM_ENABLED:-false}
       DD_RUM_APPLICATION_ID: ${DD_RUM_APPLICATION_ID}
       DD_RUM_CLIENT_TOKEN: ${DD_RUM_CLIENT_TOKEN}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
-      - "3000:3000"  # Standard React dev port
+      - "30285:3001"
+      - "3001:3001"  # Alternative port for CI/CD
     depends_on:
       - backend
     networks:
@@ -85,7 +79,6 @@ services:
       - ./public:/app/public:ro
       - /app/node_modules
       - /app/build
-    profiles: ["full", "frontend-only"]
 
   # Redis (Optional - for caching/session management)
   redis:
@@ -104,7 +97,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    profiles: ["full"]
 
 volumes:
   mongodb_data:

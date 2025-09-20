@@ -14,16 +14,17 @@ resource "kubernetes_namespace" "ingress_nginx" {
   }
 }
 
-# Application Ingress for external access
-resource "kubernetes_ingress_v1" "healthcare_app" {
+# Application Ingress for external access - Separate Frontend and Backend
+resource "kubernetes_ingress_v1" "frontend" {
   metadata {
-    name      = "healthcare-app-ingress"
+    name      = "frontend-ingress"
     namespace = "${var.namespace}-${var.environment}"
-    labels    = local.common_labels
+    labels    = merge(local.common_labels, { component = "frontend" })
     annotations = {
-      "kubernetes.io/ingress.class"              = "nginx"
-      "nginx.ingress.kubernetes.io/ssl-redirect" = var.environment == "production" ? "true" : "false"
-      "cert-manager.io/cluster-issuer"           = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
+      "nginx.ingress.kubernetes.io/ssl-redirect"   = var.environment == "production" ? "true" : "false"
+      "cert-manager.io/cluster-issuer"             = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
     }
   }
 
@@ -37,43 +38,9 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
     }
 
     rule {
-      host = var.environment == "production" ? "healthcare.company.com" : "staging.localhost"
+      host = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
 
       http {
-        dynamic "path" {
-          for_each = var.environment == "staging" ? [1] : []
-          content {
-            path      = "/staging/api/"
-            path_type = "Prefix"
-
-            backend {
-              service {
-                name = kubernetes_service.backend.metadata[0].name
-                port {
-                  number = 5001
-                }
-              }
-            }
-          }
-        }
-
-        dynamic "path" {
-          for_each = var.environment == "production" ? [1] : []
-          content {
-            path      = "/api/"
-            path_type = "Prefix"
-
-            backend {
-              service {
-                name = kubernetes_service.backend.metadata[0].name
-                port {
-                  number = 5001
-                }
-              }
-            }
-          }
-        }
-
         dynamic "path" {
           for_each = var.environment == "staging" ? [1] : []
           content {
@@ -112,6 +79,70 @@ resource "kubernetes_ingress_v1" "healthcare_app" {
   }
 }
 
+resource "kubernetes_ingress_v1" "backend" {
+  metadata {
+    name      = "backend-ingress"
+    namespace = "${var.namespace}-${var.environment}"
+    labels    = merge(local.common_labels, { component = "backend" })
+    annotations = {
+      "kubernetes.io/ingress.class"                = "nginx"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
+      "nginx.ingress.kubernetes.io/ssl-redirect"   = var.environment == "production" ? "true" : "false"
+      "cert-manager.io/cluster-issuer"             = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
+    }
+  }
+
+  spec {
+    dynamic "tls" {
+      for_each = var.environment == "production" ? [1] : []
+      content {
+        hosts       = ["healthcare.company.com"]
+        secret_name = "healthcare-app-tls"
+      }
+    }
+
+    rule {
+      host = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
+
+      http {
+        dynamic "path" {
+          for_each = var.environment == "staging" ? [1] : []
+          content {
+            path      = "/staging/api(/|$)(.*)"
+            path_type = "ImplementationSpecific"
+
+            backend {
+              service {
+                name = kubernetes_service.backend.metadata[0].name
+                port {
+                  number = 5001
+                }
+              }
+            }
+          }
+        }
+
+        dynamic "path" {
+          for_each = var.environment == "production" ? [1] : []
+          content {
+            path      = "/api(/|$)(.*)"
+            path_type = "ImplementationSpecific"
+
+            backend {
+              service {
+                name = kubernetes_service.backend.metadata[0].name
+                port {
+                  number = 5001
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 # Monitoring Ingress for Grafana and Prometheus access
 resource "kubernetes_ingress_v1" "monitoring" {
   metadata {
@@ -136,7 +167,7 @@ resource "kubernetes_ingress_v1" "monitoring" {
     }
 
     rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.localhost"
+      host = var.environment == "production" ? "monitoring.company.com" : "localhost"
 
       http {
         dynamic "path" {
@@ -315,17 +346,37 @@ resource "kubernetes_secret" "monitoring_auth" {
 }
 
 # Outputs for ingress
+output "frontend_ingress_host" {
+  description = "Frontend ingress hostname"
+  value       = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
+}
+
+output "backend_ingress_host" {
+  description = "Backend ingress hostname"
+  value       = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
+}
+
+output "frontend_ingress_name" {
+  description = "Frontend ingress resource name"
+  value       = kubernetes_ingress_v1.frontend.metadata[0].name
+}
+
+output "backend_ingress_name" {
+  description = "Backend ingress resource name"
+  value       = kubernetes_ingress_v1.backend.metadata[0].name
+}
+
 output "app_ingress_host" {
-  description = "Application ingress hostname"
-  value       = var.environment == "production" ? "healthcare.company.com" : "staging.localhost"
+  description = "Application ingress hostname (deprecated - use frontend_ingress_host)"
+  value       = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
 }
 
 output "monitoring_ingress_host" {
   description = "Monitoring ingress hostname"
-  value       = var.environment == "production" ? "monitoring.company.com" : "monitoring-staging.localhost"
+  value       = var.environment == "production" ? "monitoring.company.com" : "localhost"
 }
 
 output "grafana_external_url" {
   description = "External Grafana URL"
-  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://monitoring-staging.localhost/staging/grafana"
+  value       = var.environment == "production" ? "https://monitoring.company.com/grafana" : "http://localhost/staging/grafana"
 }

@@ -484,8 +484,8 @@ resource "kubernetes_stateful_set" "mongodb" {
 
           resources {
             requests = {
-              cpu    = "500m"
-              memory = "1Gi"
+              cpu    = "10m"
+              memory = "256Mi"
             }
             limits = {
               cpu    = "2"
@@ -2608,6 +2608,19 @@ resource "kubernetes_config_map" "gdpr_rights_config" {
       }
     })
   }
+}
+# Nginx Proxy Manager Module
+module "nginx_proxy_manager" {
+  source = "./modules/nginx-proxy-manager"
+
+  namespace                  = kubernetes_namespace.healthcare.metadata[0].name
+  environment                = var.environment
+  app_version                = var.app_version
+  common_labels              = local.common_labels
+  monitoring_labels          = local.monitoring_labels
+  frontend_labels            = local.frontend_labels
+  backend_labels             = local.backend_labels
+  enable_nginx_proxy_manager = var.enable_nginx_proxy_manager
 }
 output "mongodb_password" {
   description = "MongoDB root password (sensitive - only shown for convenience)"

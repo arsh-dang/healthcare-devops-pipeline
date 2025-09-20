@@ -31,7 +31,7 @@ Your application requires configuration for several components:
 nano terraform/terraform.tfvars
 ```
 
-## SMTP Email Configuration (REQUIRED)
+## 📧 SMTP Email Configuration (REQUIRED)
 
 ### **Step 1: Set up Gmail App Password**
 
@@ -91,7 +91,7 @@ smtp_username = "your-username"
 smtp_password = "your-password"
 ```
 
-## Slack Configuration (OPTIONAL)
+## 💬 Slack Configuration (OPTIONAL)
 
 ### **Step 1: Create Slack App**
 
@@ -122,7 +122,7 @@ slack_channel_critical = "#healthcare-critical"
 slack_channel_warning = "#healthcare-alerts"
 ```
 
-## Datadog Configuration (OPTIONAL)
+## 🐶 Datadog Configuration (OPTIONAL)
 
 ### **Step 1: Create Datadog Account**
 
@@ -156,7 +156,7 @@ datadog_rum_app_id = "abcd-1234-efgh-5678-ijkl-9012"
 datadog_rum_client_token = "mnop3456qrst7890uvwx1234yzab5678"
 ```
 
-## MongoDB Configuration
+## 🗄️ MongoDB Configuration
 
 ### **Option 1: Auto-generated Password (Recommended for Development)**
 
@@ -178,7 +178,7 @@ mongodb_root_password = "YourSecurePassword123!"
 
 ## Environment Configuration
 
-### **Basic Environment Variables**
+### Basic Environment Variables
 
 ```hcl
 # Environment Configuration
