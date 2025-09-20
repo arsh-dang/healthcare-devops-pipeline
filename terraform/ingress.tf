@@ -14,6 +14,21 @@ resource "kubernetes_namespace" "ingress_nginx" {
   }
 }
 
+# Ensure monitoring namespace exists (in case monitoring.tf is not applied yet)
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring-${var.environment}"
+    labels = {
+      component = "monitoring"
+      purpose   = "observability"
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [metadata[0].labels]
+  }
+}
+
 # Application Ingress for external access - Separate Frontend and Backend
 resource "kubernetes_ingress_v1" "frontend" {
   metadata {

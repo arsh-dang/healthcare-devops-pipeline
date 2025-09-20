@@ -1056,7 +1056,7 @@ resource "kubernetes_deployment" "prometheus" {
           resources {
             requests = {
               cpu    = "500m"
-              memory = "1Gi"
+              memory = "64Mi"
             }
             limits = {
               cpu    = "1000m"
@@ -1412,7 +1412,7 @@ resource "kubernetes_deployment" "grafana" {
           resources {
             requests = {
               cpu    = "200m"
-              memory = "256Mi"
+              memory = "64Mi"
             }
             limits = {
               cpu    = "500m"
