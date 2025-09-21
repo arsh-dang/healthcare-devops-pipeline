@@ -7,7 +7,7 @@
 resource "kubernetes_config_map" "alertmanager_config" {
   metadata {
     name      = "alertmanager-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "alertmanager" })
   }
 
@@ -182,7 +182,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
 resource "kubernetes_deployment" "alertmanager" {
   metadata {
     name      = "alertmanager"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "alertmanager" })
   }
 
@@ -296,7 +296,7 @@ resource "kubernetes_persistent_volume_claim" "alertmanager_storage" {
 
   metadata {
     name      = "alertmanager-storage"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "alertmanager" })
   }
 
@@ -320,7 +320,7 @@ resource "kubernetes_persistent_volume_claim" "alertmanager_storage" {
 resource "kubernetes_service" "alertmanager" {
   metadata {
     name      = "alertmanager"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "alertmanager" })
   }
 
@@ -341,7 +341,7 @@ resource "kubernetes_service" "alertmanager" {
 resource "kubernetes_secret" "mongodb_exporter_secret" {
   metadata {
     name      = "mongodb-exporter-secrets"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "mongodb-exporter" })
   }
 
@@ -360,7 +360,7 @@ resource "kubernetes_secret" "mongodb_exporter_secret" {
 resource "kubernetes_config_map" "mongodb_exporter_config" {
   metadata {
     name      = "mongodb-exporter-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "mongodb-exporter" })
   }
 
@@ -376,7 +376,7 @@ resource "kubernetes_config_map" "mongodb_exporter_config" {
 resource "kubernetes_deployment" "mongodb_exporter" {
   metadata {
     name      = "mongodb-exporter"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "mongodb-exporter" })
   }
 
@@ -465,7 +465,7 @@ resource "kubernetes_deployment" "mongodb_exporter" {
 resource "kubernetes_service" "mongodb_exporter" {
   metadata {
     name      = "mongodb-exporter"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "mongodb-exporter" })
   }
 
@@ -486,7 +486,7 @@ resource "kubernetes_service" "mongodb_exporter" {
 resource "kubernetes_config_map" "prometheus_config" {
   metadata {
     name      = "prometheus-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 
@@ -693,7 +693,7 @@ resource "kubernetes_config_map" "prometheus_config" {
 resource "kubernetes_config_map" "prometheus_rules" {
   metadata {
     name      = "prometheus-rules"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 
@@ -987,7 +987,7 @@ resource "kubernetes_config_map" "prometheus_rules" {
 resource "kubernetes_deployment" "prometheus" {
   metadata {
     name      = "prometheus"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 
@@ -1112,7 +1112,7 @@ resource "kubernetes_deployment" "prometheus" {
 resource "kubernetes_service_account" "prometheus" {
   metadata {
     name      = "prometheus"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 }
@@ -1134,7 +1134,7 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
   subject {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.prometheus.metadata[0].name
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
   }
 }
 
@@ -1147,7 +1147,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
 
   metadata {
     name      = "prometheus-storage"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 
@@ -1171,7 +1171,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
 resource "kubernetes_service" "prometheus" {
   metadata {
     name      = "prometheus"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 
@@ -1192,7 +1192,7 @@ resource "kubernetes_service" "prometheus" {
 resource "kubernetes_config_map" "grafana_config" {
   metadata {
     name      = "grafana-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "grafana" })
   }
 
@@ -1317,7 +1317,7 @@ resource "kubernetes_config_map" "grafana_config" {
 resource "kubernetes_deployment" "grafana" {
   metadata {
     name      = "grafana"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "grafana" })
   }
 
@@ -1469,7 +1469,7 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
 
   metadata {
     name      = "grafana-storage"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "grafana" })
   }
 
@@ -1493,7 +1493,7 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
 resource "kubernetes_service" "grafana" {
   metadata {
     name      = "grafana"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "grafana" })
   }
 
@@ -1514,7 +1514,7 @@ resource "kubernetes_service" "grafana" {
 resource "kubernetes_daemonset" "node_exporter" {
   metadata {
     name      = "node-exporter"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "node-exporter" })
   }
 
@@ -1588,7 +1588,7 @@ resource "kubernetes_daemonset" "node_exporter" {
 resource "kubernetes_cron_job_v1" "monitoring_backup" {
   metadata {
     name      = "monitoring-backup"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "monitoring", purpose = "backup" })
   }
 
@@ -1681,7 +1681,7 @@ resource "kubernetes_cron_job_v1" "monitoring_backup" {
 # Monitoring outputs
 output "monitoring_namespace" {
   description = "Monitoring namespace"
-  value       = kubernetes_namespace.monitoring[0].metadata[0].name
+  value       = kubernetes_namespace.monitoring.metadata[0].name
 }
 
 output "prometheus_service" {
@@ -1706,22 +1706,22 @@ output "mongodb_exporter_service" {
 
 output "prometheus_url" {
   description = "Prometheus URL for internal access"
-  value       = "http://${kubernetes_service.prometheus.metadata[0].name}.${kubernetes_namespace.monitoring[0].metadata[0].name}.svc.cluster.local:9090"
+  value       = "http://${kubernetes_service.prometheus.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9090"
 }
 
 output "grafana_url" {
   description = "Grafana URL for internal access"
-  value       = "http://${kubernetes_service.grafana.metadata[0].name}.${kubernetes_namespace.monitoring[0].metadata[0].name}.svc.cluster.local:3000"
+  value       = "http://${kubernetes_service.grafana.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:3000"
 }
 
 output "alertmanager_url" {
   description = "Alertmanager URL for internal access"
-  value       = "http://${kubernetes_service.alertmanager.metadata[0].name}.${kubernetes_namespace.monitoring[0].metadata[0].name}.svc.cluster.local:9093"
+  value       = "http://${kubernetes_service.alertmanager.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9093"
 }
 
 output "mongodb_exporter_url" {
   description = "MongoDB Exporter URL for internal access"
-  value       = "http://${kubernetes_service.mongodb_exporter.metadata[0].name}.${kubernetes_namespace.monitoring[0].metadata[0].name}.svc.cluster.local:9216"
+  value       = "http://${kubernetes_service.mongodb_exporter.metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9216"
 }
 
 output "monitoring_backup_cronjob" {
@@ -1739,7 +1739,7 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
 
   metadata {
     name      = "nginx-ingress-controller"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "ingress-controller" })
   }
 
@@ -1850,7 +1850,7 @@ resource "kubernetes_service_account" "ingress_controller" {
 
   metadata {
     name      = "nginx-ingress-serviceaccount"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "ingress-controller" })
   }
 }
@@ -1937,7 +1937,7 @@ resource "kubernetes_cluster_role_binding" "ingress_controller" {
   subject {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.ingress_controller[0].metadata[0].name
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
   }
 }
 
@@ -1947,7 +1947,7 @@ resource "kubernetes_service" "nginx_ingress_controller" {
 
   metadata {
     name      = "ingress-nginx-controller"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "ingress-controller" })
   }
 
@@ -1978,7 +1978,7 @@ resource "kubernetes_config_map" "nginx_configuration" {
 
   metadata {
     name      = "nginx-configuration"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "ingress-controller" })
   }
 
@@ -1999,7 +1999,7 @@ resource "kubernetes_config_map" "fluent_bit_config" {
 
   metadata {
     name      = "fluent-bit-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "fluent-bit" })
   }
 
@@ -2101,7 +2101,7 @@ resource "kubernetes_daemonset" "fluent_bit" {
 
   metadata {
     name      = "fluent-bit"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "fluent-bit" })
   }
 
@@ -2232,7 +2232,7 @@ resource "kubernetes_service_account" "fluent_bit" {
 
   metadata {
     name      = "fluent-bit"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "fluent-bit" })
   }
 }
@@ -2271,7 +2271,7 @@ resource "kubernetes_cluster_role_binding" "fluent_bit" {
   subject {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.fluent_bit[0].metadata[0].name
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
   }
 }
 
@@ -2285,7 +2285,7 @@ resource "kubernetes_config_map" "synthetic_monitoring_config" {
 
   metadata {
     name      = "synthetic-monitoring-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "synthetic-monitoring" })
   }
 
@@ -2354,7 +2354,7 @@ resource "kubernetes_deployment" "synthetic_monitoring" {
 
   metadata {
     name      = "synthetic-monitoring"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "synthetic-monitoring" })
   }
 
@@ -2489,7 +2489,7 @@ resource "kubernetes_service" "synthetic_monitoring" {
 
   metadata {
     name      = "synthetic-monitoring"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "synthetic-monitoring" })
   }
 
@@ -2516,7 +2516,7 @@ resource "kubernetes_service_account" "jaeger_operator" {
 
   metadata {
     name      = "jaeger-operator"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "jaeger" })
   }
 }
@@ -2693,7 +2693,7 @@ resource "kubernetes_cluster_role_binding" "jaeger_operator" {
   subject {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.jaeger_operator[0].metadata[0].name
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
   }
 }
 
@@ -2703,7 +2703,7 @@ resource "kubernetes_config_map" "jaeger_config" {
 
   metadata {
     name      = "jaeger-config"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "jaeger" })
   }
 
@@ -2739,7 +2739,7 @@ resource "kubernetes_deployment" "jaeger" {
 
   metadata {
     name      = "jaeger"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "jaeger" })
   }
 
@@ -2825,7 +2825,7 @@ resource "kubernetes_service" "jaeger" {
 
   metadata {
     name      = "jaeger"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "jaeger" })
   }
 
@@ -2865,7 +2865,7 @@ resource "kubernetes_service" "jaeger" {
 resource "kubernetes_config_map" "enhanced_prometheus_rules" {
   metadata {
     name      = "enhanced-prometheus-rules"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "prometheus" })
   }
 
@@ -2965,7 +2965,7 @@ resource "kubernetes_config_map" "enhanced_prometheus_rules" {
 resource "kubernetes_config_map" "enhanced_grafana_dashboards" {
   metadata {
     name      = "enhanced-grafana-dashboards"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels    = merge(local.common_labels, { component = "grafana" })
   }
 
