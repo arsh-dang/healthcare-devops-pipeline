@@ -10,7 +10,6 @@ yarn.lock
 build/
 dist/
 coverage/
-frontend.tar
 
 # Environment files
 .env
@@ -28,6 +27,17 @@ terraform/terraform.tfstate.d/
 terraform/.terraform.tfstate.lock.info
 *.tfstate
 *.tfstate.backup
+
+# Terraform backup and diagnostic files
+terraform/config_addresses*.txt
+terraform/diag*.json
+terraform/integration_resources.tf
+terraform/*.tf.bak
+terraform/monitoring.tf.backup
+terraform/monitoring.tf.full_backup
+terraform/planned_addresses*.txt
+terraform/terraform.tfstate.*.backup
+terraform/validate.json
 
 # IDE
 .vscode/
@@ -48,19 +58,16 @@ lint-results.json
 *.json.bak
 
 # Generated reports
-reports/
-security-reports/
 chaos-reports/
 compliance-reports/
+reports/
+security-reports/
 
 # Temporary development scripts
 fix-*.js
 temp-*.js
 cleanup-*.js
-deploy-*.sh
-setup-*.sh
-validate-*.sh
-terragrunt-*.sh
-jenkins-*.groovy
-test-*.js
-test-*.sh
+scripts/validate-healthcare.sh
+
+# Misplaced files
+terraform/test-integration.js
