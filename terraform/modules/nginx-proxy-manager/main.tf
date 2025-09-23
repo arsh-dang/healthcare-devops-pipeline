@@ -248,7 +248,7 @@ resource "kubernetes_service" "frontend_external" {
 
     port {
       port        = 80
-      target_port = 30285
+      target_port = 3001
       protocol    = "TCP"
       node_port   = 32710
     }
@@ -265,7 +265,7 @@ resource "kubernetes_service" "backend_external" {
   }
 
   spec {
-    selector = var.backend_labels  # Backend runs in MongoDB pod
+    selector = var.backend_labels
 
     port {
       port        = 5001
@@ -296,7 +296,7 @@ resource "kubernetes_service" "grafana_external" {
       port        = 3000
       target_port = 3000
       protocol    = "TCP"
-      node_port   = 32712
+      node_port   = 32679
     }
 
     type = "NodePort"
@@ -321,7 +321,7 @@ resource "kubernetes_service" "prometheus_external" {
       port        = 9090
       target_port = 9090
       protocol    = "TCP"
-      node_port   = 32713
+      node_port   = 32680
     }
 
     type = "NodePort"
@@ -346,7 +346,7 @@ resource "kubernetes_service" "alertmanager_external" {
       port        = 9093
       target_port = 9093
       protocol    = "TCP"
-      node_port   = 32714
+      node_port   = 32681
     }
 
     type = "NodePort"
@@ -371,7 +371,7 @@ resource "kubernetes_service" "jaeger_external" {
       port        = 16686
       target_port = 16686
       protocol    = "TCP"
-      node_port   = 32715
+      node_port   = 32682
     }
 
     type = "NodePort"

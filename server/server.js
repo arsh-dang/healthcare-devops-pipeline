@@ -151,9 +151,9 @@ if (MONGODB_USERNAME && MONGODB_PASSWORD) {
     `mongodb://${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}`;
 }
 
-console.log(`Connecting to MongoDB at: ${MONGODB_HOST}:${MONGODB_PORT}`); // eslint-disable-line no-console
-console.log(`Database: ${MONGODB_DATABASE}`); // eslint-disable-line no-console
-console.log(`Using authentication: ${!!MONGODB_USERNAME}`); // eslint-disable-line no-console
+console.log(`Connecting to MongoDB at: ${MONGODB_HOST}:${MONGODB_PORT}`);
+console.log(`Database: ${MONGODB_DATABASE}`);
+console.log(`Using authentication: ${!!MONGODB_USERNAME}`);
 
 mongoose
   .connect(MONGODB_URI)
