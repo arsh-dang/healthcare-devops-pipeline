@@ -4903,8 +4903,8 @@ EOF
                                             for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
-                                                    # Check frontend health endpoint directly from the frontend pod
-                                                    if kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:30285/health >/dev/null 2>&1; then
+                                                    # Check frontend health endpoint directly from the frontend pod using correct NodePort
+                                                    if kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:32710/health >/dev/null 2>&1; then
                                                         echo "Green environment frontend health check passed via pod $pod"
                                                         GREEN_HEALTH_STATUS="healthy"
                                                         break
@@ -4968,8 +4968,9 @@ EOF
                                     echo "Updating ingress for traffic switching..."
                                     
                                     # In production, you would update the ingress resource or service selector
-                                    # For demonstration, we'll simulate the traffic switch
-                                    kubectl patch ingress healthcare-app-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Traffic switch simulation completed"
+                                    # For demonstration, we'll simulate the traffic switch by updating service selectors
+                                    kubectl patch ingress frontend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Traffic switch simulation completed"
+                                    kubectl patch ingress backend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "backend"}]' || echo "Traffic switch simulation completed"
                                     
                                     echo "Traffic successfully switched to green environment"
                                     TRAFFIC_SWITCH_STATUS="success"
@@ -5030,8 +5031,8 @@ EOF
                                             for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
-                                                    # Check frontend health endpoint directly from the frontend pod
-                                                    kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:30285/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    # Check frontend health endpoint directly from the frontend pod using correct NodePort
+                                                    kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:32710/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 else
                                                     echo "Frontend pod $pod is not ready"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
@@ -5244,7 +5245,8 @@ EOF
                             
                             if command -v kubectl >/dev/null 2>&1; then
                                 # Switch traffic back to blue environment
-                                kubectl patch ingress healthcare-app-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Rollback traffic switch simulation completed"
+                                kubectl patch ingress frontend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Rollback traffic switch simulation completed"
+                                kubectl patch ingress backend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "backend"}]' || echo "Rollback traffic switch simulation completed"
                                 
                                 # Scale down green environment
                                 kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-production-green || echo "Green environment scaled down"
@@ -5528,7 +5530,7 @@ EOF
 - [PASS] Monitoring (Datadog integration, Dashboards, Alerting)
 
 ### Infrastructure Changes
-- Port standardization to 30285 across all services
+- Port standardization to 32710 (frontend) and 32711 (backend) across all services
 - Unified reverse proxy architecture with path-based routing
 - Kubernetes deployment with Terraform IaC
 - Docker containerization with multi-stage builds
@@ -5551,8 +5553,8 @@ EOF
 \$(docker images healthcare-app* --format "table {{.Repository}}\\t{{.Tag}}\\t{{.Size}}" 2>/dev/null || echo "Docker images information not available")
 
 ### Infrastructure
-- Frontend Service: Port 30285
-- Backend API: /api path
+- Frontend Service: Port 32710
+- Backend API: Port 32711
 - Monitoring: /staging/grafana, /staging/prometheus, /staging/alertmanager paths
 - Database: MongoDB with health checks
 
@@ -6322,7 +6324,7 @@ EOF
                                             \\"configVariables\\": [],
                                             \\"request\\": {
                                                 \\"method\\": \\"GET\\",
-                                                \\"url\\": \\"http://localhost:30285/api/health\\",
+                                                \\"url\\": \\"http://localhost:32711/api/health\\",
                                                 \\"timeout\\": 30
                                             }
                                         },
@@ -6351,7 +6353,7 @@ EOF
                                             ],
                                             \\"configVariables\\": [],
                                             \\"request\\": {
-                                                \\"url\\": \\"http://localhost:30285\\",
+                                                \\"url\\": \\"http://localhost:32710\\",
                                                 \\"timeout\\": 60
                                             },
                                             \\"steps\\": [
@@ -6359,7 +6361,7 @@ EOF
                                                     \\"name\\": \\"Navigate to login page\\",
                                                     \\"type\\": \\"goToUrl\\",
                                                     \\"params\\": {
-                                                        \\"url\\": \\"http://localhost:30285/login\\"
+                                                        \\"url\\": \\"http://localhost:32710/login\\"
                                                     }
                                                 },
                                                 {

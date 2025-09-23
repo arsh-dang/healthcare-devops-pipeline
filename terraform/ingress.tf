@@ -21,7 +21,6 @@ resource "kubernetes_ingress_v1" "frontend" {
     namespace = "${var.namespace}-${var.environment}"
     labels    = merge(local.common_labels, { component = "frontend" })
     annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
       "nginx.ingress.kubernetes.io/rewrite-target" = "/"
       "nginx.ingress.kubernetes.io/ssl-redirect"   = var.environment == "production" ? "true" : "false"
       "cert-manager.io/cluster-issuer"             = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
@@ -38,7 +37,7 @@ resource "kubernetes_ingress_v1" "frontend" {
     }
 
     rule {
-      host = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
+      host = var.environment == "production" ? "healthcare.company.com" : "localhost"
 
       http {
         dynamic "path" {
@@ -103,8 +102,7 @@ resource "kubernetes_ingress_v1" "backend" {
     namespace = "${var.namespace}-${var.environment}"
     labels    = merge(local.common_labels, { component = "backend" })
     annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/$2"
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/api/$2"
       "nginx.ingress.kubernetes.io/ssl-redirect"   = var.environment == "production" ? "true" : "false"
       "cert-manager.io/cluster-issuer"             = var.environment == "production" ? "letsencrypt-prod" : "letsencrypt-staging"
     }
@@ -120,7 +118,7 @@ resource "kubernetes_ingress_v1" "backend" {
     }
 
     rule {
-      host = var.environment == "production" ? "healthcare.company.com" : "healthcare.local"
+      host = var.environment == "production" ? "healthcare.company.com" : "localhost"
 
       http {
         dynamic "path" {
@@ -180,278 +178,278 @@ resource "kubernetes_ingress_v1" "backend" {
 }
 
 # Monitoring Ingress for Grafana and Prometheus access
-resource "kubernetes_ingress_v1" "monitoring" {
-  metadata {
-    name      = "monitoring-ingress"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
-    labels    = merge(local.common_labels, { component = "monitoring" })
-    annotations = {
-      "kubernetes.io/ingress.class"                = "nginx"
-      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-      "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
-      "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
-    }
-  }
+# resource "kubernetes_ingress_v1" "monitoring" {
+#   metadata {
+#     name      = "monitoring-ingress"
+#     namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+#     labels    = merge(local.common_labels, { component = "monitoring" })
+#     annotations = {
+#       "kubernetes.io/ingress.class"                = "nginx"
+#       "nginx.ingress.kubernetes.io/rewrite-target" = "/"
+#       "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
+#       "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
+#     }
+#   }
 
-  spec {
-    dynamic "tls" {
-      for_each = var.environment == "production" ? [1] : []
-      content {
-        hosts       = ["monitoring.company.com"]
-        secret_name = "monitoring-tls"
-      }
-    }
+#   spec {
+#     dynamic "tls" {
+#       for_each = var.environment == "production" ? [1] : []
+#       content {
+#         hosts       = ["monitoring.company.com"]
+#         secret_name = "monitoring-tls"
+#       }
+#     }
 
-    rule {
-      host = var.environment == "production" ? "monitoring.company.com" : "localhost"
+#     rule {
+#       host = var.environment == "production" ? "monitoring.company.com" : "localhost"
 
-      http {
-        dynamic "path" {
-          for_each = var.environment == "staging" ? [1] : []
-          content {
-            path      = "/staging/grafana"
-            path_type = "Prefix"
+#       http {
+#         dynamic "path" {
+#           for_each = var.environment == "staging" ? [1] : []
+#           content {
+#             path      = "/staging/grafana"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.grafana.metadata[0].name
-                port {
-                  number = 3000
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "grafana"
+#                 port {
+#                   number = 3000
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "production" ? [1] : []
-          content {
-            path      = "/grafana"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "production" ? [1] : []
+#           content {
+#             path      = "/grafana"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.grafana.metadata[0].name
-                port {
-                  number = 3000
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "grafana"
+#                 port {
+#                   number = 3000
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        # Default Grafana path for blue-green deployments
-        dynamic "path" {
-          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
-          content {
-            path      = "/grafana"
-            path_type = "Prefix"
+#         # Default Grafana path for blue-green deployments
+#         dynamic "path" {
+#           for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+#           content {
+#             path      = "/grafana"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.grafana.metadata[0].name
-                port {
-                  number = 3000
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "grafana"
+#                 port {
+#                   number = 3000
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "staging" ? [1] : []
-          content {
-            path      = "/staging/prometheus"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "staging" ? [1] : []
+#           content {
+#             path      = "/staging/prometheus"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.prometheus.metadata[0].name
-                port {
-                  number = 9090
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "prometheus"
+#                 port {
+#                   number = 9090
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "production" ? [1] : []
-          content {
-            path      = "/prometheus"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "production" ? [1] : []
+#           content {
+#             path      = "/prometheus"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.prometheus.metadata[0].name
-                port {
-                  number = 9090
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "prometheus"
+#                 port {
+#                   number = 9090
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        # Default Prometheus path for blue-green deployments
-        dynamic "path" {
-          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
-          content {
-            path      = "/prometheus"
-            path_type = "Prefix"
+#         # Default Prometheus path for blue-green deployments
+#         dynamic "path" {
+#           for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+#           content {
+#             path      = "/prometheus"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.prometheus.metadata[0].name
-                port {
-                  number = 9090
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "prometheus"
+#                 port {
+#                   number = 9090
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "staging" ? [1] : []
-          content {
-            path      = "/staging/alertmanager"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "staging" ? [1] : []
+#           content {
+#             path      = "/staging/alertmanager"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.alertmanager.metadata[0].name
-                port {
-                  number = 9093
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "alertmanager"
+#                 port {
+#                   number = 9093
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "production" ? [1] : []
-          content {
-            path      = "/alertmanager"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "production" ? [1] : []
+#           content {
+#             path      = "/alertmanager"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.alertmanager.metadata[0].name
-                port {
-                  number = 9093
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "alertmanager"
+#                 port {
+#                   number = 9093
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        # Default Alertmanager path for blue-green deployments
-        dynamic "path" {
-          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
-          content {
-            path      = "/alertmanager"
-            path_type = "Prefix"
+#         # Default Alertmanager path for blue-green deployments
+#         dynamic "path" {
+#           for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+#           content {
+#             path      = "/alertmanager"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.alertmanager.metadata[0].name
-                port {
-                  number = 9093
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "alertmanager"
+#                 port {
+#                   number = 9093
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "staging" ? [1] : []
-          content {
-            path      = "/staging/mongodb-exporter"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "staging" ? [1] : []
+#           content {
+#             path      = "/staging/mongodb-exporter"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.mongodb_exporter.metadata[0].name
-                port {
-                  number = 9216
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "mongodb-exporter"
+#                 port {
+#                   number = 9216
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.environment == "production" ? [1] : []
-          content {
-            path      = "/mongodb-exporter"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.environment == "production" ? [1] : []
+#           content {
+#             path      = "/mongodb-exporter"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.mongodb_exporter.metadata[0].name
-                port {
-                  number = 9216
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "mongodb-exporter"
+#                 port {
+#                   number = 9216
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        # Default MongoDB Exporter path for blue-green deployments
-        dynamic "path" {
-          for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
-          content {
-            path      = "/mongodb-exporter"
-            path_type = "Prefix"
+#         # Default MongoDB Exporter path for blue-green deployments
+#         dynamic "path" {
+#           for_each = (var.environment != "staging" && var.environment != "production") ? [1] : []
+#           content {
+#             path      = "/mongodb-exporter"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.mongodb_exporter.metadata[0].name
-                port {
-                  number = 9216
-                }
-              }
-            }
-          }
-        }
+#             backend {
+#               service {
+#                 name = "mongodb-exporter"
+#                 port {
+#                   number = 9216
+#                 }
+#               }
+#             }
+#           }
+#         }
 
-        dynamic "path" {
-          for_each = var.enable_distributed_tracing ? [1] : []
-          content {
-            path      = "/jaeger"
-            path_type = "Prefix"
+#         dynamic "path" {
+#           for_each = var.enable_distributed_tracing ? [1] : []
+#           content {
+#             path      = "/jaeger"
+#             path_type = "Prefix"
 
-            backend {
-              service {
-                name = kubernetes_service.jaeger[0].metadata[0].name
-                port {
-                  number = 16686
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
+#             backend {
+#               service {
+#                 name = kubernetes_service.jaeger[0].metadata[0].name
+#                 port {
+#                   number = 16686
+#                 }
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#   }
+# }
 
 # Basic auth secret for production monitoring
-resource "kubernetes_secret" "monitoring_auth" {
-  count = var.environment == "production" ? 1 : 0
+# resource "kubernetes_secret" "monitoring_auth" {
+#   count = var.environment == "production" ? 1 : 0
 
-  metadata {
-    name      = "monitoring-auth"
-    namespace = kubernetes_namespace.monitoring[0].metadata[0].name
-    labels    = merge(local.common_labels, { component = "monitoring" })
-  }
+#   metadata {
+#     name      = "monitoring-auth"
+#     namespace = kubernetes_namespace.monitoring[0].metadata[0].name
+#     labels    = merge(local.common_labels, { component = "monitoring" })
+#   }
 
-  type = "Opaque"
+#   type = "Opaque"
 
-  data = {
-    # Generated with: htpasswd -nb admin monitoring123
-    auth = base64encode("admin:$2y$10$2Xw5Z1nPQmGVq5X1qEZKH.QwJUGVn8rJdKlh9z1z6c8X1h1QwqGVe")
-  }
-}
+#   data = {
+#     # Generated with: htpasswd -nb admin monitoring123
+#     auth = base64encode("admin:$2y$10$2Xw5Z1nPQmGVq5X1qEZKH.QwJUGVn8rJdKlh9z1z6c8X1h1QwqGVe")
+#   }
+# }
 
 # Outputs for ingress
 output "frontend_ingress_host" {

@@ -1106,7 +1106,7 @@ resource "kubernetes_service" "mongodb" {
   }
 
   spec {
-    selector = local.mongodb_labels
+    selector = local.backend_labels
 
     port {
       port        = 27017
@@ -1313,7 +1313,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.mongodb_labels # Backend runs as sidecar in MongoDB pod
+    selector = local.backend_labels # Backend runs as sidecar in MongoDB pod
 
     port {
       port        = 5001
@@ -2194,7 +2194,7 @@ resource "kubernetes_cron_job_v1" "mongodb_backup" {
                 
                 # Perform MongoDB backup
                 mongodump \
-                  --host mongodb \
+                  --host ${var.environment == "production" ? "mongodb" : "mongodb-staging"} \
                   --username admin \
                   --password $MONGO_PASSWORD \
                   --authenticationDatabase admin \
