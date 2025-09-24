@@ -49,6 +49,12 @@ variable "enable_nginx_proxy_manager" {
   default     = true
 }
 
+variable "enable_monitoring_external_services" {
+  description = "Enable external NodePort services for monitoring components"
+  type        = bool
+  default     = false
+}
+
 # Local values for this module
 locals {
   mongodb_labels = merge(var.common_labels, { component = "mongodb" })
@@ -284,6 +290,8 @@ resource "kubernetes_service" "backend_external" {
 }
 
 resource "kubernetes_service" "grafana_external" {
+  count = var.enable_monitoring_external_services ? 1 : 0
+
   metadata {
     name      = "grafana-external"
     namespace = var.monitoring_namespace
@@ -307,6 +315,8 @@ resource "kubernetes_service" "grafana_external" {
 }
 
 resource "kubernetes_service" "prometheus_external" {
+  count = var.enable_monitoring_external_services ? 1 : 0
+
   metadata {
     name      = "prometheus-external"
     namespace = var.monitoring_namespace
@@ -330,6 +340,8 @@ resource "kubernetes_service" "prometheus_external" {
 }
 
 resource "kubernetes_service" "alertmanager_external" {
+  count = var.enable_monitoring_external_services ? 1 : 0
+
   metadata {
     name      = "alertmanager-external"
     namespace = var.monitoring_namespace
@@ -353,6 +365,8 @@ resource "kubernetes_service" "alertmanager_external" {
 }
 
 resource "kubernetes_service" "jaeger_external" {
+  count = var.enable_monitoring_external_services ? 1 : 0
+
   metadata {
     name      = "jaeger-external"
     namespace = var.monitoring_namespace

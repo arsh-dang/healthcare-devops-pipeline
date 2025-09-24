@@ -1690,6 +1690,7 @@ module "nginx_proxy_manager_monitoring" {
   frontend_labels     = {}  # Not used for monitoring
   backend_labels      = {}  # Not used for monitoring
   enable_nginx_proxy_manager = false  # Only create external services
+  enable_monitoring_external_services = true  # Enable monitoring external services
   monitoring_namespace = kubernetes_namespace.monitoring.metadata[0].name
 }
 
