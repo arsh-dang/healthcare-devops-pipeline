@@ -1874,12 +1874,12 @@ Please review test results and fix any failing tests.""", 'danger')
                                                 },
                                                 {
                                                     \\"metric\\": \\"jenkins.quality.trufflehog.secrets_found\\",
-                                                    \\"points\\": [[$(date +%s), ${SECRETS_FOUND:-0}]],
+                                                    \\"points\\": [[$(date +%s), $SECRETS_FOUND]],
                                                     \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
                                                 },
                                                 {
                                                     \\"metric\\": \\"jenkins.quality.trufflehog.high_secrets\\",
-                                                    \\"points\\": [[$(date +%s), ${HIGH_SECRETS:-0}]],
+                                                    \\"points\\": [[$(date +%s), $HIGH_SECRETS]],
                                                     \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
                                                 }
                                             ]
