@@ -1757,38 +1757,41 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send SonarQube metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.sonarqube.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$SONARQUBE_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:sonarqube\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.sonarqube.bugs\\",
-                                                        \\"points\\": [[$(date +%s), ${SONARQUBE_BUGS:-0}]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:sonarqube\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.sonarqube.vulnerabilities\\",
-                                                        \\"points\\": [[$(date +%s), ${SONARQUBE_VULNERABILITIES:-0}]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:sonarqube\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.sonarqube.code_smells\\",
-                                                        \\"points\\": [[$(date +%s), ${SONARQUBE_CODE_SMELLS:-0}]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:sonarqube\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.sonarqube.coverage\\",
-                                                        \\"points\\": [[$(date +%s), ${SONARQUBE_COVERAGE:-0}]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:sonarqube\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        SONARQUBE_RESULT=$([ "$SONARQUBE_STATUS" = "success" ] && echo 1 || echo 0)
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [
+        {
+            "metric": "jenkins.quality.sonarqube.result",
+            "points": [[$(date +%s), $SONARQUBE_RESULT]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
+        },
+        {
+            "metric": "jenkins.quality.sonarqube.bugs",
+            "points": [[$(date +%s), ${SONARQUBE_BUGS:-0}]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
+        },
+        {
+            "metric": "jenkins.quality.sonarqube.vulnerabilities",
+            "points": [[$(date +%s), ${SONARQUBE_VULNERABILITIES:-0}]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
+        },
+        {
+            "metric": "jenkins.quality.sonarqube.code_smells",
+            "points": [[$(date +%s), ${SONARQUBE_CODE_SMELLS:-0}]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
+        },
+        {
+            "metric": "jenkins.quality.sonarqube.coverage",
+            "points": [[$(date +%s), ${SONARQUBE_COVERAGE:-0}]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
+        }
+    ]
+}
+EOF
                                     fi
                                     
                                     echo "SonarQube analysis completed"
