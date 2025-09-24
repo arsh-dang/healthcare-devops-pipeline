@@ -38,6 +38,11 @@ variable "backend_labels" {
   type        = map(string)
 }
 
+variable "monitoring_namespace" {
+  description = "Kubernetes namespace for monitoring stack"
+  type        = string
+}
+
 variable "enable_nginx_proxy_manager" {
   description = "Enable Nginx Proxy Manager deployment"
   type        = bool
@@ -248,7 +253,7 @@ resource "kubernetes_service" "frontend_external" {
 
     port {
       port        = 80
-      target_port = 3001
+      target_port = 80
       protocol    = "TCP"
       node_port   = 32710
     }
@@ -281,16 +286,14 @@ resource "kubernetes_service" "backend_external" {
 resource "kubernetes_service" "grafana_external" {
   metadata {
     name      = "grafana-external"
-    namespace = var.namespace
+    namespace = var.monitoring_namespace
     labels = {
       app = "grafana"
     }
   }
 
   spec {
-    selector = {
-      app = "grafana"
-    }
+    selector = merge(var.common_labels, { component = "grafana" })
 
     port {
       port        = 3000
@@ -306,22 +309,20 @@ resource "kubernetes_service" "grafana_external" {
 resource "kubernetes_service" "prometheus_external" {
   metadata {
     name      = "prometheus-external"
-    namespace = var.namespace
+    namespace = var.monitoring_namespace
     labels = {
       app = "prometheus"
     }
   }
 
   spec {
-    selector = {
-      app = "prometheus"
-    }
+    selector = merge(var.common_labels, { component = "prometheus" })
 
     port {
       port        = 9090
       target_port = 9090
       protocol    = "TCP"
-      node_port   = 32680
+      node_port   = 32683
     }
 
     type = "NodePort"
@@ -331,16 +332,14 @@ resource "kubernetes_service" "prometheus_external" {
 resource "kubernetes_service" "alertmanager_external" {
   metadata {
     name      = "alertmanager-external"
-    namespace = var.namespace
+    namespace = var.monitoring_namespace
     labels = {
       app = "alertmanager"
     }
   }
 
   spec {
-    selector = {
-      app = "alertmanager"
-    }
+    selector = merge(var.common_labels, { component = "alertmanager" })
 
     port {
       port        = 9093
@@ -356,16 +355,14 @@ resource "kubernetes_service" "alertmanager_external" {
 resource "kubernetes_service" "jaeger_external" {
   metadata {
     name      = "jaeger-external"
-    namespace = var.namespace
+    namespace = var.monitoring_namespace
     labels = {
       app = "jaeger"
     }
   }
 
   spec {
-    selector = {
-      app = "jaeger"
-    }
+    selector = merge(var.common_labels, { component = "jaeger" })
 
     port {
       port        = 16686
