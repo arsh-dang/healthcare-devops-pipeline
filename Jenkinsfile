@@ -9,8 +9,8 @@ properties([
         choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], description: 'Target environment'),
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
         booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
-        booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: false, description: 'Deploy to Kubernetes'),
         // Slack parameters (webhooks include channel info)
+        string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications (optional - will use credentials if empty)'),
         string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications (optional - will use credentials if empty)'),
         string(name: 'SLACK_WEBHOOK_URL_FAILURE', defaultValue: '', description: 'Slack webhook URL for failure notifications (optional - will use credentials if empty)'),
         // SMTP parameters
