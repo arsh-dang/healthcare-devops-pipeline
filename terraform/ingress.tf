@@ -1,19 +1,5 @@
-# Ingress Controller and Application Ingress with Terraform        dynamic "path" {
-          for_each = var.environment == "staging" ? [1] : []
-          content {
-            path      = "/"
-            path_type = "Prefix"
-
-            backend {
-              service {
-                name = kubernetes_service.frontend.metadata[0].name
-                port {
-                  number = 80
-                }
-              }
-            }
-          }
-        }ages ingress resources for external access
+# Ingress Controller and Application Ingress with Terraform
+# Manages ingress resources for external access
 
 # NGINX Ingress Controller (if not already installed)
 resource "kubernetes_namespace" "ingress_nginx" {

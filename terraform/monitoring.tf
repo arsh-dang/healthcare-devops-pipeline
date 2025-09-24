@@ -1,17 +1,6 @@
 # Monitoring Infrastructure with Terraform
 # This file manages Prometheus, Grafana, Alertmanager, MongoDB Exporter, and monitoring resources
 
-# Local values for this module
-locals {
-  common_labels = {
-    app         = "healthcare-app"
-    environment = var.environment
-    managed-by  = "terraform"
-  }
-
-  monitoring_labels = merge(local.common_labels, { component = "monitoring" })
-}
-
 # Monitoring namespace
 resource "kubernetes_namespace" "monitoring" {
   metadata {
@@ -27,10 +16,46 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-# Test output
-output "monitoring_namespace" {
-  description = "Monitoring namespace"
-  value       = kubernetes_namespace.monitoring.metadata[0].name
+# Alertmanager ConfigMap
+resource "kubernetes_config_map" "alertmanager_config" {
+  depends_on = [kubernetes_namespace.monitoring]
+
+  metadata {
+    name      = "alertmanager-config"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "alertmanager" })
+  }
+
+  data = {
+    "alertmanager.yml" = yamlencode({
+      global = {
+        smtp_smarthost = "smtp.gmail.com:587"
+        smtp_from      = "alerts@healthcare.company.com"
+        smtp_auth_username = "alerts@healthcare.company.com"
+        smtp_auth_password = "your-smtp-password"
+      }
+
+      route = {
+        group_by       = ["alertname"]
+        group_wait     = "10s"
+        group_interval = "10s"
+        repeat_interval = "1h"
+        receiver       = "email"
+      }
+
+      receivers = [
+        {
+          name = "email"
+          email_configs = [
+            {
+              to           = "platform-team@healthcare.company.com"
+              send_resolved = true
+            }
+          ]
+        }
+      ]
+    })
+  }
 }
 
 # Alertmanager Deployment
@@ -148,7 +173,7 @@ resource "kubernetes_deployment" "alertmanager" {
 resource "kubernetes_persistent_volume_claim" "alertmanager_storage" {
   count = var.enable_persistent_storage ? 1 : 0
 
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   # Don't wait for binding since local-path uses WaitForFirstConsumer mode
   wait_until_bound = false
@@ -177,7 +202,7 @@ resource "kubernetes_persistent_volume_claim" "alertmanager_storage" {
 
 # Alertmanager Service
 resource "kubernetes_service" "alertmanager" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "alertmanager"
@@ -200,7 +225,7 @@ resource "kubernetes_service" "alertmanager" {
 
 # MongoDB Exporter Secret (copy from healthcare namespace)
 resource "kubernetes_secret" "mongodb_exporter_secret" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "mongodb-exporter-secrets"
@@ -221,7 +246,7 @@ resource "kubernetes_secret" "mongodb_exporter_secret" {
 
 
 resource "kubernetes_config_map" "mongodb_exporter_config" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "mongodb-exporter-config"
@@ -239,7 +264,7 @@ resource "kubernetes_config_map" "mongodb_exporter_config" {
 
 # MongoDB Exporter Deployment
 resource "kubernetes_deployment" "mongodb_exporter" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "mongodb-exporter"
@@ -330,7 +355,7 @@ resource "kubernetes_deployment" "mongodb_exporter" {
 
 # MongoDB Exporter Service
 resource "kubernetes_service" "mongodb_exporter" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "mongodb-exporter"
@@ -353,7 +378,7 @@ resource "kubernetes_service" "mongodb_exporter" {
 
 # Prometheus ConfigMap
 resource "kubernetes_config_map" "prometheus_config" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "prometheus-config"
@@ -562,7 +587,7 @@ resource "kubernetes_config_map" "prometheus_config" {
 
 # Prometheus Rules ConfigMap
 resource "kubernetes_config_map" "prometheus_rules" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "prometheus-rules"
@@ -858,7 +883,7 @@ resource "kubernetes_config_map" "prometheus_rules" {
 
 # Prometheus Deployment
 resource "kubernetes_deployment" "prometheus" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "prometheus"
@@ -985,7 +1010,7 @@ resource "kubernetes_deployment" "prometheus" {
 
 # Prometheus Service Account
 resource "kubernetes_service_account" "prometheus" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "prometheus"
@@ -1046,7 +1071,7 @@ resource "kubernetes_cluster_role_binding" "prometheus" {
 resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   count = var.enable_persistent_storage ? 1 : 0
 
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   # Don't wait for binding since local-path uses WaitForFirstConsumer mode
   wait_until_bound = false
@@ -1075,7 +1100,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
 
 # Prometheus Service
 resource "kubernetes_service" "prometheus" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "prometheus"
@@ -1098,7 +1123,7 @@ resource "kubernetes_service" "prometheus" {
 
 # Grafana ConfigMap
 resource "kubernetes_config_map" "grafana_config" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "grafana-config"
@@ -1225,7 +1250,7 @@ resource "kubernetes_config_map" "grafana_config" {
 
 # Grafana Deployment
 resource "kubernetes_deployment" "grafana" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "grafana"
@@ -1376,7 +1401,7 @@ resource "kubernetes_deployment" "grafana" {
 resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   count = var.enable_persistent_storage ? 1 : 0
 
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   # Don't wait for binding since local-path uses WaitForFirstConsumer mode
   wait_until_bound = false
@@ -1405,7 +1430,7 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
 
 # Grafana Service
 resource "kubernetes_service" "grafana" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "grafana"
@@ -1428,7 +1453,7 @@ resource "kubernetes_service" "grafana" {
 
 # Node Exporter DaemonSet for node metrics
 resource "kubernetes_daemonset" "node_exporter" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "node-exporter"
@@ -1504,7 +1529,7 @@ resource "kubernetes_daemonset" "node_exporter" {
 
 # Monitoring Backup CronJob
 resource "kubernetes_cron_job_v1" "monitoring_backup" {
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "monitoring-backup"
@@ -1672,7 +1697,7 @@ module "nginx_proxy_manager_monitoring" {
 resource "kubernetes_deployment" "nginx_ingress_controller" {
   count = var.enable_ingress_monitoring ? 1 : 0
 
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "nginx-ingress-controller"
@@ -1785,7 +1810,7 @@ resource "kubernetes_deployment" "nginx_ingress_controller" {
 resource "kubernetes_service_account" "ingress_controller" {
   count = var.enable_ingress_monitoring ? 1 : 0
 
-  depends_on = [kubernetes_namespace.monitoring[0]]
+  depends_on = [kubernetes_namespace.monitoring]
 
   metadata {
     name      = "nginx-ingress-serviceaccount"
