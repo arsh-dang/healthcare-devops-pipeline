@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Enhanced Documentation Generation Script
-# Generates comprehensive API documentation and project docs
+# Optimized Enhanced Documentation Generation Script
+# Generates comprehensive API documentation and project docs with performance optimizations
 
 set -e
 
@@ -12,6 +12,7 @@ OUTPUT_DIR="docs/generated"
 API_DOCS_DIR="$OUTPUT_DIR/api"
 ARCHITECTURE_DOCS_DIR="$OUTPUT_DIR/architecture"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+CACHE_DIR=".docs-cache"
 
 # Colors
 GREEN='\033[0;32m'
@@ -41,21 +42,67 @@ log_docs() {
     echo -e "${PURPLE}[DOCS]${NC} $1"
 }
 
-# Create output directories
-mkdir -p $API_DOCS_DIR $ARCHITECTURE_DOCS_DIR
+log_timing() {
+    local duration=$1
+    local task=$2
+    echo -e "${BLUE}[TIMING]${NC} $task completed in ${duration}s"
+}
 
-log_docs "Starting Enhanced Documentation Generation"
+# Measure execution time
+start_timer() {
+    START_TIME=$(date +%s.%3N)
+}
+
+end_timer() {
+    local task_name=$1
+    END_TIME=$(date +%s.%3N)
+    DURATION=$(echo "$END_TIME - $START_TIME" | bc)
+    log_timing "$DURATION" "$task_name"
+}
+
+# Create output directories
+mkdir -p $API_DOCS_DIR $ARCHITECTURE_DOCS_DIR $CACHE_DIR
+
+log_docs "Starting Optimized Documentation Generation"
 log_docs "=========================================="
 log_info "Project: $PROJECT_NAME"
 log_info "Version: $VERSION"
 log_info "Output Directory: $OUTPUT_DIR"
 
+# Check if files have changed since last generation
+should_regenerate() {
+    local cache_file="$CACHE_DIR/$1.timestamp"
+    local source_files="$2"
+
+    if [ ! -f "$cache_file" ]; then
+        return 0 # No cache, regenerate
+    fi
+
+    local last_gen=$(cat "$cache_file")
+    local newest_file=$(find $source_files -type f -newer "$cache_file" 2>/dev/null | head -1)
+
+    if [ -n "$newest_file" ]; then
+        return 0 # Files changed, regenerate
+    else
+        return 1 # Use cache
+    fi
+}
+
+# Update cache timestamp
+update_cache() {
+    local cache_type=$1
+    echo "$TIMESTAMP" > "$CACHE_DIR/$cache_type.timestamp"
+}
+
 # Generate API Documentation with OpenAPI/Swagger
 generate_api_docs() {
-    log_docs "Generating API Documentation..."
+    start_timer
 
-    # Create OpenAPI specification
-    cat > $API_DOCS_DIR/openapi-spec.yaml << 'EOF'
+    if should_regenerate "api" "scripts/generate-docs.sh package.json"; then
+        log_docs "Generating API Documentation..."
+
+        # Create OpenAPI specification
+        cat > $API_DOCS_DIR/openapi-spec.yaml << 'EOF'
 openapi: 3.0.3
 info:
   title: Healthcare Application API
@@ -630,14 +677,25 @@ components:
                       type: string
 EOF
 
-    log_success "OpenAPI specification generated"
+        log_success "OpenAPI specification generated"
+        update_cache "api"
+    else
+        log_info "API documentation is up to date (using cache)"
+    fi
+
+    end_timer "API Documentation Generation"
 }
 
 # Generate JSDoc documentation for backend
 generate_jsdoc() {
-    log_docs "Generating JSDoc documentation..."
+    start_timer
 
-    if command -v npx &> /dev/null; then
+    # Check if source files have changed
+    SOURCE_FILES="server/ src/"
+    if should_regenerate "jsdoc" "$SOURCE_FILES scripts/generate-docs.sh"; then
+        log_docs "Generating JSDoc documentation..."
+
+        if command -v npx &> /dev/null; then
         # Find actual JavaScript files to document
         log_info "Scanning for JavaScript files to document..."
 
@@ -737,14 +795,11 @@ EOF
         # Install JSDoc plugins if needed
         log_info "Checking for JSDoc template..."
         if ! npx jsdoc --help 2>/dev/null | grep -q "docdash"; then
-            log_info "Installing JSDoc template..."
-            if npm install --save-dev docdash --legacy-peer-deps --silent; then
-                log_success "JSDoc template installed"
-            else
-                log_warning "Could not install docdash template, using default"
-                # Remove template from config if installation failed
-                sed -i '' '/"template": "node_modules\/docdash",/d' jsdoc-config.json
-            fi
+            log_warning "docdash template not found - using default template"
+            TEMPLATE_CONFIG=""
+        else
+            log_info "Using docdash template"
+            TEMPLATE_CONFIG='"template": "node_modules/docdash",'
         fi
 
         # Generate JSDoc with improved error handling
@@ -764,6 +819,7 @@ EOF
 
         if [ $JSDOC_EXIT_CODE -eq 0 ]; then
             log_success "JSDoc documentation generated successfully"
+            update_cache "jsdoc"
         else
             log_warning "JSDoc generation completed with warnings/errors"
 
@@ -789,7 +845,7 @@ EOF
 </head>
 <body>
     <div class="header">
-        <h1>Healthcare DevOps Pipeline API</h1>
+        <h1>🏥 Healthcare DevOps Pipeline API</h1>
         <p>Backend API Documentation</p>
     </div>
 
@@ -810,6 +866,7 @@ EOF
 </html>
 EOF
                 log_info "Created fallback API documentation page"
+                update_cache "jsdoc"
             fi
         fi
 
@@ -819,6 +876,11 @@ EOF
     else
         log_warning "npx not available - skipping JSDoc generation"
     fi
+    else
+        log_info "JSDoc documentation is up to date (using cache)"
+    fi
+
+    end_timer "JSDoc Documentation Generation"
 }
 
 # Generate architecture documentation
@@ -1445,7 +1507,7 @@ generate_readme() {
 
 A comprehensive healthcare management system with enterprise-grade DevOps pipeline, implementing all 7 stages of CI/CD with advanced deployment strategies and monitoring.
 
-## Features
+## 🚀 Features
 
 ### Core Functionality
 - **Patient Management**: Complete patient lifecycle management
@@ -1472,7 +1534,7 @@ A comprehensive healthcare management system with enterprise-grade DevOps pipeli
 - **Backup & Recovery**: Automated disaster recovery
 - **Compliance**: HIPAA, SOC 2, GDPR compliance ready
 
-## Architecture
+## 🏗️ Architecture
 
 ### System Overview
 \`\`\`mermaid
@@ -1526,7 +1588,7 @@ graph TB
 - **SonarQube** for code quality
 - **OWASP ZAP** for security testing
 
-## Prerequisites
+## 📋 Prerequisites
 
 ### System Requirements
 - **Node.js**: 18.0.0 or higher
@@ -1551,7 +1613,7 @@ docker-compose up -d
 npm run dev
 \`\`\`
 
-## Deployment
+## 🚀 Deployment
 
 ### Quick Start
 \`\`\`bash
@@ -1580,7 +1642,7 @@ kubectl apply -f k8s/canary/
 kubectl get pods -l environment=canary
 \`\`\`
 
-## Monitoring
+## 📊 Monitoring
 
 ### Access Monitoring Interfaces
 
@@ -1608,7 +1670,7 @@ kubectl port-forward svc/jaeger 16686:16686
 - **Business Metrics**: User registrations, appointment bookings
 - **Security Events**: Failed authentication attempts, suspicious activities
 
-## Testing
+## 🧪 Testing
 
 ### Run Test Suite
 \`\`\`bash
@@ -1635,7 +1697,7 @@ npm run test:e2e
 - **Performance Tests**: Load testing with Artillery
 - **Security Tests**: Automated vulnerability scanning
 
-## Security
+## 🔒 Security
 
 ### Security Features
 - **Authentication**: JWT with refresh tokens
@@ -1654,7 +1716,7 @@ npm run test:e2e
 open security-reports/
 \`\`\`
 
-## API Documentation
+## 📚 API Documentation
 
 ### OpenAPI Specification
 The API is fully documented using OpenAPI 3.0 specification.
@@ -1688,7 +1750,7 @@ open docs/generated/api/index.html
 - \`PUT /api/appointments/:id\` - Update appointment
 - \`DELETE /api/appointments/:id\` - Delete appointment
 
-## Contributing
+## 🤝 Contributing
 
 ### Development Workflow
 1. **Fork** the repository
@@ -1709,7 +1771,7 @@ open docs/generated/api/index.html
 - E2E tests for user-facing features
 - 90%+ code coverage requirement
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -1739,7 +1801,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with love for healthcare professionals worldwide**
+**Built with ❤️ for healthcare professionals worldwide**
 EOF
 
     log_success "Comprehensive README generated"
