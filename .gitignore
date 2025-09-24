@@ -69,5 +69,14 @@ temp-*.js
 cleanup-*.js
 scripts/validate-healthcare.sh
 
+# Build artifacts
+healthcare-app-backend.tar
+*.tar
+*.tar.gz
+
+# Kubernetes manifests (using Terraform instead)
+terraform/*.yaml
+terraform/monitoring.tf.full
+
 # Misplaced files
 terraform/test-integration.js
