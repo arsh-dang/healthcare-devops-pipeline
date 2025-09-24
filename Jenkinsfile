@@ -1888,8 +1888,9 @@ Please review test results and fix any failing tests.""", 'danger')
                                 echo "TruffleHog secrets scan completed"
                             '''
                         }
-                        
-                        def qualityDuration = System.currentTimeMillis() - qualityStartTime
+                    )
+                    
+                    def qualityDuration = System.currentTimeMillis() - qualityStartTime
                         
                         // Send code quality completion metrics
                         sh """
