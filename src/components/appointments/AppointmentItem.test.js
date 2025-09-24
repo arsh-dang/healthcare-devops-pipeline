@@ -2,6 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AppointmentItem from './AppointmentItem';
+import { API_ENDPOINTS } from '../../utils/api';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -125,7 +126,7 @@ describe('AppointmentItem', () => {
     fireEvent.click(deleteButton);
     
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('http://localhost:30285/api/appointments/1', {
+      expect(fetch).toHaveBeenCalledWith(`${API_ENDPOINTS.appointments}/1`, {
         method: 'DELETE',
       });
     });

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AppointmentForm from "../components/appointments/AppointmentForm";
 import { useNavigate } from "react-router-dom";
-import { buildApiUrl } from "../utils/helpers";
+import { API_ENDPOINTS } from "../utils/api";
 
 function NewAppointmentPage() {
     const navigate = useNavigate();
@@ -12,8 +12,8 @@ function NewAppointmentPage() {
         setIsSubmitting(true);
         setError(null);
 
-        // Using centralized API URL through reverse proxy
-        fetch(buildApiUrl('appointments'), {
+                // Using environment-aware API endpoint
+        fetch(API_ENDPOINTS.appointments, {
             method: 'POST',
             body: JSON.stringify(appointmentData),
             headers: {

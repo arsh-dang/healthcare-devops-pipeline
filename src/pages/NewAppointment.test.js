@@ -3,6 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import NewAppointmentPage from './NewAppointment';
+import { API_ENDPOINTS } from '../utils/api';
 
 // Mock useNavigate hook
 const mockNavigate = jest.fn();
@@ -85,7 +86,7 @@ describe('NewAppointmentPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
 
-    expect(fetch).toHaveBeenCalledWith('http://localhost:30285/api/appointments', {
+    expect(fetch).toHaveBeenCalledWith(API_ENDPOINTS.appointments, {
       method: 'POST',
       body: JSON.stringify({
         patientName: 'John Doe',

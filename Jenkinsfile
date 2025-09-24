@@ -4044,7 +4044,7 @@ spec:
           service:
             name: frontend
             port:
-              number: 3001
+              number: 80
 EOF
 
                                     # Create backend ingress

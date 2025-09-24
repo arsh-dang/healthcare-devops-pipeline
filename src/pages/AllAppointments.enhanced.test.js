@@ -30,13 +30,13 @@ jest.mock('../components/appointments/AppointmentList', () => {
 });
 
 // Mock console.error to avoid error logs in tests
-const originalConsoleError = console.error; // eslint-disable-line no-console
+const originalConsoleError = console.error;
 beforeAll(() => {
-  console.error = jest.fn(); // eslint-disable-line no-console
+  console.error = jest.fn();
 });
 
 afterAll(() => {
-  console.error = originalConsoleError; // eslint-disable-line no-console
+  console.error = originalConsoleError;
 });
 
 const renderWithProviders = (component) => {
@@ -135,7 +135,7 @@ describe('AllAppointmentsPage', () => {
 
     expect(screen.getByText(`Error: ${errorMessage}`)).toBeInTheDocument();
     expect(screen.getByText('Try Again')).toBeInTheDocument();
-    expect(console.error).toHaveBeenCalledWith('Error fetching appointments:', expect.any(Error)); // eslint-disable-line no-console
+    expect(console.error).toHaveBeenCalledWith('Error fetching appointments:', expect.any(Error));
   });
 
   test('retry functionality works after error', async () => {

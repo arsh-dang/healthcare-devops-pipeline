@@ -2,6 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AppointmentItem from './AppointmentItem';
 import { SavedAppointmentsProvider } from '../../store/saved-appointments-context';
+import { API_ENDPOINTS } from '../../utils/api';
 
 // Mock Card component
 jest.mock('../ui/Card', () => {
@@ -179,7 +180,7 @@ describe('AppointmentItem Component', () => {
     fireEvent.click(deleteButton);
     
     expect(global.confirm).toHaveBeenCalled();
-    expect(fetch).toHaveBeenCalledWith('http://localhost:30285/api/appointments/apt-1', {
+    expect(fetch).toHaveBeenCalledWith(`${API_ENDPOINTS.appointments}/apt-1`, {
       method: 'DELETE'
     });
     
@@ -270,7 +271,7 @@ describe('AppointmentItem Component', () => {
     fireEvent.click(deleteButton);
     
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('http://localhost:30285/api/appointments/apt-1', {
+      expect(fetch).toHaveBeenCalledWith(`${API_ENDPOINTS.appointments}/apt-1`, {
         method: 'DELETE'
       });
     });

@@ -1,21 +1,25 @@
 # Use Node.js as base image
 FROM node:20-alpine AS build
 
+# Install pnpm globally using npm (simpler and more reliable)
+RUN npm install -g pnpm --registry=https://registry.npmjs.org/
+
 # Set working directory
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package.json ./
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using yarn with frozen lockfile for reproducible builds
-RUN yarn install --frozen-lockfile
+# Install dependencies using pnpm
+RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the code
 COPY public/ public/
 COPY src/ src/
 
 # Build the app for production
-RUN yarn build
+# Build the app for production
+RUN pnpm build
 
 # Production stage
 FROM nginx:1.25.3-alpine
@@ -39,4 +43,4 @@ RUN printf '%s\n' \
     chmod +x /docker-entrypoint.d/40-init-nginx-cache.sh
 
 # Expose port
-EXPOSE 30285
+EXPOSE 80

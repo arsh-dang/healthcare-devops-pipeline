@@ -3,11 +3,11 @@ const axios = require('axios');
 
 // Configuration
 const API_BASE_URL = process.env.API_BASE_URL || 'http://backend:5001';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://frontend:3001';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://frontend:80';
 
 // For Jenkins/CI environment, try host machine IP if localhost fails
 const CI_API_BASE_URL = process.env.CI_API_BASE_URL || 'http://backend.healthcare-staging.svc.cluster.local:5001';
-const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://frontend.healthcare-staging.svc.cluster.local:3001';
+const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://frontend.healthcare-staging.svc.cluster.local:80';
 
 // Test results
 let testResults = {

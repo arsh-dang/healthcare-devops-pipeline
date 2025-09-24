@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 import AppointmentList from "../components/appointments/AppointmentList";
-import { buildApiUrl } from "../utils/helpers";
+import { API_ENDPOINTS } from "../utils/api";
 
 function AllAppointmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -12,8 +12,8 @@ function AllAppointmentsPage() {
     setIsLoading(true);
     setError(null);
     
-    // Using centralized API URL through reverse proxy
-    fetch(buildApiUrl("appointments"))
+    // Using environment-aware API endpoint
+    fetch(API_ENDPOINTS.appointments)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
