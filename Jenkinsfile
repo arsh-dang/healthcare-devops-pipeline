@@ -1804,16 +1804,18 @@ EOF
                             sh '''
                                 # Send secrets scan start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.quality.trufflehog.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.trufflehog.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:trufflehog"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Scanning for exposed secrets with TruffleHog..."
