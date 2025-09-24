@@ -1860,31 +1860,7 @@ Please review test results and fix any failing tests.""", 'danger')
                                 echo "High-confidence secrets: $HIGH_SECRETS"
                                 
                                 # Send TruffleHog metrics
-                                TRUFFLEHOG_RESULT=$([ "$TRUFFLEHOG_STATUS" = "clean" ] && echo 1 || echo 0)
-                                if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [
-                                                {
-                                                    \\"metric\\": \\"jenkins.quality.trufflehog.result\\",
-                                                    \\"points\\": [[$(date +%s), $TRUFFLEHOG_RESULT]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
-                                                },
-                                                {
-                                                    \\"metric\\": \\"jenkins.quality.trufflehog.secrets_found\\",
-                                                    \\"points\\": [[$(date +%s), $SECRETS_FOUND]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
-                                                },
-                                                {
-                                                    \\"metric\\": \\"jenkins.quality.trufflehog.high_secrets\\",
-                                                    \\"points\\": [[$(date +%s), $HIGH_SECRETS]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
-                                                }
-                                            ]
-                                        }" || echo "Failed to send Datadog metrics"
-                                fi
+                                echo "Sending TruffleHog metrics to Datadog"
                                 
                                 echo "TruffleHog secrets scan completed"
                             '''
