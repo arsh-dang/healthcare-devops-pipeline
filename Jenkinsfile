@@ -6,7 +6,7 @@ properties([
     // Build parameters
     parameters([
         choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
-        choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], description: 'Target environment'),
+        choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], defaultValue: 'staging', description: 'Target environment'),
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
         booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
         // Slack parameters (webhooks include channel info)
@@ -885,6 +885,22 @@ node {
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
+                        // Send Slack notification for build failure
+                        sendSlackNotification("""🚨 Build Stage Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
+
+**Error Details:**
+${e.getMessage()}
+
+**Build Information:**
+• Build: #${BUILD_NUMBER}
+• Environment: ${params.ENVIRONMENT}
+• Build Type: ${params.BUILD_TYPE}
+• Duration: ${currentBuild.durationString}
+
+**Failed Stage:** Build
+**Impact:** Application cannot be deployed until build issues are resolved.
+
+Please check the Jenkins console output for complete build logs.""", 'danger')
                         throw e
                     }
                 }
@@ -1391,6 +1407,22 @@ node {
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
+                        // Send Slack notification for test failure
+                        sendSlackNotification("""🚨 Test Stage Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
+
+**Error Details:**
+${e.getMessage()}
+
+**Build Information:**
+• Build: #${BUILD_NUMBER}
+• Environment: ${params.ENVIRONMENT}
+• Build Type: ${params.BUILD_TYPE}
+• Duration: ${currentBuild.durationString}
+
+**Failed Stage:** Testing
+**Impact:** Quality issues detected. Application should not be deployed until tests pass.
+
+Please review test results and fix any failing tests.""", 'danger')
                         throw e
                     }
                 }
@@ -2232,6 +2264,22 @@ node {
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
+                        // Send Slack notification for security failure
+                        sendSlackNotification("""🚨 Security Stage Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
+
+**Error Details:**
+${e.getMessage()}
+
+**Build Information:**
+• Build: #${BUILD_NUMBER}
+• Environment: ${params.ENVIRONMENT}
+• Build Type: ${params.BUILD_TYPE}
+• Duration: ${currentBuild.durationString}
+
+**Failed Stage:** Security Scanning
+**Impact:** Security vulnerabilities detected. Application deployment blocked for security reasons.
+
+Please review security scan results and address any critical vulnerabilities.""", 'danger')
                         throw e
                     }
                 }
@@ -3725,6 +3773,12 @@ node {
                                     }" || echo "Failed to send Datadog event"
                             fi
                         '''
+                        // Send Slack notification for infrastructure failure
+                        sendSlackNotification(
+                            color: 'danger',
+                            message: "🚨 Infrastructure as Code Failed",
+                            details: "Healthcare App infrastructure deployment failed: ${e.getMessage()}\n\nBuild: #${BUILD_NUMBER}\nJob: ${JOB_NAME}\nEnvironment: ${ENVIRONMENT}\n\nImpact: Infrastructure provisioning failed - deployment cannot proceed\nAction Required: Check Terraform configuration and cloud provider status"
+                        )
                         throw e
                     }
                 }
