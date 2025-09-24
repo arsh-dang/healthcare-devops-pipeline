@@ -18,6 +18,14 @@ coverage/
 .env.test.local
 .env.production.local
 
+# SMTP test scripts (contain real credentials - DO NOT COMMIT)
+test-smtp.js
+quick-smtp-test.js
+smtp-final-test.js
+*-smtp-test.js
+smtp-*.js
+load-env.sh
+
 # Terraform
 terraform/.terraform/
 terraform/*.tfstate

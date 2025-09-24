@@ -17,7 +17,7 @@ properties([
         string(name: 'SMTP_USERNAME', defaultValue: '', description: 'SMTP username for email notifications (optional - will use credentials if empty)'),
         password(name: 'SMTP_PASSWORD', defaultValue: '', description: 'SMTP password for email notifications (optional - will use credentials if empty)'),
         string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)'),
-        booleanParam(name: 'SEND_EMAIL', defaultValue: false, description: 'Send email notifications')
+        booleanParam(name: 'SEND_EMAIL', defaultValue: true, description: 'Send email notifications')
     ]),
     pipelineTriggers([
         // Trigger on SCM changes (optional - uncomment to enable)
