@@ -6,8 +6,8 @@ environment           = "production"
 app_version           = "v1.2.3"
 
 # Docker images for production
-frontend_image = "localhost:5000/healthcare-app-frontend:v1.2.3"
-backend_image  = "localhost:5000/healthcare-app-backend:v1.2.3"
+frontend_image = "healthcare-app-frontend:v1.2.3"
+backend_image  = "healthcare-app-backend:v1.2.3"
 
 # Production scaling
 replica_count = {
