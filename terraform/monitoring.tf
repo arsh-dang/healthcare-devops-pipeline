@@ -1682,7 +1682,7 @@ module "nginx_proxy_manager_monitoring" {
 
   source = "./modules/nginx-proxy-manager"
 
-  namespace           = var.namespace
+  namespace           = kubernetes_namespace.healthcare.metadata[0].name
   environment         = var.environment
   app_version         = var.app_version
   common_labels       = local.common_labels

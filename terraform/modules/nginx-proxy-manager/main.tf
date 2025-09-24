@@ -299,7 +299,7 @@ resource "kubernetes_service" "grafana_external" {
       port        = 3000
       target_port = 3000
       protocol    = "TCP"
-      node_port   = 32679
+      node_port   = 32712
     }
 
     type = "NodePort"
@@ -322,7 +322,7 @@ resource "kubernetes_service" "prometheus_external" {
       port        = 9090
       target_port = 9090
       protocol    = "TCP"
-      node_port   = 32683
+      node_port   = 32713
     }
 
     type = "NodePort"
@@ -345,7 +345,7 @@ resource "kubernetes_service" "alertmanager_external" {
       port        = 9093
       target_port = 9093
       protocol    = "TCP"
-      node_port   = 32681
+      node_port   = 32714
     }
 
     type = "NodePort"
@@ -368,7 +368,7 @@ resource "kubernetes_service" "jaeger_external" {
       port        = 16686
       target_port = 16686
       protocol    = "TCP"
-      node_port   = 32682
+      node_port   = 32715
     }
 
     type = "NodePort"
