@@ -1860,6 +1860,7 @@ Please review test results and fix any failing tests.""", 'danger')
                                 echo "High-confidence secrets: $HIGH_SECRETS"
                                 
                                 # Send TruffleHog metrics
+                                TRUFFLEHOG_RESULT=$([ "$TRUFFLEHOG_STATUS" = "clean" ] && echo 1 || echo 0)
                                 if [ -n "$DATADOG_API_KEY" ]; then
                                     curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                         -H "Content-Type: application/json" \\
@@ -1868,7 +1869,7 @@ Please review test results and fix any failing tests.""", 'danger')
                                             \\"series\\": [
                                                 {
                                                     \\"metric\\": \\"jenkins.quality.trufflehog.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$TRUFFLEHOG_STATUS\\" = \\"clean\\" ] && echo 1 || echo 0)]],
+                                                    \\"points\\": [[$(date +%s), $TRUFFLEHOG_RESULT]],
                                                     \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:trufflehog\\"]
                                                 },
                                                 {
