@@ -1794,7 +1794,7 @@ Please review test results and fix any failing tests.""", 'danger')
                                     echo "SonarQube analysis completed"
                                 '''
                             }
-                        ),
+                        },
                         
                         'Secrets Scanning': {
                             echo 'Running TruffleHog secrets detection'
