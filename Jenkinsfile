@@ -1,39 +1,9 @@
 // Force Jenkins to reload pipeline - add this at the very top of Jenkinsfile
 def forcePipelineReload = true
 
-// Pipeline properties for automatic builds
-properties([
-    // Build parameters
-    parameters([
-        choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
-        choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], defaultValue: 'staging', description: 'Target environment'),
-        booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
-        booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
-        // Slack parameters (webhooks include channel info)
-        string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications (optional - will use credentials if empty)'),
-        string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications (optional - will use credentials if empty)'),
-        string(name: 'SLACK_WEBHOOK_URL_FAILURE', defaultValue: '', description: 'Slack webhook URL for failure notifications (optional - will use credentials if empty)'),
-        // SMTP parameters
-        string(name: 'SMTP_USERNAME', defaultValue: '', description: 'SMTP username for email notifications (optional - will use credentials if empty)'),
-        password(name: 'SMTP_PASSWORD', defaultValue: '', description: 'SMTP password for email notifications (optional - will use credentials if empty)'),
-        string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)'),
-        booleanParam(name: 'SEND_EMAIL', defaultValue: true, description: 'Send email notifications')
-    ]),
-    pipelineTriggers([
-        // Trigger on SCM changes (optional - uncomment to enable)
-        // scm('H/5 * * * *'),
-        // Trigger on timer (optional - uncomment to enable)
-        // cron('H 2 * * *')
-    ]),
-    // Disable concurrent builds to avoid conflicts
-    disableConcurrentBuilds(),
-    // Build history
-    buildDiscarder(logRotator(numToKeepStr: '10'))
-])
-
-// Notification functions
-def sendSlackNotification(String message, String color = 'good') {
-    script {
+node {
+    // Notification functions
+    def sendSlackNotification(String message, String color = 'good') {
         try {
             def webhookUrl = ''
 
@@ -83,10 +53,8 @@ def sendSlackNotification(String message, String color = 'good') {
             echo "Failed to send Slack notification: ${e.getMessage()}"
         }
     }
-}
 
-def sendEmailNotification(String subject, String body, String status = 'INFO') {
-    script {
+    def sendEmailNotification(String subject, String body, String status = 'INFO') {
         try {
             if (params.SEND_EMAIL && params.EMAIL_RECIPIENTS) {
                 def smtpUser = params.SMTP_USERNAME
@@ -119,9 +87,29 @@ def sendEmailNotification(String subject, String body, String status = 'INFO') {
             echo "Failed to send email notification: ${e.getMessage()}"
         }
     }
-}
+    // Pipeline properties for automatic builds
+    properties([
+        // Build parameters
+        parameters([
+            choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
+            choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], defaultValue: 'staging', description: 'Target environment'),
+            booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
+            booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
+            // Slack parameters (webhooks include channel info)
+            string(name: 'SLACK_WEBHOOK_URL_SUCCESS', defaultValue: '', description: 'Slack webhook URL for success notifications (optional - will use credentials if empty)'),
+            string(name: 'SLACK_WEBHOOK_URL_FAILURE', defaultValue: '', description: 'Slack webhook URL for failure notifications (optional - will use credentials if empty)'),
+            // SMTP parameters
+            string(name: 'SMTP_USERNAME', defaultValue: '', description: 'SMTP username for email notifications (optional - will use credentials if empty)'),
+            password(name: 'SMTP_PASSWORD', defaultValue: '', description: 'SMTP password for email notifications (optional - will use credentials if empty)'),
+            string(name: 'EMAIL_RECIPIENTS', defaultValue: '', description: 'Email recipients (comma-separated)'),
+            booleanParam(name: 'SEND_EMAIL', defaultValue: true, description: 'Send email notifications')
+        ]),
+        // Disable concurrent builds to avoid conflicts
+        disableConcurrentBuilds(),
+        // Build history
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    ])
 
-node {
     try {
         // Environment variables setup based on parameters
         env.DOCKER_REGISTRY = 'docker.io'
@@ -725,40 +713,52 @@ node {
                                             # Check if both builds failed
                                             if [ "$FRONTEND_FAILED" = "true" ] && [ "$BACKEND_FAILED" = "true" ]; then
                                                 # Both builds failed - send failure metric
-                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                    -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                    -d "{
-                                                        \\"series\\": [{
-                                                            \\"metric\\": \\"jenkins.build.docker.failure\\",
-                                                            \\"points\\": [[$(date +%s), 1]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\", \\"reason:missing_base_images\\"]
-                                                        }]
-                                                    }" || echo "Failed to send Datadog metric"
+                                                if [ -n "$DATADOG_API_KEY" ]; then
+                                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                        -H "Content-Type: application/json" \
+                                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.build.docker.failure",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "component:docker", "reason:missing_base_images"]
+    }]
+}
+EOF
+                                                fi
                                             elif [ "$FRONTEND_FAILED" = "true" ] || [ "$BACKEND_FAILED" = "true" ]; then
                                                 # Partial success - one build succeeded, one failed
-                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                    -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                    -d "{
-                                                        \\"series\\": [{
-                                                            \\"metric\\": \\"jenkins.build.docker.partial_success\\",
-                                                            \\"points\\": [[$(date +%s), 1]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\", \\"frontend_failed:$FRONTEND_FAILED\\", \\"backend_failed:$BACKEND_FAILED\\"]
-                                                        }]
-                                                    }" || echo "Failed to send Datadog metric"
+                                                if [ -n "$DATADOG_API_KEY" ]; then
+                                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                        -H "Content-Type: application/json" \
+                                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.build.docker.partial_success",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "component:docker", "frontend_failed:$FRONTEND_FAILED", "backend_failed:$BACKEND_FAILED"]
+    }]
+}
+EOF
+                                                fi
                                             else
                                                 # Full success - both builds succeeded
-                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                    -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                    -d "{
-                                                        \\"series\\": [{
-                                                            \\"metric\\": \\"jenkins.build.docker.success\\",
-                                                            \\"points\\": [[$(date +%s), 1]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\"]
-                                                        }]
-                                                    }" || echo "Failed to send Datadog metric"
+                                                if [ -n "$DATADOG_API_KEY" ]; then
+                                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                        -H "Content-Type: application/json" \
+                                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.build.docker.success",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "component:docker"]
+    }]
+}
+EOF
+                                                fi
                                             fi
                                         fi
                                     else
@@ -768,16 +768,18 @@ node {
                                         
                                         # Send build failure metric
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.build.docker.failure\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"component:docker\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [{
+        "metric": "jenkins.build.docker.failure",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "component:docker"]
+    }]
+}
+EOF
                                         fi
                                     fi
                                 '''
@@ -1149,16 +1151,18 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     
                                     # Send performance test success metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.performance.success\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:performance\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.test.performance.success",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "test_type:performance"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -1169,16 +1173,18 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     
                                     # Send accessibility test start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.accessibility.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:accessibility\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.test.accessibility.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "test_type:accessibility"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Running accessibility tests..."
@@ -1303,16 +1309,18 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     
                                     # Send contract test start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.contract.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:contract\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.test.contract.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "test_type:contract"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Running contract/API contract tests..."
@@ -1346,16 +1354,18 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     
                                     # Send contract test metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.test.contract.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$CONTRACT_TEST_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"test_type:contract\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.test.contract.result",
+        "points": [[$(date +%s), $([ "$CONTRACT_TEST_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "test_type:contract"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -1366,16 +1376,18 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                         // Send test duration and completion metrics
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.test.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${testDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.test.duration",
+        "points": [[\$(date +%s), ${testDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send test completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
@@ -1427,6 +1439,7 @@ Please review test results and fix any failing tests.""", 'danger')
                     }
                 }
             }
+            
             }
             
             stage('Code Quality') {
@@ -1444,16 +1457,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send ESLint start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.quality.eslint.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:eslint\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.eslint.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:eslint"]
+    }]
+}
+EOF
                                     fi
                                     
                                     if command -v npm >/dev/null 2>&1; then
@@ -1473,16 +1488,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                         
                                         # Send ESLint metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.quality.eslint.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$ESLINT_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:eslint\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [{
+        "metric": "jenkins.quality.eslint.result",
+        "points": [[$(date +%s), $([ "$ESLINT_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:eslint"]
+    }]
+}
+EOF
                                         fi
                                     else
                                         echo "npm not available - skipping ESLint for now"
@@ -1497,16 +1514,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send TypeScript start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.quality.typescript.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:typescript\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.typescript.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:typescript"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Running TypeScript type checking..."
@@ -1523,16 +1542,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                         
                                         # Send TypeScript metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.quality.typescript.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$TSC_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:typescript\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.typescript.result",
+        "points": [[$(date +%s), \$([ "$TSC_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:typescript"]
+    }]
+}
+EOF
                                         fi
                                     else
                                         echo "npx not available - skipping TypeScript checking for now"
@@ -1547,16 +1568,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send coverage start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.quality.coverage.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:coverage\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.coverage.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:coverage"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Analyzing code coverage..."
@@ -1581,16 +1604,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send coverage metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.quality.coverage.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$COVERAGE_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:coverage\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.coverage.result",
+        "points": [[$(date +%s), \$([ "$COVERAGE_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:coverage"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -1601,16 +1626,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send complexity start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.quality.complexity.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:complexity\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.complexity.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:complexity"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Analyzing code complexity..."
@@ -1624,23 +1651,25 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send complexity metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.complexity.files\\",
-                                                        \\"points\\": [[$(date +%s), $JS_FILES]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:complexity\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.quality.complexity.functions\\",
-                                                        \\"points\\": [[$(date +%s), $FUNCTIONS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:complexity\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [
+        {
+            "metric": "jenkins.quality.complexity.files",
+            "points": [[$(date +%s), $JS_FILES]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:complexity"]
+        },
+        {
+            "metric": "jenkins.quality.complexity.functions",
+            "points": [[$(date +%s), $FUNCTIONS]],
+            "tags": ["env:staging", "service:healthcare-app", "tool:complexity"]
+        }
+    ]
+}
+EOF
                                     fi
                                     
                                     echo "Code complexity analysis completed"
@@ -1653,16 +1682,18 @@ Please review test results and fix any failing tests.""", 'danger')
                                     
                                     # Send SonarQube start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.quality.sonarqube.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"tool:sonarqube\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.quality.sonarqube.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Running SonarQube code quality analysis..."
@@ -1797,7 +1828,7 @@ EOF
                                     echo "SonarQube analysis completed"
                                 '''
                             }
-                        },
+                        ),
                         
                         'Secrets Scanning': {
                             echo 'Running TruffleHog secrets detection'
@@ -1896,35 +1927,39 @@ EOF
                                 echo "TruffleHog secrets scan completed"
                             '''
                         }
-                    )
+                    
                     
                     def qualityDuration = System.currentTimeMillis() - qualityStartTime
                         
                         // Send code quality completion metrics
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.quality.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${qualityDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @-
+{
+  "series": [{
+    "metric": "jenkins.quality.duration",
+    "points": [[\$(date +%s), ${qualityDuration}]],
+    "tags": ["env:staging", "service:healthcare-app"]
+  }]
+}
+EOF
                                 
                                 # Send code quality completion event
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Code Quality Analysis Completed\\\",
-                                        \\\"text\\\": \\\"Healthcare App code quality analysis completed in ${qualityDuration}ms with ESLint, TypeScript, Coverage, Complexity, SonarQube, and TruffleHog analysis\\\",
-                                        \\\"priority\\\": \\\"normal\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:quality\\\", \\\"status:success\\\"],
-                                        \\\"alert_type\\\": \\\"success\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @-
+{
+  "title": "Code Quality Analysis Completed",
+  "text": "Healthcare App code quality analysis completed in ${qualityDuration}ms with ESLint, TypeScript, Coverage, Complexity, SonarQube, and TruffleHog analysis",
+  "priority": "normal",
+  "tags": ["env:staging", "service:healthcare-app", "stage:quality", "status:success"],
+  "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -1932,16 +1967,18 @@ EOF
                         // Send code quality failure event
                         sh '''
                             if [ -n "$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Code Quality Analysis Failed\\\",
-                                        \\\"text\\\": \\\"Healthcare App code quality analysis failed: ''' + "${e.getMessage()}" + '''\\\",
-                                        \\\"priority\\\": \\\"normal\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:quality\\\", \\\"status:failure\\\"],
-                                        \\\"alert_type\\\": \\\"error\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @-
+{
+    "title": "Code Quality Analysis Failed",
+    "text": "Healthcare App code quality analysis failed: ''' + "${e.getMessage()}" + '''",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:quality", "status:failure"],
+    "alert_type": "error"
+}
+EOF
                             fi
                         '''
                         throw e
@@ -1964,16 +2001,18 @@ EOF
                                 sh '''
                                     # Send security scan start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.security.dependency.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:dependency\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.security.dependency.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "scan_type:dependency"]
+  }]
+}
+EOF
                                     fi
                                     
                                     if command -v npm >/dev/null 2>&1; then
@@ -1992,23 +2031,25 @@ EOF
                                         
                                         # Send security metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.security.vulnerabilities.found\\",
-                                                            \\"points\\": [[$(date +%s), ${VULNERABILITIES:-0}]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:dependency\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.security.dependency.scan\\",
-                                                            \\"points\\": [[$(date +%s), \$([ \\"$SCAN_STATUS\\" = \\"completed\\" ] && echo 1 || echo 0)]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:dependency\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
+                                                -d @-
+{
+  "series": [
+    {
+      "metric": "jenkins.security.vulnerabilities.found",
+      "points": [[$(date +%s), ${VULNERABILITIES:-0}]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:dependency"]
+    },
+    {
+      "metric": "jenkins.security.dependency.scan",
+      "points": [[$(date +%s), \$([ \"\$SCAN_STATUS\" = \"completed\" ] && echo 1 || echo 0)]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:dependency"]
+    }
+  ]
+}
+EOF
                                         fi
                                         
                                         echo "Checking for known vulnerabilities..."
@@ -2024,16 +2065,18 @@ EOF
                                 sh '''
                                     # Send SAST start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.security.sast.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:sast\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.security.sast.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "scan_type:sast"]
+  }]
+}
+EOF
                                     fi
                                     
                                     echo "Running static security analysis..."
@@ -2051,33 +2094,35 @@ EOF
                                     
                                     # Send SAST metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.security.sast.issues\\",
-                                                        \\"points\\": [[$(date +%s), $SAST_ISSUES]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:sast\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.security.sast.critical\\",
-                                                        \\"points\\": [[$(date +%s), $SAST_CRITICAL]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:sast\\", \\"severity:critical\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.security.sast.high\\",
-                                                        \\"points\\": [[$(date +%s), $SAST_HIGH]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:sast\\", \\"severity:high\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.security.sast.medium\\",
-                                                        \\"points\\": [[$(date +%s), $SAST_MEDIUM]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:sast\\", \\"severity:medium\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                            -d @-
+{
+  "series": [
+    {
+      "metric": "jenkins.security.sast.issues",
+      "points": [[$(date +%s), \$SAST_ISSUES]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:sast"]
+    },
+    {
+      "metric": "jenkins.security.sast.critical",
+      "points": [[$(date +%s), \$SAST_CRITICAL]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:sast", "severity:critical"]
+    },
+    {
+      "metric": "jenkins.security.sast.high",
+      "points": [[$(date +%s), \$SAST_HIGH]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:sast", "severity:high"]
+    },
+    {
+      "metric": "jenkins.security.sast.medium",
+      "points": [[$(date +%s), \$SAST_MEDIUM]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:sast", "severity:medium"]
+    }
+  ]
+}
+EOF
                                     fi
                                     
                                     echo "SAST analysis completed"
@@ -2088,16 +2133,18 @@ EOF
                                 sh '''
                                     # Send container security start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.security.container.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:container\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.security.container.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
+  }]
+}
+EOF
                                     fi
                                     
                                     if command -v docker >/dev/null 2>&1; then
@@ -2134,23 +2181,25 @@ EOF
                                         
                                         # Send container security metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.security.container.vulnerabilities\\",
-                                                            \\"points\\": [[$(date +%s), ${TOTAL_VULN:-0}]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:container\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.security.container.scan\\",
-                                                            \\"points\\": [[$(date +%s), \$([ \\"$CONTAINER_SCAN_STATUS\\" = \\"completed\\" ] && echo 1 || echo 0)]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:container\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
+                                                -d @-
+{
+  "series": [
+    {
+      "metric": "jenkins.security.container.vulnerabilities",
+      "points": [[$(date +%s), \${TOTAL_VULN:-0}]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
+    },
+    {
+      "metric": "jenkins.security.container.scan",
+      "points": [[$(date +%s), \$([ \"\$CONTAINER_SCAN_STATUS\" = \"completed\" ] && echo 1 || echo 0)]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
+    }
+  ]
+}
+EOF
                                         fi
                                     else
                                         echo "Docker not available - skipping container security scan for now"
@@ -2158,16 +2207,18 @@ EOF
                                         
                                         # Send container scan failure metric
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.security.container.failure\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:container\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                                -d @-
+{
+  "series": [{
+    "metric": "jenkins.security.container.failure",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
+  }]
+}
+EOF
                                         fi
                                     fi
                                     echo "Container security scan completed"
@@ -2178,16 +2229,18 @@ EOF
                                 sh '''
                                     # Send secrets scan start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.security.secrets.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:secrets\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.security.secrets.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "scan_type:secrets"]
+  }]
+}
+EOF
                                     fi
                                     
                                     echo "Scanning for exposed secrets in code..."
@@ -2203,23 +2256,25 @@ EOF
                                     
                                     # Send secrets scan metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.security.secrets.found\\",
-                                                        \\"points\\": [[$(date +%s), $SECRETS_FOUND]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:secrets\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.security.secrets.scan\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"scan_type:secrets\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                            -d @-
+{
+  "series": [
+    {
+      "metric": "jenkins.security.secrets.found",
+      "points": [[$(date +%s), \$SECRETS_FOUND]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:secrets"]
+    },
+    {
+      "metric": "jenkins.security.secrets.scan",
+      "points": [[$(date +%s), 1]],
+      "tags": ["env:staging", "service:healthcare-app", "scan_type:secrets"]
+    }
+  ]
+}
+EOF
                                     fi
                                     
                                     echo "Secrets scan completed"
@@ -2232,28 +2287,32 @@ EOF
                         // Send security scan completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.security.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${securityDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @-
+{
+  "series": [{
+    "metric": "jenkins.security.duration",
+    "points": [[\$(date +%s), ${securityDuration}]],
+    "tags": ["env:staging", "service:healthcare-app"]
+  }]
+}
+EOF
                                 
                                 # Send security completion event
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Security Stage Completed\\\",
-                                        \\\"text\\\": \\\"Healthcare App security scans completed in ${securityDuration}ms\\\",
-                                        \\\"priority\\\": \\\"normal\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:security\\\", \\\"status:success\\\"],
-                                        \\\"alert_type\\\": \\\"success\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @-
+{
+  "title": "Security Stage Completed",
+  "text": "Healthcare App security scans completed in ${securityDuration}ms",
+  "priority": "normal",
+  "tags": ["env:staging", "service:healthcare-app", "stage:security", "status:success"],
+  "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -2261,16 +2320,18 @@ EOF
                         // Send security failure event
                         sh '''
                             if [ -n "$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Security Stage Failed\\\",
-                                        \\\"text\\\": \\\"Healthcare App security scans failed: ''' + "${e.getMessage()}" + '''\\\",
-                                        \\\"priority\\\": \\\"high\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:security\\\", \\\"status:failure\\\"],
-                                        \\\"alert_type\\\": \\\"error\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @-
+{
+    "title": "Security Stage Failed",
+    "text": "Healthcare App security scans failed: ''' + "${e.getMessage()}" + '''",
+    "priority": "high",
+    "tags": ["env:staging", "service:healthcare-app", "stage:security", "status:failure"],
+    "alert_type": "error"
+}
+EOF
                             fi
                         '''
                         // Send Slack notification for security failure
@@ -2294,6 +2355,8 @@ Please review security scan results and address any critical vulnerabilities."""
                 }
             }
             
+            }
+            
             stage('Load Testing') {
                 echo 'Running comprehensive load testing with Artillery...'
                 
@@ -2304,16 +2367,18 @@ Please review security scan results and address any critical vulnerabilities."""
                         // Send load testing start event
                         sh '''
                             if [ -n "$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Load Testing Started\\\",
-                                        \\\"text\\\": \\\"Healthcare App load testing started with Artillery for performance validation\\\",
-                                        \\\"priority\\\": \\\"normal\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:loadtest\\\", \\\"testing:performance\\\"],
-                                        \\\"alert_type\\\": \\\"info\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @-
+{
+  "title": "Load Testing Started",
+  "text": "Healthcare App load testing started with Artillery for performance validation",
+  "priority": "normal",
+  "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "testing:performance"],
+  "alert_type": "info"
+}
+EOF
                             fi
                         '''
                         
@@ -2325,16 +2390,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send load test execution start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.loadtest.execution.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:execution\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.loadtest.execution.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:execution"]
+  }]
+}
+EOF
                                     fi
                                     
                                     echo "Executing load tests..."
@@ -2371,16 +2438,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send load test execution metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.loadtest.execution.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$LOAD_TEST_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:execution\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.loadtest.execution.result",
+    "points": [[$(date +%s), \$([ \"\$LOAD_TEST_STATUS\" = \"success\" ] && echo 1 || echo 0)]],
+    "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:execution"]
+  }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -2391,16 +2460,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send performance analysis start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.loadtest.analysis.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:analysis\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.loadtest.analysis.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
+  }]
+}
+EOF
                                     fi
                                     
                                     echo "Analyzing load test performance..."
@@ -2426,33 +2497,35 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send performance analysis metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.analysis.response_time\\",
-                                                        \\"points\\": [[$(date +%s), $RESPONSE_TIME_AVG]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:analysis\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.analysis.error_rate\\",
-                                                        \\"points\\": [[$(date +%s), $ERROR_RATE]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:analysis\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.analysis.throughput\\",
-                                                        \\"points\\": [[$(date +%s), $THROUGHPUT]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:analysis\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.analysis.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$PERFORMANCE_STATUS\\" = \\"good\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:analysis\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                            -d @-
+{
+  "series": [
+    {
+      "metric": "jenkins.loadtest.analysis.response_time",
+      "points": [[$(date +%s), \$RESPONSE_TIME_AVG]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
+    },
+    {
+      "metric": "jenkins.loadtest.analysis.error_rate",
+      "points": [[$(date +%s), \$ERROR_RATE]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
+    },
+    {
+      "metric": "jenkins.loadtest.analysis.throughput",
+      "points": [[$(date +%s), \$THROUGHPUT]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
+    },
+    {
+      "metric": "jenkins.loadtest.analysis.result",
+      "points": [[$(date +%s), \$([ \"\$PERFORMANCE_STATUS\" = \"good\" ] && echo 1 || echo 0)]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
+    }
+  ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -2463,16 +2536,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send scalability test start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.loadtest.scalability.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:scalability\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -d @-
+{
+  "series": [{
+    "metric": "jenkins.loadtest.scalability.start",
+    "points": [[$(date +%s), 1]],
+    "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
+  }]
+}
+EOF
                                     fi
                                     
                                     echo "Testing application scalability..."
@@ -2498,33 +2573,35 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send scalability metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.scalability.cpu\\",
-                                                        \\"points\\": [[$(date +%s), $CPU_USAGE]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:scalability\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.scalability.memory\\",
-                                                        \\"points\\": [[$(date +%s), $MEMORY_USAGE]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:scalability\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.scalability.users\\",
-                                                        \\"points\\": [[$(date +%s), $CONCURRENT_USERS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:scalability\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.loadtest.scalability.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$SCALABILITY_STATUS\\" = \\"good\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:loadtest\\", \\"task:scalability\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                            -d @-
+{
+  "series": [
+    {
+      "metric": "jenkins.loadtest.scalability.cpu",
+      "points": [[$(date +%s), \$CPU_USAGE]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
+    },
+    {
+      "metric": "jenkins.loadtest.scalability.memory",
+      "points": [[$(date +%s), \$MEMORY_USAGE]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
+    },
+    {
+      "metric": "jenkins.loadtest.scalability.users",
+      "points": [[$(date +%s), \$CONCURRENT_USERS]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
+    },
+    {
+      "metric": "jenkins.loadtest.scalability.result",
+      "points": [[$(date +%s), \$([ \"\$SCALABILITY_STATUS\" = \"good\" ] && echo 1 || echo 0)]],
+      "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
+    }
+  ]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -2535,28 +2612,32 @@ Please review security scan results and address any critical vulnerabilities."""
                         // Send load testing completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.loadtest.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${loadTestDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @-
+{
+  "series": [{
+    "metric": "jenkins.loadtest.duration",
+    "points": [[\$(date +%s), ${loadTestDuration}]],
+    "tags": ["env:staging", "service:healthcare-app"]
+  }]
+}
+EOF
                                 
                                 # Send load testing completion event
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Load Testing Completed\\\",
-                                        \\\"text\\\": \\\"Healthcare App load testing completed successfully in ${loadTestDuration}ms with performance analysis and scalability testing\\\",
-                                        \\\"priority\\\": \\\"normal\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:loadtest\\\", \\\"status:success\\\"],
-                                        \\\"alert_type\\\": \\\"success\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @-
+{
+  "title": "Load Testing Completed",
+  "text": "Healthcare App load testing completed successfully in ${loadTestDuration}ms with performance analysis and scalability testing",
+  "priority": "normal",
+  "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "status:success"],
+  "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -2564,16 +2645,18 @@ Please review security scan results and address any critical vulnerabilities."""
                         // Send load testing failure event
                         sh '''
                             if [ -n "$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Load Testing Failed\\\",
-                                        \\\"text\\\": \\\"Healthcare App load testing failed: ''' + "${e.getMessage()}" + '''\\\",
-                                        \\\"priority\\\": \\\"high\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:loadtest\\\", \\\"status:failure\\\"],
-                                        \\\"alert_type\\\": \\\"error\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "title": "Load Testing Failed",
+    "text": "Healthcare App load testing failed: ''' + "${e.getMessage()}" + '''",
+    "priority": "high",
+    "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "status:failure"],
+    "alert_type": "error"
+}
+EOF
                             fi
                         '''
                         throw e
@@ -2612,16 +2695,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send pod failure simulation start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.chaos.pod_failure.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:pod_failure\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.chaos.pod_failure.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:pod_failure"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Simulating pod failures..."
@@ -2652,16 +2737,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send pod failure metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.chaos.pod_failure.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$POD_FAILURE_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:pod_failure\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.chaos.pod_failure.result",
+        "points": [[$(date +%s), \$([ "$POD_FAILURE_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:pod_failure"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -2672,16 +2759,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send network disruption start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.chaos.network.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:network\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.chaos.network.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Testing network disruption scenarios..."
@@ -2705,28 +2794,30 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send network disruption metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.network.latency\\",
-                                                        \\"points\\": [[$(date +%s), $NETWORK_LATENCY]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:network\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.network.packet_loss\\",
-                                                        \\"points\\": [[$(date +%s), $PACKET_LOSS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:network\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.network.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$NETWORK_STATUS\\" = \\"resilient\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:network\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [
+        {
+            "metric": "jenkins.chaos.network.latency",
+            "points": [[$(date +%s), $NETWORK_LATENCY]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
+        },
+        {
+            "metric": "jenkins.chaos.network.packet_loss",
+            "points": [[$(date +%s), $PACKET_LOSS]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
+        },
+        {
+            "metric": "jenkins.chaos.network.result",
+            "points": [[$(date +%s), \$([ "$NETWORK_STATUS" = "resilient" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -2737,16 +2828,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send resource stress test start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.chaos.resource.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:resource\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.chaos.resource.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Testing resource exhaustion scenarios..."
@@ -2772,33 +2865,35 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send resource stress metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.resource.cpu\\",
-                                                        \\"points\\": [[$(date +%s), $CPU_STRESS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:resource\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.resource.memory\\",
-                                                        \\"points\\": [[$(date +%s), $MEMORY_STRESS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:resource\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.resource.disk\\",
-                                                        \\"points\\": [[$(date +%s), $DISK_STRESS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:resource\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.chaos.resource.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$RESOURCE_STATUS\\" = \\"resilient\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:chaos\\", \\"task:resource\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [
+        {
+            "metric": "jenkins.chaos.resource.cpu",
+            "points": [[$(date +%s), $CPU_STRESS]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
+        },
+        {
+            "metric": "jenkins.chaos.resource.memory",
+            "points": [[$(date +%s), $MEMORY_STRESS]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
+        },
+        {
+            "metric": "jenkins.chaos.resource.disk",
+            "points": [[$(date +%s), $DISK_STRESS]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
+        },
+        {
+            "metric": "jenkins.chaos.resource.result",
+            "points": [[$(date +%s), \$([ "$RESOURCE_STATUS" = "resilient" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -2812,25 +2907,29 @@ Please review security scan results and address any critical vulnerabilities."""
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.chaos.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${chaosDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.chaos.duration",
+        "points": [[\$(date +%s), ${chaosDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send chaos engineering completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Chaos Engineering Completed\\\",
-                                        \\\"text\\\": \\\"Healthcare App chaos engineering tests completed successfully in ${chaosDuration}ms with pod failure, network disruption, and resource stress testing\\\",
-                                        \\\"priority\\\": \\\"normal\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:chaos\\\", \\\"status:success\\\"],
-                                        \\\"alert_type\\\": \\\"success\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @- << EOF
+{
+    "title": "Chaos Engineering Completed",
+    "text": "Healthcare App chaos engineering tests completed successfully in ${chaosDuration}ms with pod failure, network disruption, and resource stress testing",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "status:success"],
+    "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -2838,16 +2937,18 @@ Please review security scan results and address any critical vulnerabilities."""
                         // Send chaos engineering failure event
                         sh '''
                             if [ -n "$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\\"title\\\": \\\"Chaos Engineering Failed\\\",
-                                        \\\"text\\\": \\\"Healthcare App chaos engineering tests failed: ''' + "${e.getMessage()}" + '''\\\",
-                                        \\\"priority\\\": \\\"high\\\",
-                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:chaos\\\", \\\"status:failure\\\"],
-                                        \\\"alert_type\\\": \\\"error\\\"
-                                    }" || echo "Failed to send Datadog event"
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "title": "Chaos Engineering Failed",
+    "text": "Healthcare App chaos engineering tests failed: ''' + "${e.getMessage()}" + '''",
+    "priority": "high",
+    "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "status:failure"],
+    "alert_type": "error"
+}
+EOF
                             fi
                         '''
                         throw e
@@ -2886,16 +2987,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send API docs start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.docs.api.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:api\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.docs.api.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:api"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Generating API documentation..."
@@ -2925,16 +3028,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send API docs metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.docs.api.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$API_DOCS_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:api\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.docs.api.result",
+        "points": [[$(date +%s), \$([ "$API_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:api"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -2945,16 +3050,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send architecture docs start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.docs.arch.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:architecture\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.docs.arch.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Generating architecture documentation..."
@@ -2972,28 +3079,30 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send architecture docs metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.docs.arch.documents\\",
-                                                        \\"points\\": [[$(date +%s), $DOCS_GENERATED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:architecture\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.docs.arch.diagrams\\",
-                                                        \\"points\\": [[$(date +%s), $DIAGRAMS_CREATED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:architecture\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.docs.arch.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$ARCH_DOCS_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:architecture\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [
+        {
+            "metric": "jenkins.docs.arch.documents",
+            "points": [[$(date +%s), $DOCS_GENERATED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
+        },
+        {
+            "metric": "jenkins.docs.arch.diagrams",
+            "points": [[$(date +%s), $DIAGRAMS_CREATED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
+        },
+        {
+            "metric": "jenkins.docs.arch.result",
+            "points": [[$(date +%s), \$([ "$ARCH_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -3004,16 +3113,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send deployment docs start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.docs.deploy.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:deployment\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.docs.deploy.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Generating deployment documentation..."
@@ -3031,28 +3142,30 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send deployment docs metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.docs.deploy.guides\\",
-                                                        \\"points\\": [[$(date +%s), $GUIDES_CREATED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:deployment\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.docs.deploy.runbooks\\",
-                                                        \\"points\\": [[$(date +%s), $RUNBOOKS_GENERATED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:deployment\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.docs.deploy.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$DEPLOY_DOCS_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"task:deployment\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @- << EOF
+{
+    "series": [
+        {
+            "metric": "jenkins.docs.deploy.guides",
+            "points": [[$(date +%s), $GUIDES_CREATED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
+        },
+        {
+            "metric": "jenkins.docs.deploy.runbooks",
+            "points": [[$(date +%s), $RUNBOOKS_GENERATED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
+        },
+        {
+            "metric": "jenkins.docs.deploy.result",
+            "points": [[$(date +%s), \$([ "$DEPLOY_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -3066,25 +3179,29 @@ Please review security scan results and address any critical vulnerabilities."""
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.docs.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${docsDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.docs.duration",
+        "points": [[\$(date +%s), ${docsDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send documentation generation completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"title\\": \\"Documentation Generation Completed\\",
-                                        \\"text\\": \\"Healthcare App documentation generation completed successfully in ${docsDuration}ms with API docs, architecture docs, and deployment guides\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @- << EOF
+{
+    "title": "Documentation Generation Completed",
+    "text": "Healthcare App documentation generation completed successfully in ${docsDuration}ms with API docs, architecture docs, and deployment guides",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:docs", "status:success"],
+    "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -3140,16 +3257,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send security standards start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.compliance.security.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:security\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.compliance.security.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:security"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Checking security standards compliance..."
@@ -3179,16 +3298,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send compliance metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.compliance.security.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$COMPLIANCE_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:security\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.compliance.security.result",
+        "points": [[$(date +%s), $([ "$COMPLIANCE_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:security"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -3199,16 +3320,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send policy validation start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.compliance.policy.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:policy\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.compliance.policy.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Validating security policies and configurations..."
@@ -3234,33 +3357,35 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send policy validation metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.policy.checked\\",
-                                                        \\"points\\": [[$(date +%s), $POLICIES_CHECKED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:policy\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.policy.passed\\",
-                                                        \\"points\\": [[$(date +%s), $POLICIES_PASSED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:policy\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.policy.failed\\",
-                                                        \\"points\\": [[$(date +%s), $POLICIES_FAILED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:policy\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.policy.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$POLICY_STATUS\\" = \\"compliant\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:policy\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.compliance.policy.checked",
+            "points": [[$(date +%s), $POLICIES_CHECKED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
+        },
+        {
+            "metric": "jenkins.compliance.policy.passed",
+            "points": [[$(date +%s), $POLICIES_PASSED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
+        },
+        {
+            "metric": "jenkins.compliance.policy.failed",
+            "points": [[$(date +%s), $POLICIES_FAILED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
+        },
+        {
+            "metric": "jenkins.compliance.policy.result",
+            "points": [[$(date +%s), $([ "$POLICY_STATUS" = "compliant" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -3271,16 +3396,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send audit report start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.compliance.audit.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:audit\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.compliance.audit.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Generating compliance audit reports..."
@@ -3298,28 +3425,30 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send audit report metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.audit.reports\\",
-                                                        \\"points\\": [[$(date +%s), $REPORTS_GENERATED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:audit\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.audit.standards\\",
-                                                        \\"points\\": [[$(date +%s), $STANDARDS_COVERED]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:audit\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.compliance.audit.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$AUDIT_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"task:audit\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.compliance.audit.reports",
+            "points": [[$(date +%s), $REPORTS_GENERATED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
+        },
+        {
+            "metric": "jenkins.compliance.audit.standards",
+            "points": [[$(date +%s), $STANDARDS_COVERED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
+        },
+        {
+            "metric": "jenkins.compliance.audit.result",
+            "points": [[$(date +%s), $([ "$AUDIT_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -3333,25 +3462,29 @@ Please review security scan results and address any critical vulnerabilities."""
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.compliance.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${complianceDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.compliance.duration",
+        "points": [[\$(date +%s), ${complianceDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send compliance automation completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"title\\": \\"Compliance Automation Completed\\",
-                                        \\"text\\": \\"Healthcare App compliance automation completed successfully in ${complianceDuration}ms with security standards validation and audit report generation\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d @- << EOF
+{
+    "title": "Compliance Automation Completed",
+    "text": "Healthcare App compliance automation completed successfully in ${complianceDuration}ms with security standards validation and audit report generation",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "status:success"],
+    "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -3391,16 +3524,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send validation start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.infra.validation.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:validation\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.validation.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:validation"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Validating Terraform configuration..."
@@ -3425,16 +3560,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                         
                                         # Send validation metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.infra.validation.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$VALIDATION_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:validation\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.validation.result",
+        "points": [[$(date +%s), $([ "$VALIDATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:validation"]
+    }]
+}
+EOF
                                         fi
                                     else
                                         echo "Terraform not available - skipping validation"
@@ -3449,16 +3586,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send planning start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.infra.planning.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:planning\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.planning.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:planning"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Planning Terraform deployment..."
@@ -3533,23 +3672,25 @@ Please review security scan results and address any critical vulnerabilities."""
                                         
                                         # Send planning metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.infra.planning.result\\",
-                                                            \\"points\\": [[$(date +%s), \$([ \\"$PLANNING_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:planning\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.infra.planning.changes\\",
-                                                            \\"points\\": [[$(date +%s), ${PLAN_CHANGES:-0}]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:planning\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.infra.planning.result",
+            "points": [[$(date +%s), $([ "$PLANNING_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:planning"]
+        },
+        {
+            "metric": "jenkins.infra.planning.changes",
+            "points": [[$(date +%s), ${PLAN_CHANGES:-0}]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:planning"]
+        }
+    ]
+}
+EOF
                                         fi
                                     else
                                         echo "Terraform not available - skipping planning"
@@ -3564,16 +3705,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send compliance start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.infra.compliance.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:compliance\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.compliance.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:compliance"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Checking infrastructure security compliance..."
@@ -3596,23 +3739,25 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send compliance metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.infra.compliance.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$COMPLIANCE_STATUS\\" = \\"compliant\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:compliance\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.infra.compliance.secure_configs\\",
-                                                        \\"points\\": [[$(date +%s), $SECURE_CONFIGS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:compliance\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.infra.compliance.result",
+            "points": [[$(date +%s), $([ "$COMPLIANCE_STATUS" = "compliant" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:compliance"]
+        },
+        {
+            "metric": "jenkins.infra.compliance.secure_configs",
+            "points": [[$(date +%s), $SECURE_CONFIGS]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:compliance"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -3623,16 +3768,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send application start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.infra.application.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:application\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.application.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Applying Terraform configuration..."
@@ -3717,16 +3864,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                         
                                         # Send application metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [{
-                                                        \\"metric\\": \\"jenkins.infra.application.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$APPLICATION_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"task:application\\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.application.result",
+        "points": [[$(date +%s), $([ "$APPLICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
+    }]
+}
+EOF
                                         fi
                                     else
                                         echo "Terraform not available - skipping application"
@@ -3741,28 +3890,32 @@ Please review security scan results and address any critical vulnerabilities."""
                         // Send infrastructure completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.infra.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${infraDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.infra.duration",
+        "points": [[\$(date +%s), ${infraDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send infrastructure completion event
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"title\\": \\"Infrastructure as Code Completed\\",
-                                        \\"text\\": \\"Healthcare App infrastructure deployment completed in ${infraDuration}ms with parallel validation, planning, compliance checks, and application\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"status:success\\"],
-                                        \\"alert_type\\": \\"success\\"
-                                    }" || echo "Failed to send Datadog event"
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "title": "Infrastructure as Code Completed",
+    "text": "Healthcare App infrastructure deployment completed in ${infraDuration}ms with parallel validation, planning, compliance checks, and application",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:infra", "status:success"],
+    "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -3808,16 +3961,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send deployment start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.terraform.init.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:terraform\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.terraform.init.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Initializing Terraform..."
@@ -3830,16 +3985,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send terraform metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.terraform.init.result\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:terraform\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.terraform.init.result",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -3850,16 +4007,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send build start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.docker.build.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:docker\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.docker.build.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:docker"]
+    }]
+}
+EOF
                                     fi
                                     
                                     if command -v docker >/dev/null 2>&1; then
@@ -3923,16 +4082,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send build metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.docker.build.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$DOCKER_BUILD_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:docker\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.docker.build.result",
+        "points": [[$(date +%s), $([ "$DOCKER_BUILD_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:docker"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -3943,16 +4104,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send push start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.docker.push.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:registry\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.docker.push.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:registry"]
+    }]
+}
+EOF
                                     fi
                                     
                                     if command -v docker >/dev/null 2>&1; then
@@ -4004,16 +4167,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send push metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.docker.push.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$REGISTRY_PUSH_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:registry\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.docker.push.result",
+        "points": [[$(date +%s), $([ "$REGISTRY_PUSH_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:registry"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -4024,16 +4189,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send migration start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.migration.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:migration\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.migration.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:migration"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Running database migrations..."
@@ -4060,16 +4227,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                     
                                     # Send migration metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.deploy.migration.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$MIGRATION_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:migration\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.migration.result",
+        "points": [[$(date +%s), $([ "$MIGRATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:migration"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -4083,16 +4252,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                 
                                 # Send apply start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.deploy.terraform.apply.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:terraform\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.terraform.apply.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Applying Terraform infrastructure..."
@@ -4102,16 +4273,18 @@ Please review security scan results and address any critical vulnerabilities."""
                                 
                                 # Send apply metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.deploy.terraform.apply.result\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:terraform\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.terraform.apply.result",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
+    }]
+}
+EOF
                                 fi
                             '''
                         }
@@ -4124,16 +4297,18 @@ Please review security scan results and address any critical vulnerabilities."""
 
                                 # Send manual fixes start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.deploy.manual_fixes.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:manual_fixes\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.manual_fixes.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:manual_fixes"]
+    }]
+}
+EOF
                                 fi
 
                                 echo "Applying manual fixes to infrastructure..."
@@ -4257,16 +4432,18 @@ EOF
 
                                 # Send manual fixes metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.deploy.manual_fixes.result\\",
-                                                \\"points\\": [[$(date +%s), \$([ \\"$MANUAL_FIXES_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:manual_fixes\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.manual_fixes.result",
+        "points": [[$(date +%s), $([ "$MANUAL_FIXES_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:manual_fixes"]
+    }]
+}
+EOF
                                 fi
                             '''
                         }
@@ -4279,16 +4456,18 @@ EOF
                                 
                                 # Send verification start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.deploy.verify.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:verify\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.verify.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:verify"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Verifying deployment..."
@@ -4320,16 +4499,18 @@ EOF
                                 
                                 # Send verification metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.deploy.verify.result\\",
-                                                \\"points\\": [[$(date +%s), \$([ \\"$VERIFICATION_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"task:verify\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.deploy.verify.result",
+        "points": [[$(date +%s), $([ "$VERIFICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:verify"]
+    }]
+}
+EOF
                                 fi
                             '''
                         }
@@ -4339,28 +4520,32 @@ EOF
                         // Send deployment completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.deploy.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${deployDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "series": [{
+        "metric": "jenkins.deploy.duration",
+        "points": [[\$(date +%s), ${deployDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send deployment completion event
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"title\\": \\"Staging Deployment Completed\\",
-                                        \\"text\\": \\"Healthcare App staging deployment completed successfully in ${deployDuration}ms using Terraform IaC with parallel Docker builds, registry push, database migration, infrastructure provisioning, and deployment verification\\",
-                                        \\"priority\\": \\"normal\\",
-                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"status:success\\", \\"deployment_type:terraform\\"],
-                                        \\"alert_type\\": \\"success\\"
-                                    }" || echo "Failed to send Datadog event"
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "title": "Staging Deployment Completed",
+    "text": "Healthcare App staging deployment completed successfully in ${deployDuration}ms using Terraform IaC with parallel Docker builds, registry push, database migration, infrastructure provisioning, and deployment verification",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "status:success", "deployment_type:terraform"],
+    "alert_type": "success"
+}
+EOF
                             fi
                         """
                         
@@ -4416,16 +4601,18 @@ EOF
                                     
                                     # Send canary deployment start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.canary.deploy.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:deploy\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.canary.deploy.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:deploy"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Deploying canary version..."
@@ -4448,23 +4635,25 @@ EOF
                                     
                                     # Send canary deployment metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.deploy.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$CANARY_DEPLOY_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:deploy\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.traffic_split\\",
-                                                        \\"points\\": [[$(date +%s), 10]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.canary.deploy.result",
+            "points": [[$(date +%s), $([ "$CANARY_DEPLOY_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:deploy"]
+        },
+        {
+            "metric": "jenkins.canary.traffic_split",
+            "points": [[$(date +%s), 10]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -4475,16 +4664,18 @@ EOF
                                     
                                     # Send monitoring start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.canary.monitor.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.canary.monitor.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Monitoring canary deployment health..."
@@ -4524,23 +4715,25 @@ EOF
                                             
                                             # Send health check metrics
                                             if [ -n "$DATADOG_API_KEY" ]; then
-                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                    -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                    -d "{
-                                                        \\"series\\": [
-                                                            {
-                                                                \\"metric\\": \\"jenkins.canary.health.passed\\",
-                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
-                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                            },
-                                                            {
-                                                                \\"metric\\": \\"jenkins.canary.health.failed\\",
-                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
-                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                            }
-                                                        ]
-                                                    }" || echo "Failed to send Datadog metrics"
+                                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                    -H "Content-Type: application/json" \
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.canary.health.passed",
+            "points": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+        },
+        {
+            "metric": "jenkins.canary.health.failed",
+            "points": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+        }
+    ]
+}
+EOF
                                             fi
                                             
                                             # Wait 10 seconds before next check (unless it's the last one)
@@ -4572,23 +4765,25 @@ EOF
                                             
                                             # Send health check metrics
                                             if [ -n "$DATADOG_API_KEY" ]; then
-                                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                    -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                    -d "{
-                                                        \\"series\\": [
-                                                            {
-                                                                \\"metric\\": \\"jenkins.canary.health.passed\\",
-                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
-                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                            },
-                                                            {
-                                                                \\"metric\\": \\"jenkins.canary.health.failed\\",
-                                                                \\"points\\": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
-                                                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                            }
-                                                        ]
-                                                    }" || echo "Failed to send Datadog metrics"
+                                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                    -H "Content-Type: application/json" \
+                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.canary.health.passed",
+            "points": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+        },
+        {
+            "metric": "jenkins.canary.health.failed",
+            "points": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+        }
+    ]
+}
+EOF
                                             fi
                                             
                                             sleep 10
@@ -4621,23 +4816,25 @@ EOF
                                     
                                     # Send final health metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.health.success_rate\\",
-                                                        \\"points\\": [[$(date +%s), $SUCCESS_RATE]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.health.status\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$CANARY_HEALTH_STATUS\\" = \\"healthy\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:monitor\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.canary.health.success_rate",
+            "points": [[$(date +%s), $SUCCESS_RATE]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+        },
+        {
+            "metric": "jenkins.canary.health.status",
+            "points": [[$(date +%s), $([ "$CANARY_HEALTH_STATUS" = "healthy" ] && echo 1 || echo 0)]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -4648,16 +4845,18 @@ EOF
                                     
                                     # Send traffic analysis start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.canary.traffic.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:analysis\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.canary.traffic.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Analyzing traffic patterns during canary deployment..."
@@ -4691,38 +4890,40 @@ EOF
                                     
                                     # Send traffic analysis metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.traffic.baseline_requests\\",
-                                                        \\"points\\": [[$(date +%s), $BASELINE_REQUESTS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"version:baseline\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.traffic.canary_requests\\",
-                                                        \\"points\\": [[$(date +%s), $CANARY_REQUESTS]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"version:canary\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.traffic.latency_improvement\\",
-                                                        \\"points\\": [[$(date +%s), $LATENCY_IMPROVEMENT]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:analysis\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.traffic.error_improvement\\",
-                                                        \\"points\\": [[$(date +%s), $ERROR_IMPROVEMENT]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:analysis\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.canary.traffic.analysis_result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$TRAFFIC_ANALYSIS_STATUS\\" = \\"positive\\" ] && echo 2 || ([ \\"$TRAFFIC_ANALYSIS_STATUS\\" = \\"neutral\\" ] && echo 1 || echo 0))]],
-                                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:analysis\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.canary.traffic.baseline_requests",
+            "points": [[$(date +%s), $BASELINE_REQUESTS]],
+            "tags": ["env:staging", "service:healthcare-app", "version:baseline"]
+        },
+        {
+            "metric": "jenkins.canary.traffic.canary_requests",
+            "points": [[$(date +%s), $CANARY_REQUESTS]],
+            "tags": ["env:staging", "service:healthcare-app", "version:canary"]
+        },
+        {
+            "metric": "jenkins.canary.traffic.latency_improvement",
+            "points": [[$(date +%s), $LATENCY_IMPROVEMENT]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
+        },
+        {
+            "metric": "jenkins.canary.traffic.error_improvement",
+            "points": [[$(date +%s), $ERROR_IMPROVEMENT]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
+        },
+        {
+            "metric": "jenkins.canary.traffic.analysis_result",
+            "points": [[$(date +%s), $([ "$TRAFFIC_ANALYSIS_STATUS" = "positive" ] && echo 2 || ([ "$TRAFFIC_ANALYSIS_STATUS" = "neutral" ] && echo 1 || echo 0))]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -4733,16 +4934,18 @@ EOF
                                     
                                     # Send rollback check start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.canary.rollback.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:rollback\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.canary.rollback.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Monitoring for automatic rollback conditions..."
@@ -4770,23 +4973,25 @@ EOF
                                         
                                         # Send monitoring metrics
                                         if [ -n "$DATADOG_API_KEY" ]; then
-                                            curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                                -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \\"series\\": [
-                                                        {
-                                                            \\"metric\\": \\"jenkins.canary.rollback.error_rate\\",
-                                                            \\"points\\": [[$(date +%s), $CURRENT_ERROR_RATE]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:rollback\\"]
-                                                        },
-                                                        {
-                                                            \\"metric\\": \\"jenkins.canary.rollback.latency\\",
-                                                            \\"points\\": [[$(date +%s), $CURRENT_LATENCY]],
-                                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:rollback\\"]
-                                                        }
-                                                    ]
-                                                }" || echo "Failed to send Datadog metrics"
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.canary.rollback.error_rate",
+            "points": [[$(date +%s), $CURRENT_ERROR_RATE]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
+        },
+        {
+            "metric": "jenkins.canary.rollback.latency",
+            "points": [[$(date +%s), $CURRENT_LATENCY]],
+            "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
+        }
+    ]
+}
+EOF
                                         fi
                                         
                                         sleep 10
@@ -4805,16 +5010,18 @@ EOF
                                     
                                     # Send rollback result metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.canary.rollback.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$ROLLBACK_STATUS\\" = \\"not_triggered\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"task:rollback\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.canary.rollback.result",
+        "points": [[$(date +%s), $([ "$ROLLBACK_STATUS" = "not_triggered" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -4825,16 +5032,18 @@ EOF
                         // Send canary deployment completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.canary.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${canaryDuration}]],
-                                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @-
+{
+    "series": [{
+        "metric": "jenkins.canary.duration",
+        "points": [[\$(date +%s), ${canaryDuration}]],
+        "tags": ["env:staging", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send canary completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
@@ -4902,16 +5111,18 @@ EOF
                                 
                                 # Send green deployment start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.green.deploy.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\", \\"iac:terraform\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.green.deploy.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green", "iac:terraform"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Deploying to green environment with Terraform..."
@@ -4930,16 +5141,18 @@ EOF
                                 
                                 # Send green deployment metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.green.deploy.result\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\", \\"iac:terraform\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.green.deploy.result",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green", "iac:terraform"]
+    }]
+}
+EOF
                                 fi
                             '''
                         }
@@ -4952,16 +5165,18 @@ EOF
                                 
                                 # Send green health check start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.green.health.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.green.health.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Running health checks on green environment..."
@@ -5085,16 +5300,18 @@ EOF
                                 
                                 # Send green health metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.green.health.status\\",
-                                                \\"points\\": [[$(date +%s), \$([ \\"$GREEN_HEALTH_STATUS\\" = \\"healthy\\" ] && echo 1 || echo 0)]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"environment:green\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.green.health.status",
+        "points": [[$(date +%s), $([ "$GREEN_HEALTH_STATUS" = "healthy" ] && echo 1 || echo 0)]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green"]
+    }]
+}
+EOF
                                 fi
                             '''
                         }
@@ -5107,16 +5324,18 @@ EOF
                                 
                                 # Send traffic switch start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.traffic.switch.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:traffic_switch\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.traffic.switch.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:traffic_switch"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Switching traffic to green environment..."
@@ -5139,16 +5358,18 @@ EOF
                                 
                                 # Send traffic switch metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.traffic.switch.result\\",
-                                                \\"points\\": [[$(date +%s), \$([ \\"$TRAFFIC_SWITCH_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:traffic_switch\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.traffic.switch.result",
+        "points": [[$(date +%s), $([ "$TRAFFIC_SWITCH_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:traffic_switch"]
+    }]
+}
+EOF
                                 fi
                             '''
                         }
@@ -5161,16 +5382,18 @@ EOF
                                 
                                 # Send monitoring start metric
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [{
-                                                \\"metric\\": \\"jenkins.bluegreen.monitor.start\\",
-                                                \\"points\\": [[$(date +%s), 1]],
-                                                \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                            }]
-                                        }" || echo "Failed to send Datadog metric"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.monitor.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
+    }]
+}
+EOF
                                 fi
                                 
                                 echo "Monitoring green environment for 2 minutes..."
@@ -5286,23 +5509,25 @@ EOF
                                     
                                     # Send monitoring metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.bluegreen.monitor.passed\\",
-                                                        \\"points\\": [[$(date +%s), $MONITOR_CHECKS_PASSED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.bluegreen.monitor.failed\\",
-                                                        \\"points\\": [[$(date +%s), $MONITOR_CHECKS_FAILED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.bluegreen.monitor.passed",
+            "points": [[$(date +%s), $MONITOR_CHECKS_PASSED]],
+            "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
+        },
+        {
+            "metric": "jenkins.bluegreen.monitor.failed",
+            "points": [[$(date +%s), $MONITOR_CHECKS_FAILED]],
+            "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
+        }
+    ]
+}
+EOF
                                     fi
                                     
                                     sleep 10
@@ -5330,23 +5555,25 @@ EOF
                                 
                                 # Send final monitoring metrics
                                 if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                        -H "Content-Type: application/json" \\
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                        -d "{
-                                            \\"series\\": [
-                                                {
-                                                    \\"metric\\": \\"jenkins.bluegreen.monitor.success_rate\\",
-                                                    \\"points\\": [[$(date +%s), $MONITOR_SUCCESS_RATE]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                },
-                                                {
-                                                    \\"metric\\": \\"jenkins.bluegreen.monitor.stable\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$GREEN_STABLE_STATUS\\" = \\"stable\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"task:monitor\\"]
-                                                }
-                                            ]
-                                        }" || echo "Failed to send Datadog metrics"
+                                    cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                        -H "Content-Type: application/json" \
+                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                        -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.bluegreen.monitor.success_rate",
+            "points": [[$(date +%s), $MONITOR_SUCCESS_RATE]],
+            "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
+        },
+        {
+            "metric": "jenkins.bluegreen.monitor.stable",
+            "points": [[$(date +%s), $([ "$GREEN_STABLE_STATUS" = "stable" ] && echo 1 || echo 0)]],
+            "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
+        }
+    ]
+}
+EOF
                                 fi
                             '''
                         }
@@ -5356,16 +5583,18 @@ EOF
                         // Send blue-green deployment completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.bluegreen.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${blueGreenDuration}]],
-                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @-
+{
+    "series": [{
+        "metric": "jenkins.bluegreen.duration",
+        "points": [[\$(date +%s), ${blueGreenDuration}]],
+        "tags": ["env:production", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send blue-green completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
@@ -5450,16 +5679,18 @@ EOF
                                     
                                     # Send version management start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.release.version.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:version\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.release.version.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:release", "task:version"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Managing version tags and release artifacts..."
@@ -5506,16 +5737,18 @@ EOF
                                     
                                     # Send version management metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.release.version.result\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:version\\", \\"version:$RELEASE_VERSION\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.release.version.result",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:release", "task:version", "version:$RELEASE_VERSION"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -5526,16 +5759,18 @@ EOF
                                     
                                     # Send artifact management start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.release.artifact.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:artifact\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.release.artifact.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:release", "task:artifact"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Managing and promoting release artifacts..."
@@ -5595,23 +5830,25 @@ EOF
                                     
                                     # Send artifact management metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.artifact.count\\",
-                                                        \\"points\\": [[$(date +%s), $ARTIFACT_COUNT]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:artifact\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.artifact.result\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:artifact\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.release.artifact.count",
+            "points": [[$(date +%s), $ARTIFACT_COUNT]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:artifact"]
+        },
+        {
+            "metric": "jenkins.release.artifact.result",
+            "points": [[$(date +%s), 1]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:artifact"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -5622,16 +5859,18 @@ EOF
                                     
                                     # Send release notes start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.release.notes.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:notes\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.release.notes.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:release", "task:notes"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Generating comprehensive release notes..."
@@ -5744,23 +5983,25 @@ EOF
                                     # Send release notes metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
                                         NOTES_LENGTH=\$(wc -l < release-notes.md)
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.notes.lines\\",
-                                                        \\"points\\": [[$(date +%s), $NOTES_LENGTH]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:notes\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.notes.result\\",
-                                                        \\"points\\": [[$(date +%s), 1]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:notes\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.release.notes.lines",
+            "points": [[$(date +%s), $NOTES_LENGTH]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:notes"]
+        },
+        {
+            "metric": "jenkins.release.notes.result",
+            "points": [[$(date +%s), 1]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:notes"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -5771,16 +6012,18 @@ EOF
                                     
                                     # Send release validation start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.release.validation.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:validation\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.release.validation.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Validating release readiness and compliance..."
@@ -5853,33 +6096,35 @@ EOF
                                     
                                     # Send release validation metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.validation.checks\\",
-                                                        \\"points\\": [[$(date +%s), $VALIDATION_CHECKS]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:validation\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.validation.passed\\",
-                                                        \\"points\\": [[$(date +%s), $VALIDATION_PASSED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:validation\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.validation.rate\\",
-                                                        \\"points\\": [[$(date +%s), $VALIDATION_RATE]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:validation\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.release.validation.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$RELEASE_READY\\" = \\"ready\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"task:validation\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.release.validation.checks",
+            "points": [[$(date +%s), $VALIDATION_CHECKS]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
+        },
+        {
+            "metric": "jenkins.release.validation.passed",
+            "points": [[$(date +%s), $VALIDATION_PASSED]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
+        },
+        {
+            "metric": "jenkins.release.validation.rate",
+            "points": [[$(date +%s), $VALIDATION_RATE]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
+        },
+        {
+            "metric": "jenkins.release.validation.result",
+            "points": [[$(date +%s), $([ "$RELEASE_READY" = "ready" ] && echo 1 || echo 0)]],
+            "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -5892,16 +6137,18 @@ EOF
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 RELEASE_VERSION=\$(cat version.txt 2>/dev/null || echo "v1.${BUILD_NUMBER}.0")
                                 
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.release.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${releaseDuration}]],
-                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"version:\$RELEASE_VERSION\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @-
+{
+    "series": [{
+        "metric": "jenkins.release.duration",
+        "points": [[\$(date +%s), ${releaseDuration}]],
+        "tags": ["env:production", "service:healthcare-app", "version:\$RELEASE_VERSION"]
+    }]
+}
+EOF
                                 
                                 # Send release completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
@@ -5969,16 +6216,18 @@ EOF
                                     
                                     # Send dashboard creation start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.monitoring.dashboard.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:dashboard\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.monitoring.dashboard.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:dashboard"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Creating comprehensive monitoring dashboards..."
@@ -6156,16 +6405,18 @@ EOF
                                     
                                     # Send dashboard creation metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.monitoring.dashboard.result\\",
-                                                    \\"points\\": [[$(date +%s), \$([ \\"$DASHBOARD_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:dashboard\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.monitoring.dashboard.result",
+        "points": [[$(date +%s), $([ "$DASHBOARD_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:dashboard"]
+    }]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -6176,16 +6427,18 @@ EOF
                                     
                                     # Send alert configuration start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.monitoring.alert.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:alert\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.monitoring.alert.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:alert"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Setting up comprehensive alerting rules..."
@@ -6303,23 +6556,25 @@ EOF
                                     
                                     # Send alert configuration metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.monitoring.alert.count\\",
-                                                        \\"points\\": [[$(date +%s), $ALERTS_CREATED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:alert\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.monitoring.alert.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$ALERT_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:alert\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.monitoring.alert.count",
+            "points": [[$(date +%s), $ALERTS_CREATED]],
+            "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:alert"]
+        },
+        {
+            "metric": "jenkins.monitoring.alert.result",
+            "points": [[$(date +%s), $([ "$ALERT_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:alert"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -6330,16 +6585,18 @@ EOF
                                     
                                     # Send log monitoring start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.monitoring.log.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:log\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.monitoring.log.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:log"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Configuring log monitoring and analysis..."
@@ -6420,23 +6677,25 @@ EOF
                                     
                                     # Send log monitoring metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.monitoring.log.configs\\",
-                                                        \\"points\\": [[$(date +%s), $LOG_CONFIGS_CREATED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:log\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.monitoring.log.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$LOG_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:log\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.monitoring.log.configs",
+            "points": [[$(date +%s), $LOG_CONFIGS_CREATED]],
+            "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:log"]
+        },
+        {
+            "metric": "jenkins.monitoring.log.result",
+            "points": [[$(date +%s), $([ "$LOG_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:log"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             },
@@ -6447,16 +6706,18 @@ EOF
                                     
                                     # Send synthetics start metric
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [{
-                                                    \\"metric\\": \\"jenkins.monitoring.synthetics.start\\",
-                                                    \\"points\\": [[$(date +%s), 1]],
-                                                    \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:synthetics\\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.monitoring.synthetics.start",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:synthetics"]
+    }]
+}
+EOF
                                     fi
                                     
                                     echo "Setting up synthetic tests for critical user journeys..."
@@ -6596,23 +6857,25 @@ EOF
                                     
                                     # Send synthetics metrics
                                     if [ -n "$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                                            -d "{
-                                                \\"series\\": [
-                                                    {
-                                                        \\"metric\\": \\"jenkins.monitoring.synthetics.count\\",
-                                                        \\"points\\": [[$(date +%s), $SYNTHETICS_CREATED]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:synthetics\\"]
-                                                    },
-                                                    {
-                                                        \\"metric\\": \\"jenkins.monitoring.synthetics.result\\",
-                                                        \\"points\\": [[$(date +%s), \$([ \\"$SYNTHETICS_STATUS\\" = \\"success\\" ] && echo 1 || echo 0)]],
-                                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"task:synthetics\\"]
-                                                    }
-                                                ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.monitoring.synthetics.count",
+            "points": [[$(date +%s), $SYNTHETICS_CREATED]],
+            "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:synthetics"]
+        },
+        {
+            "metric": "jenkins.monitoring.synthetics.result",
+            "points": [[$(date +%s), $([ "$SYNTHETICS_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:synthetics"]
+        }
+    ]
+}
+EOF
                                     fi
                                 '''
                             }
@@ -6623,16 +6886,18 @@ EOF
                         // Send monitoring setup completion metrics and event
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"series\\": [{
-                                            \\"metric\\": \\"jenkins.monitoring.duration\\",
-                                            \\"points\\": [[\$(date +%s), ${monitoringDuration}]],
-                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\"]
-                                        }]
-                                    }" || echo "Failed to send Datadog metric"
+                                    -d @-
+{
+    "series": [{
+        "metric": "jenkins.monitoring.duration",
+        "points": [[\$(date +%s), ${monitoringDuration}]],
+        "tags": ["env:production", "service:healthcare-app"]
+    }]
+}
+EOF
                                 
                                 # Send monitoring setup completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
@@ -6692,35 +6957,39 @@ EOF
             if [ -n "$DATADOG_API_KEY" ]; then
                 PIPELINE_DURATION=$(( $(date +%s) - $(date -d "$(date -r Jenkinsfile)" +%s 2>/dev/null || echo "$(date +%s)") ))
                 
-                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                     -H "Content-Type: application/json" \\
                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                    -d "{
-                        \\"title\\": \\"Jenkins Pipeline Succeeded\\",
-                        \\"text\\": \\"Healthcare App CI/CD Pipeline #${BUILD_NUMBER} completed successfully in ${PIPELINE_DURATION}s. All stages passed: Build, Test, Code Quality (with SonarQube), Security, Load Testing, Chaos Engineering, Documentation Generation, Compliance Automation, Infrastructure as Code, Deploy to Staging, Canary Deployment, Blue-Green Deployment, Release, Monitoring. Advanced optimizations: intelligent caching, security testing, canary deployment, blue-green deployment, comprehensive monitoring, load testing, chaos engineering, automated documentation, compliance automation.\\",
-                        \\"priority\\": \\"normal\\",
-                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"pipeline:jenkins\\", \\"event:pipeline_success\\", \\"status:success\\"],
-                        \\"alert_type\\": \\"success\\"
-                    }" || echo "Failed to send Datadog event"
+                    -d @-
+{
+    "title": "Jenkins Pipeline Succeeded",
+    "text": "Healthcare App CI/CD Pipeline #${BUILD_NUMBER} completed successfully in ${PIPELINE_DURATION}s. All stages passed: Build, Test, Code Quality (with SonarQube), Security, Load Testing, Chaos Engineering, Documentation Generation, Compliance Automation, Infrastructure as Code, Deploy to Staging, Canary Deployment, Blue-Green Deployment, Release, Monitoring. Advanced optimizations: intelligent caching, security testing, canary deployment, blue-green deployment, comprehensive monitoring, load testing, chaos engineering, automated documentation, compliance automation.",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins", "event:pipeline_success", "status:success"],
+    "alert_type": "success"
+}
+EOF
                 
                 # Send final pipeline metrics
-                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                     -H "Content-Type: application/json" \\
                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                    -d "{
-                        \\"series\\": [
-                            {
-                                \\"metric\\": \\"jenkins.pipeline.success\\",
-                                \\"points\\": [[$(date +%s), 1]],
-                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"pipeline:jenkins\\"]
-                            },
-                            {
-                                \\"metric\\": \\"jenkins.pipeline.duration\\",
-                                \\"points\\": [[$(date +%s), ${PIPELINE_DURATION:-0}]],
-                                \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"pipeline:jenkins\\"]
-                            }
-                        ]
-                    }" || echo "Failed to send Datadog metrics"
+                    -d @-
+{
+    "series": [
+        {
+            "metric": "jenkins.pipeline.success",
+            "points": [[$(date +%s), 1]],
+            "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins"]
+        },
+        {
+            "metric": "jenkins.pipeline.duration",
+            "points": [[$(date +%s), ${PIPELINE_DURATION:-0}]],
+            "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins"]
+        }
+    ]
+}
+EOF
             fi
         '''
         
@@ -6757,28 +7026,32 @@ Please check the Jenkins console output for complete details.""", 'danger')
         // Send pipeline failure event to Datadog
         sh '''
             if [ -n "$DATADOG_API_KEY" ]; then
-                curl -X POST "https://api.datadadoghq.com/api/v1/events" \\
+                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                     -H "Content-Type: application/json" \\
                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                    -d "{
-                        \\"title\\": \\"Jenkins Pipeline Failed\\",
-                        \\"text\\": \\"Healthcare App CI/CD Pipeline #${BUILD_NUMBER} failed: ''' + "${e.getMessage()}" + '''. Check Jenkins logs for details.\\",
-                        \\"priority\\": \\"high\\",
-                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"pipeline:jenkins\\", \\"event:pipeline_failure\\", \\"status:failure\\"],
-                        \\"alert_type\\": \\"error\\"
-                    }" || echo "Failed to send Datadog event"
+                    -d @-
+{
+    "title": "Jenkins Pipeline Failed",
+    "text": "Healthcare App CI/CD Pipeline #${BUILD_NUMBER} failed: ''' + "${e.getMessage()}" + '''. Check Jenkins logs for details.",
+    "priority": "high",
+    "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins", "event:pipeline_failure", "status:failure"],
+    "alert_type": "error"
+}
+EOF
                 
                 # Send pipeline failure metric
-                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                     -H "Content-Type: application/json" \\
                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
-                    -d "{
-                        \\"series\\": [{
-                            \\"metric\\": \\"jenkins.pipeline.failure\\",
-                            \\"points\\": [[$(date +%s), 1]],
-                            \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"pipeline:jenkins\\"]
-                        }]
-                    }" || echo "Failed to send Datadog metric"
+                    -d @-
+{
+    "series": [{
+        "metric": "jenkins.pipeline.failure",
+        "points": [[$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins"]
+    }]
+}
+EOF
             fi
         '''
         
@@ -6825,6 +7098,3 @@ Please check the Jenkins console output for complete details.""", 'danger')
         '''
     }
 }
-// Force Jenkins to reload pipeline configuration - updated at 2024-12-19 10:30 UTC
-// This comment ensures Jenkins detects the pipeline change and reloads the configuration
-def forceReload = true
