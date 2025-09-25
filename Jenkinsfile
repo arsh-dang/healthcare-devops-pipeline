@@ -1928,7 +1928,7 @@ EOF
                                 echo "TruffleHog secrets scan completed"
                             '''
                         }
-                    
+                    )
                     
                     def qualityDuration = System.currentTimeMillis() - qualityStartTime
                         
