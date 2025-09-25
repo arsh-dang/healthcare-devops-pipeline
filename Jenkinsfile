@@ -1828,17 +1828,18 @@ EOF
                                     echo "SonarQube analysis completed"
                                 '''
                             }
-                        ),
-                        
-                        'Secrets Scanning': {
-                            echo 'Running TruffleHog secrets detection'
-                            sh '''
-                                # Send secrets scan start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
-                                    curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                        -H "Content-Type: application/json" \
-                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
-                                        -d @- << EOF
+                        }
+                    ),
+                    
+                    'Secrets Scanning': {
+                        echo 'Running TruffleHog secrets detection'
+                        sh '''
+                            # Send secrets scan start metric
+                            if [ -n "$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                    -d @- << EOF
 {
     "series": [{
         "metric": "jenkins.quality.trufflehog.start",
@@ -1847,7 +1848,7 @@ EOF
     }]
 }
 EOF
-                                fi
+                            fi
                                 
                                 echo "Scanning for exposed secrets with TruffleHog..."
                                 
