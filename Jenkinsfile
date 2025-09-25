@@ -1932,6 +1932,8 @@ EOF
                     
                     def qualityDuration = System.currentTimeMillis() - qualityStartTime
                         
+                        // Force Jenkins cache invalidation - syntax fix applied
+                        
                         // Send code quality completion metrics
                         sh """
                             if [ -n "\$DATADOG_API_KEY" ]; then
