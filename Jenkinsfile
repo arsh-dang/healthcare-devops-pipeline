@@ -223,7 +223,7 @@ node {
                     echo "PATH: $PATH"
                     
                     # Check if we're in a CI environment
-                    if [ -n "$JENKINS_HOME" ]; then
+                    if [ -n "\$JENKINS_HOME" ]; then
                         echo "Running in Jenkins CI environment"
                     else
                         echo "INFO: Not running in Jenkins environment"
@@ -242,7 +242,7 @@ node {
                     
                     // Send pipeline start event to Datadog
                     sh '''
-                        if [ -n "$DATADOG_API_KEY" ]; then
+                        if [ -n "\$DATADOG_API_KEY" ]; then
                             echo "Sending pipeline start event to Datadog..."
                             curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                 -H "Content-Type: application/json" \\
@@ -284,7 +284,7 @@ node {
                                     echo "Current directory: $(pwd)"
                                     
                                     # Send build start metric to Datadog
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -333,7 +333,7 @@ node {
                                             ls -la build/ || echo "Build directory not found"
                                             
                                             # Send build success metric
-                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                     -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -350,7 +350,7 @@ node {
                                             pnpm run --silent 2>/dev/null | grep "build" || echo "No build script found in package.json"
                                             
                                             # Send build failure metric
-                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                     -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -385,7 +385,7 @@ node {
                                     cd ${WORKSPACE}
                                     
                                     # Send backend build start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -420,7 +420,7 @@ node {
                                         echo "Backend build completed successfully"
                                         
                                         # Send backend build success metric
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -442,7 +442,7 @@ node {
                                 echo 'Building Docker Images with Multi-stage Optimization...'
                                 sh '''
                                     # Send build start metric to Datadog
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -562,7 +562,7 @@ node {
                                             echo "  docker pull nginx:1.25.3-alpine"
                                             
                                             # Send warning metric about missing base images
-                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -581,7 +581,7 @@ node {
                                             echo "  ./scripts/pre-cache-images.sh"
                                             
                                             # Send build skip event
-                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -711,11 +711,11 @@ node {
                                         docker images | grep healthcare-app
                                         
                                         # Send build success metric based on component status
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             # Check if both builds failed
                                             if [ "$FRONTEND_FAILED" = "true" ] && [ "$BACKEND_FAILED" = "true" ]; then
                                                 # Both builds failed - send failure metric
-                                                if [ -n "$DATADOG_API_KEY" ]; then
+                                                if [ -n "\$DATADOG_API_KEY" ]; then
                                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                         -H "Content-Type: application/json" \
                                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -731,7 +731,7 @@ EOF
                                                 fi
                                             elif [ "$FRONTEND_FAILED" = "true" ] || [ "$BACKEND_FAILED" = "true" ]; then
                                                 # Partial success - one build succeeded, one failed
-                                                if [ -n "$DATADOG_API_KEY" ]; then
+                                                if [ -n "\$DATADOG_API_KEY" ]; then
                                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                         -H "Content-Type: application/json" \
                                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -747,7 +747,7 @@ EOF
                                                 fi
                                             else
                                                 # Full success - both builds succeeded
-                                                if [ -n "$DATADOG_API_KEY" ]; then
+                                                if [ -n "\$DATADOG_API_KEY" ]; then
                                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                         -H "Content-Type: application/json" \
                                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -769,7 +769,7 @@ EOF
                                         echo "Docker build would happen here with proper Docker setup"
                                         
                                         # Send build failure metric
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -792,7 +792,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send documentation build start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -823,7 +823,7 @@ EOF
                                     echo "Documentation build completed"
                                     
                                     # Send documentation build success metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -843,15 +843,15 @@ EOF
                         
                         // Send build duration metric
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d "{
-                                        \\\"series\\\": [{
-                                            \\\"metric\\\": \\\"jenkins.build.duration\\\",
-                                            \\\"points\\\": [[\\$(date +%s), ${buildDuration}]],
-                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\"]
+                                        \\\\\\\"series\\\\\\\": [{
+                                            \\\\\\\"metric\\\\\\\": \\\\\\\"jenkins.build.duration\\\\\\\",
+                                            \\\\\\\"points\\\\\\\": [[\\\\\\$(date +%s), ${buildDuration}]],
+                                            \\\\\\\"tags\\\\\\\": [\\\\\\\"env:staging\\\\\\\", \\\\\\\"service:healthcare-app\\\\\\\"]
                                         }]
                                     }" || echo "Failed to send Datadog metric"
                             fi
@@ -859,10 +859,10 @@ EOF
                         
                         // Send build completion event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d "{
                                         \\\"title\\\": \\\"Build Stage Completed\\\",
                                         \\\"text\\\": \\\"Healthcare App build completed successfully in ${buildDuration}ms\\\",
@@ -876,10 +876,10 @@ EOF
                     } catch (Exception e) {
                         // Send build failure event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d "{
                                         \\\"title\\\": \\\"Build Stage Failed\\\",
                                         \\\"text\\\": \\\"Healthcare App build failed: ${e.getMessage()}\\\",
@@ -924,7 +924,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                 echo 'Running unit tests with coverage'
                                 sh '''
                                     # Send test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -964,7 +964,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         fi
                                         
                                         # Send test metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1000,7 +1000,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                 echo 'Running integration tests'
                                 sh '''
                                     # Send test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1034,7 +1034,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         fi
                                         
                                         # Send integration test result
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1056,7 +1056,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                 echo 'Running API tests with Newman'
                                 sh '''
                                     # Send test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1085,7 +1085,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         echo "API tests completed with $API_TESTS_PASSED/$API_TESTS_TOTAL passed"
                                         
                                         # Send API test metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1123,7 +1123,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     cd ${WORKSPACE}
                                     
                                     # Send performance test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1152,7 +1152,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     fi
                                     
                                     # Send performance test success metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1174,7 +1174,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send accessibility test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1207,7 +1207,7 @@ EOF
                                     fi
                                     
                                     # Send accessibility test success metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1227,7 +1227,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send security test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1283,7 +1283,7 @@ EOF
                                     fi
                                     
                                     # Send security test metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1310,7 +1310,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send contract test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1355,7 +1355,7 @@ EOF
                                     fi
                                     
                                     # Send contract test metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1377,10 +1377,10 @@ EOF
                         
                         // Send test duration and completion metrics
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                    -H "Content-Type: application/json" \
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
@@ -1408,7 +1408,7 @@ EOF
                     } catch (Exception e) {
                         // Send test failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -1458,7 +1458,7 @@ Please review test results and fix any failing tests.""", 'danger')
                                     cd ${WORKSPACE}
                                     
                                     # Send ESLint start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1489,7 +1489,7 @@ EOF
                                         fi
                                         
                                         # Send ESLint metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1515,7 +1515,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send TypeScript start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1543,7 +1543,7 @@ EOF
                                         fi
                                         
                                         # Send TypeScript metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1569,7 +1569,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send coverage start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1605,7 +1605,7 @@ EOF
                                     fi
                                     
                                     # Send coverage metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1627,7 +1627,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send complexity start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1652,7 +1652,7 @@ EOF
                                     echo "Found $FUNCTIONS functions/methods"
                                     
                                     # Send complexity metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1683,7 +1683,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send SonarQube start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1789,7 +1789,7 @@ EOF
                                     echo "Code coverage: $SONARQUBE_COVERAGE%"
                                     
                                     # Send SonarQube metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         SONARQUBE_RESULT=$([ "$SONARQUBE_STATUS" = "success" ] && echo 1 || echo 0)
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
@@ -1835,7 +1835,7 @@ EOF
                         echo 'Running TruffleHog secrets detection'
                         sh '''
                             # Send secrets scan start metric
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                     -H "Content-Type: application/json" \
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1902,7 +1902,7 @@ EOF
                                 else
                                     TRUFFLEHOG_RESULT=0
                                 fi
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -1941,10 +1941,10 @@ EOF
                         
                         // Send code quality completion metrics
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d @-
 {
   "series": [{
@@ -1974,7 +1974,7 @@ EOF
                     } catch (Exception e) {
                         // Send code quality failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2008,7 +2008,7 @@ EOF
                                 echo 'Running dependency security scan'
                                 sh '''
                                     # Send security scan start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2038,7 +2038,7 @@ EOF
                                         fi
                                         
                                         # Send security metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2072,7 +2072,7 @@ EOF
                                 echo 'Running static application security testing'
                                 sh '''
                                     # Send SAST start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2101,7 +2101,7 @@ EOF
                                     echo "SAST analysis found $SAST_ISSUES issues ($SAST_CRITICAL critical, $SAST_HIGH high, $SAST_MEDIUM medium)"
                                     
                                     # Send SAST metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2140,7 +2140,7 @@ EOF
                                 echo 'Running container security scan'
                                 sh '''
                                     # Send container security start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2188,7 +2188,7 @@ EOF
                                         fi
                                         
                                         # Send container security metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2214,7 +2214,7 @@ EOF
                                         echo "Container security scan would run here with proper Docker setup"
                                         
                                         # Send container scan failure metric
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2236,7 +2236,7 @@ EOF
                                 echo 'Scanning for exposed secrets'
                                 sh '''
                                     # Send secrets scan start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2263,7 +2263,7 @@ EOF
                                     echo "Secrets scan completed - $SECRETS_FOUND secrets found"
                                     
                                     # Send secrets scan metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2294,10 +2294,10 @@ EOF
                         
                         // Send security scan completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d @-
 {
   "series": [{
@@ -2327,7 +2327,7 @@ EOF
                     } catch (Exception e) {
                         // Send security failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2372,7 +2372,7 @@ Please review security scan results and address any critical vulnerabilities."""
                     try {
                         // Send load testing start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2395,7 +2395,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send load test execution start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2443,7 +2443,7 @@ EOF
                                     fi
                                     
                                     # Send load test execution metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2465,7 +2465,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send performance analysis start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2502,7 +2502,7 @@ EOF
                                     fi
                                     
                                     # Send performance analysis metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2541,7 +2541,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send scalability test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2578,7 +2578,7 @@ EOF
                                     fi
                                     
                                     # Send scalability metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2617,10 +2617,10 @@ EOF
                         
                         // Send load testing completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d @-
 {
   "series": [{
@@ -2650,7 +2650,7 @@ EOF
                     } catch (Exception e) {
                         // Send load testing failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \
                                     -H "Content-Type: application/json" \
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2679,7 +2679,7 @@ EOF
                     try {
                         // Send chaos engineering start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2700,7 +2700,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send pod failure simulation start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2742,7 +2742,7 @@ EOF
                                     fi
                                     
                                     # Send pod failure metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2764,7 +2764,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send network disruption start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2799,7 +2799,7 @@ EOF
                                     fi
                                     
                                     # Send network disruption metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2833,7 +2833,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send resource stress test start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2870,7 +2870,7 @@ EOF
                                     fi
                                     
                                     # Send resource stress metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2942,7 +2942,7 @@ EOF
                     } catch (Exception e) {
                         // Send chaos engineering failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \
                                     -H "Content-Type: application/json" \
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -2971,7 +2971,7 @@ EOF
                     try {
                         // Send documentation generation start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -2992,7 +2992,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send API docs start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3033,7 +3033,7 @@ EOF
                                     fi
                                     
                                     # Send API docs metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3055,7 +3055,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send architecture docs start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3084,7 +3084,7 @@ EOF
                                     echo "Architecture documentation generated successfully"
                                     
                                     # Send architecture docs metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3118,7 +3118,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send deployment docs start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3147,7 +3147,7 @@ EOF
                                     echo "Deployment documentation generated successfully"
                                     
                                     # Send deployment docs metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3214,7 +3214,7 @@ EOF
                     } catch (Exception e) {
                         // Send documentation generation failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -3241,7 +3241,7 @@ EOF
                     try {
                         // Send compliance automation start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -3262,7 +3262,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send security standards start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3303,7 +3303,7 @@ EOF
                                     fi
                                     
                                     # Send compliance metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3325,7 +3325,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send policy validation start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3362,7 +3362,7 @@ EOF
                                     fi
                                     
                                     # Send policy validation metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3401,7 +3401,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send audit report start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3430,7 +3430,7 @@ EOF
                                     echo "Audit reports generated successfully"
                                     
                                     # Send audit report metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3497,7 +3497,7 @@ EOF
                     } catch (Exception e) {
                         // Send compliance automation failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -3529,7 +3529,7 @@ EOF
                                     cd ${WORKSPACE}/terraform
                                     
                                     # Send validation start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3565,7 +3565,7 @@ EOF
                                         fi
                                         
                                         # Send validation metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3591,7 +3591,7 @@ EOF
                                     cd ${WORKSPACE}/terraform
                                     
                                     # Send planning start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3677,7 +3677,7 @@ EOF
                                         fi
                                         
                                         # Send planning metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3710,7 +3710,7 @@ EOF
                                     cd ${WORKSPACE}/terraform
                                     
                                     # Send compliance start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3744,7 +3744,7 @@ EOF
                                     fi
                                     
                                     # Send compliance metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3773,7 +3773,7 @@ EOF
                                     cd ${WORKSPACE}/terraform
                                     
                                     # Send application start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3869,7 +3869,7 @@ EOF
                                         fi
                                         
                                         # Send application metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3895,10 +3895,10 @@ EOF
                         
                         // Send infrastructure completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                    -H "Content-Type: application/json" \
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
@@ -3928,7 +3928,7 @@ EOF
                     } catch (Exception e) {
                         // Send infrastructure failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -3975,7 +3975,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
                                     cd ${WORKSPACE}/terraform
                                     
                                     # Send deployment start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -3999,7 +3999,7 @@ EOF
                                     echo "Terraform initialization and planning completed"
                                     
                                     # Send terraform metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4021,7 +4021,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send build start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4096,7 +4096,7 @@ EOF
                                     fi
                                     
                                     # Send build metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4118,7 +4118,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send push start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4181,7 +4181,7 @@ EOF
                                     fi
                                     
                                     # Send push metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4203,7 +4203,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send migration start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4241,7 +4241,7 @@ EOF
                                     echo "Database migrations completed"
                                     
                                     # Send migration metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4266,7 +4266,7 @@ EOF
                                 cd ${WORKSPACE}/terraform
                                 
                                 # Send apply start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4287,7 +4287,7 @@ EOF
                                 echo "Terraform apply completed successfully"
                                 
                                 # Send apply metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4311,7 +4311,7 @@ EOF
                                 cd ${WORKSPACE}
 
                                 # Send manual fixes start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4446,7 +4446,7 @@ EOF
                                 fi
 
                                 # Send manual fixes metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4470,7 +4470,7 @@ EOF
                                 cd ${WORKSPACE}
                                 
                                 # Send verification start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4513,7 +4513,7 @@ EOF
                                 fi
                                 
                                 # Send verification metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4534,10 +4534,10 @@ EOF
                         
                         // Send deployment completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                    -H "Content-Type: application/json" \
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
@@ -4567,7 +4567,7 @@ EOF
                     } catch (Exception e) {
                         // Send deployment failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -4594,7 +4594,7 @@ EOF
                     try {
                         // Send canary deployment start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -4615,7 +4615,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send canary deployment start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4649,7 +4649,7 @@ EOF
                                     fi
                                     
                                     # Send canary deployment metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4678,7 +4678,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send monitoring start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4729,7 +4729,7 @@ EOF
                                             fi
                                             
                                             # Send health check metrics
-                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
                                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4779,7 +4779,7 @@ EOF
                                             fi
                                             
                                             # Send health check metrics
-                                            if [ -n "$DATADOG_API_KEY" ]; then
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
                                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                     -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4830,7 +4830,7 @@ EOF
                                     fi
                                     
                                     # Send final health metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4859,7 +4859,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send traffic analysis start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4904,7 +4904,7 @@ EOF
                                     fi
                                     
                                     # Send traffic analysis metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4948,7 +4948,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send rollback check start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -4987,7 +4987,7 @@ EOF
                                         fi
                                         
                                         # Send monitoring metrics
-                                        if [ -n "$DATADOG_API_KEY" ]; then
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
                                                 -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5024,7 +5024,7 @@ EOF
                                     fi
                                     
                                     # Send rollback result metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5046,10 +5046,10 @@ EOF
                         
                         // Send canary deployment completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d @-
 {
     "series": [{
@@ -5077,7 +5077,7 @@ EOF
                     } catch (Exception e) {
                         // Send canary deployment failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -5104,7 +5104,7 @@ EOF
                     try {
                         // Send blue-green deployment start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -5125,7 +5125,7 @@ EOF
                                 cd ${WORKSPACE}/terraform
                                 
                                 # Send green deployment start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5155,7 +5155,7 @@ EOF
                                 echo "Green environment deployment completed with Terraform"
                                 
                                 # Send green deployment metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5179,7 +5179,7 @@ EOF
                                 cd ${WORKSPACE}
                                 
                                 # Send green health check start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5314,7 +5314,7 @@ EOF
                                 echo "Green environment health status: $GREEN_HEALTH_STATUS"
                                 
                                 # Send green health metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5338,7 +5338,7 @@ EOF
                                 cd ${WORKSPACE}/terraform
                                 
                                 # Send traffic switch start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5372,7 +5372,7 @@ EOF
                                 fi
                                 
                                 # Send traffic switch metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5396,7 +5396,7 @@ EOF
                                 cd ${WORKSPACE}
                                 
                                 # Send monitoring start metric
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5529,7 +5529,7 @@ EOF
                                     fi
                                     
                                     # Send monitoring metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5575,7 +5575,7 @@ EOF
                                 fi
                                 
                                 # Send final monitoring metrics
-                                if [ -n "$DATADOG_API_KEY" ]; then
+                                if [ -n "\$DATADOG_API_KEY" ]; then
                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
                                         -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5603,10 +5603,10 @@ EOF
                         
                         // Send blue-green deployment completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d @-
 {
     "series": [{
@@ -5634,10 +5634,10 @@ EOF
                     } catch (Exception e) {
                         // Send blue-green deployment failure event and initiate rollback
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Failed\\",
                                         \\"text\\": \\"Healthcare App blue-green deployment failed: ${e.getMessage()} - initiating automatic rollback to blue environment using Terraform\\",
@@ -5678,7 +5678,7 @@ EOF
                     try {
                         // Send release start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -5699,7 +5699,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send version management start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5757,7 +5757,7 @@ EOF
                                     fi
                                     
                                     # Send version management metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5779,7 +5779,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send artifact management start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5850,7 +5850,7 @@ EOF
                                     ARTIFACT_COUNT=\$(find release-artifacts -type f | wc -l)
                                     
                                     # Send artifact management metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -5879,7 +5879,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send release notes start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6002,7 +6002,7 @@ EOF
                                     echo "Comprehensive release notes generated"
                                     
                                     # Send release notes metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         NOTES_LENGTH=\$(wc -l < release-notes.md)
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
@@ -6032,7 +6032,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send release validation start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6116,7 +6116,7 @@ EOF
                                     fi
                                     
                                     # Send release validation metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6188,7 +6188,7 @@ EOF
                     } catch (Exception e) {
                         // Send release failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -6215,7 +6215,7 @@ EOF
                     try {
                         // Send monitoring setup start event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -6236,7 +6236,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send dashboard creation start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6324,7 +6324,7 @@ EOF
                                     }'
                                     
                                     # Create dashboard via Datadog API
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         DASHBOARD_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/dashboard" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -6406,7 +6406,7 @@ EOF
                                     }'
                                     
                                     # Create performance dashboard
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         PERF_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/dashboard" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -6425,7 +6425,7 @@ EOF
                                     echo "Dashboard creation completed"
                                     
                                     # Send dashboard creation metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6447,7 +6447,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send alert configuration start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6529,7 +6529,7 @@ EOF
                                     ALERTS_CREATED=0
                                     
                                     # Create alerts via Datadog API
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         # Create error rate alert
                                         ERROR_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
@@ -6576,7 +6576,7 @@ EOF
                                     echo "Alert configuration completed: $ALERTS_CREATED alerts created"
                                     
                                     # Send alert configuration metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6605,7 +6605,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send log monitoring start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6663,7 +6663,7 @@ EOF
                                     LOG_CONFIGS_CREATED=0
                                     
                                     # Create log configurations via Datadog API
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         # Create log pipeline
                                         PIPELINE_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/logs/config/pipelines" \\
                                             -H "Content-Type: application/json" \\
@@ -6697,7 +6697,7 @@ EOF
                                     echo "Log monitoring setup completed: $LOG_CONFIGS_CREATED configurations created"
                                     
                                     # Send log monitoring metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6726,7 +6726,7 @@ EOF
                                     cd ${WORKSPACE}
                                     
                                     # Send synthetics start metric
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6842,7 +6842,7 @@ EOF
                                     SYNTHETICS_CREATED=0
                                     
                                     # Create synthetic tests via Datadog API
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         # Create API test
                                         API_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/synthetics/tests" \\
                                             -H "Content-Type: application/json" \\
@@ -6877,7 +6877,7 @@ EOF
                                     echo "Synthetics monitoring setup completed: $SYNTHETICS_CREATED tests created"
                                     
                                     # Send synthetics metrics
-                                    if [ -n "$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                             -H "DD-API-KEY: $DATADOG_API_KEY" \
@@ -6906,10 +6906,10 @@ EOF
                         
                         // Send monitoring setup completion metrics and event
                         sh """
-                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\\\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
+                                    -H "Content-Type: application/json" \\\\
+                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
                                     -d @-
 {
     "series": [{
@@ -6937,7 +6937,7 @@ EOF
                     } catch (Exception e) {
                         // Send monitoring setup failure event
                         sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
@@ -6975,7 +6975,7 @@ EOF
         
         // Send pipeline success event to Datadog
         sh '''
-            if [ -n "$DATADOG_API_KEY" ]; then
+            if [ -n "\$DATADOG_API_KEY" ]; then
                 PIPELINE_DURATION=$(( \$(date +%s) - $(date -d "$(date -r Jenkinsfile)" +%s 2>/dev/null || echo "\$(date +%s)") ))
                 
                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
@@ -7046,7 +7046,7 @@ Please check the Jenkins console output for complete details.""", 'danger')
         
         // Send pipeline failure event to Datadog
         sh '''
-            if [ -n "$DATADOG_API_KEY" ]; then
+            if [ -n "\$DATADOG_API_KEY" ]; then
                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                     -H "Content-Type: application/json" \\
                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
