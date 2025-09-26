@@ -131,13 +131,11 @@ node {
         // Configure tool paths for macOS environment
         env.PATH = "${env.PATH}:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin"
 
-        // Setup Datadog credentials globally for the entire pipeline
-        withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
-            env.DATADOG_API_KEY = DATADOG_API_KEY
-        }
-
         // Enable timestamps for all output
         timestamps {
+            // Setup Datadog credentials globally for the entire pipeline
+            withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+                env.DATADOG_API_KEY = DATADOG_API_KEY
 
             stage('Force Pipeline Reload Check') {
                 echo 'Checking if pipeline reload is needed...'
@@ -7117,5 +7115,7 @@ EOF
             
             echo "Deployment cleanup completed"
         '''
-    }
+            } // End of withCredentials block
+        } // End of timestamps block
+    } // End of node block
 }
