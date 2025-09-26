@@ -847,13 +847,13 @@ EOF
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
                                     -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
-                                    -d '{
-                                        "series": [{
-                                            "metric": "jenkins.build.duration",
-                                            "points": [[\\$(date +%s), ${buildDuration}]],
-                                            "tags": ["env:staging", "service:healthcare-app"]
+                                    -d "{
+                                        \\\"series\\\": [{
+                                            \\\"metric\\\": \\\"jenkins.build.duration\\\",
+                                            \\\"points\\\": [[\\\$(date +%s), ${buildDuration}]],
+                                            \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\"]
                                         }]
-                                    }' || echo "Failed to send Datadog metric"
+                                    }" || echo "Failed to send Datadog metric"
                             fi
                         """
                         
@@ -863,13 +863,13 @@ EOF
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
                                     -H "Content-Type: application/json" \\\\
                                     -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
-                                    -d '{
-                                        "title": "Build Stage Completed",
-                                        "text": "Healthcare App build completed successfully in ${buildDuration}ms",
-                                        "priority": "normal",
-                                        "tags": ["env:staging", "service:healthcare-app", "stage:build", "status:success"],
-                                        "alert_type": "success"
-                                    }' || echo "Failed to send Datadog event"
+                                    -d "{
+                                        \\\"title\\\": \\\"Build Stage Completed\\\",
+                                        \\\"text\\\": \\\"Healthcare App build completed successfully in ${buildDuration}ms\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:success\\\"],
+                                        \\\"alert_type\\\": \\\"success\\\"
+                                    }" || echo "Failed to send Datadog event"
                             fi
                         """
                         
@@ -880,13 +880,13 @@ EOF
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
                                     -H "Content-Type: application/json" \\\\
                                     -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\\\
-                                    -d '{
-                                        "title": "Build Stage Failed",
-                                        "text": "Healthcare App build failed: ${e.getMessage()}",
-                                        "priority": "normal",
-                                        "tags": ["env:staging", "service:healthcare-app", "stage:build", "status:failure"],
-                                        "alert_type": "error"
-                                    }' || echo "Failed to send Datadog event"
+                                    -d "{
+                                        \\\"title\\\": \\\"Build Stage Failed\\\",
+                                        \\\"text\\\": \\\"Healthcare App build failed: ${e.getMessage()}\\\",
+                                        \\\"priority\\\": \\\"normal\\\",
+                                        \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:failure\\\"],
+                                        \\\"alert_type\\\": \\\"error\\\"
+                                    }" || echo "Failed to send Datadog event"
                             fi
                         """
                         // Send Slack notification for build failure
