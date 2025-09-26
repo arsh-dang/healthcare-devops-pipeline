@@ -1829,7 +1829,7 @@ EOF
                                 '''
                             }
                         }
-                    ),
+                    },
                     
                     'Secrets Scanning': {
                         echo 'Running TruffleHog secrets detection'
@@ -1932,6 +1932,7 @@ EOF
                                 echo "TruffleHog secrets scan completed"
                             '''
                         }
+                    )
                     
                     
                     def qualityDuration = System.currentTimeMillis() - qualityStartTime
