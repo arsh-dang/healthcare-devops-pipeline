@@ -1828,7 +1828,6 @@ EOF
                                     echo "SonarQube analysis completed"
                                 '''
                             },
-                        }
                     },
 
                     'Secrets Scanning': {
