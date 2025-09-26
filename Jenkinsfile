@@ -287,7 +287,7 @@ node {
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.frontend.start\\\",
@@ -336,7 +336,7 @@ node {
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                     -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                     -d "{
                                                         \\\"series\\\": [{
                                                             \\\"metric\\\": \\\"jenkins.build.frontend.success\\\",
@@ -353,7 +353,7 @@ node {
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                     -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                     -d "{
                                                         \\\"series\\\": [{
                                                             \\\"metric\\\": \\\"jenkins.build.frontend.failure\\\",
@@ -388,7 +388,7 @@ node {
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.backend.start\\\",
@@ -423,7 +423,7 @@ node {
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d "{
                                                     \\\"series\\\": [{
                                                         \\\"metric\\\": \\\"jenkins.build.backend.success\\\",
@@ -445,7 +445,7 @@ node {
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.docker.start\\\",
@@ -565,7 +565,7 @@ node {
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                     -H "Content-Type: application/json" \
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                     -d "{
                                                         \\\"series\\\": [{
                                                             \\\"metric\\\": \\\"jenkins.build.base_images_missing\\\",
@@ -584,7 +584,7 @@ node {
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \
                                                     -H "Content-Type: application/json" \
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                     -d "{
                                                         \\\"title\\\": \\\"Docker Build Skipped\\\",
                                                         \\\"text\\\": \\\"Docker build skipped due to missing base images. Network connectivity required.\\\",
@@ -718,7 +718,7 @@ node {
                                                 if [ -n "\$DATADOG_API_KEY" ]; then
                                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                         -H "Content-Type: application/json" \
-                                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                        -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                         -d @-
 {
     "series": [{
@@ -734,7 +734,7 @@ EOF
                                                 if [ -n "\$DATADOG_API_KEY" ]; then
                                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                         -H "Content-Type: application/json" \
-                                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                        -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                         -d @-
 {
     "series": [{
@@ -750,7 +750,7 @@ EOF
                                                 if [ -n "\$DATADOG_API_KEY" ]; then
                                                     cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                         -H "Content-Type: application/json" \
-                                                        -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                        -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                         -d @-
 {
     "series": [{
@@ -772,7 +772,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @-
 {
     "series": [{
@@ -795,7 +795,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.docs.start\\\",
@@ -826,7 +826,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.docs.success\\\",
@@ -927,7 +927,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.unit.start\\\",
@@ -967,7 +967,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d "{
                                                     \\\"series\\\": [
                                                         {
@@ -1003,7 +1003,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.integration.start\\\",
@@ -1037,7 +1037,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d "{
                                                     \\\"series\\\": [{
                                                         \\\"metric\\\": \\\"jenkins.test.integration.result\\\",
@@ -1059,7 +1059,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.api.start\\\",
@@ -1088,7 +1088,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d "{
                                                     \\\"series\\\": [
                                                         {
@@ -1126,7 +1126,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.performance.start\\\",
@@ -1155,7 +1155,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -1177,7 +1177,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -1210,7 +1210,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.accessibility.success\\\",
@@ -1230,7 +1230,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.security.start\\\",
@@ -1286,7 +1286,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "{
                                                 \\\"series\\\": [
                                                     {
@@ -1313,7 +1313,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1358,7 +1358,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1385,7 +1385,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.test.duration",
-        "points": [[\\\\$(date +%s), ${testDuration}]],
+        "points": [[\\\$(date +%s), ${testDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -1461,7 +1461,7 @@ Please review test results and fix any failing tests.""", 'danger')
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1492,7 +1492,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @-
 {
     "series": [{
@@ -1518,7 +1518,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1546,7 +1546,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @- << EOF
 {
     "series": [{
@@ -1572,7 +1572,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1608,7 +1608,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1630,7 +1630,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1655,7 +1655,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [
@@ -1686,7 +1686,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -1793,7 +1793,7 @@ EOF
                                         SONARQUBE_RESULT=$([ "$SONARQUBE_STATUS" = "success" ] && echo 1 || echo 0)
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [
@@ -2011,7 +2011,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2041,7 +2041,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d @-
 {
   "series": [
@@ -2075,7 +2075,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2104,7 +2104,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [
@@ -2143,7 +2143,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2191,7 +2191,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d @-
 {
   "series": [
@@ -2217,7 +2217,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                                 -d @-
 {
   "series": [{
@@ -2239,7 +2239,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2266,7 +2266,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [
@@ -2398,7 +2398,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2446,7 +2446,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2468,7 +2468,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2505,7 +2505,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [
@@ -2544,7 +2544,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [{
@@ -2581,7 +2581,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d @-
 {
   "series": [
@@ -2703,7 +2703,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -2745,7 +2745,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -2767,7 +2767,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -2802,7 +2802,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [
@@ -2836,7 +2836,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -2873,7 +2873,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [
@@ -2995,7 +2995,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -3036,7 +3036,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -3058,7 +3058,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -3087,7 +3087,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [
@@ -3121,7 +3121,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [{
@@ -3150,7 +3150,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @- << EOF
 {
     "series": [
@@ -3265,7 +3265,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3306,7 +3306,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3328,7 +3328,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3365,7 +3365,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -3404,7 +3404,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3433,7 +3433,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -3532,7 +3532,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3568,7 +3568,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @-
 {
     "series": [{
@@ -3594,7 +3594,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3680,7 +3680,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @-
 {
     "series": [
@@ -3713,7 +3713,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3747,7 +3747,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -3776,7 +3776,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -3872,7 +3872,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @-
 {
     "series": [{
@@ -3978,7 +3978,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4002,7 +4002,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4024,7 +4024,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4099,7 +4099,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4121,7 +4121,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4184,7 +4184,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4206,7 +4206,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4244,7 +4244,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4618,7 +4618,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4652,7 +4652,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -4681,7 +4681,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4732,7 +4732,7 @@ EOF
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                     -H "Content-Type: application/json" \
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                     -d @-
 {
     "series": [
@@ -4782,7 +4782,7 @@ EOF
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                     -H "Content-Type: application/json" \
-                                                    -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                    -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                     -d @-
 {
     "series": [
@@ -4833,7 +4833,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -4862,7 +4862,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4907,7 +4907,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -4951,7 +4951,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4990,7 +4990,7 @@ EOF
                                         if [ -n "\$DATADOG_API_KEY" ]; then
                                             cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                                 -H "Content-Type: application/json" \
-                                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                                -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                                 -d @-
 {
     "series": [
@@ -5027,7 +5027,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -5532,7 +5532,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -5702,7 +5702,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -5760,7 +5760,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -5782,7 +5782,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -5853,7 +5853,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -5882,7 +5882,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6006,7 +6006,7 @@ EOF
                                         NOTES_LENGTH=\$(wc -l < release-notes.md)
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -6035,7 +6035,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6119,7 +6119,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -6239,7 +6239,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6327,7 +6327,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         DASHBOARD_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/dashboard" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$DASHBOARD_CONFIG")
                                         
                                         DASHBOARD_ID=$(echo $DASHBOARD_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
@@ -6409,7 +6409,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         PERF_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/dashboard" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$PERFORMANCE_CONFIG")
                                         
                                         PERF_DASHBOARD_ID=$(echo $PERF_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
@@ -6428,7 +6428,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6450,7 +6450,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6533,7 +6533,7 @@ EOF
                                         # Create error rate alert
                                         ERROR_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$ERROR_ALERT_CONFIG")
                                         
                                         if echo $ERROR_RESPONSE | grep -q '"id":'; then
@@ -6545,7 +6545,7 @@ EOF
                                         # Create response time alert
                                         RT_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$RESPONSE_TIME_ALERT_CONFIG")
                                         
                                         if echo $RT_RESPONSE | grep -q '"id":'; then
@@ -6557,7 +6557,7 @@ EOF
                                         # Create availability alert
                                         AVAIL_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$AVAILABILITY_ALERT_CONFIG")
                                         
                                         if echo $AVAIL_RESPONSE | grep -q '"id":'; then
@@ -6579,7 +6579,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -6608,7 +6608,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6667,7 +6667,7 @@ EOF
                                         # Create log pipeline
                                         PIPELINE_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/logs/config/pipelines" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$LOG_PIPELINE_CONFIG")
                                         
                                         if echo $PIPELINE_RESPONSE | grep -q '"id":'; then
@@ -6679,7 +6679,7 @@ EOF
                                         # Create log metric
                                         METRIC_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/logs/config/metrics" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$LOG_METRIC_CONFIG")
                                         
                                         if echo $METRIC_RESPONSE | grep -q '"name":'; then
@@ -6700,7 +6700,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
@@ -6729,7 +6729,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [{
@@ -6846,7 +6846,7 @@ EOF
                                         # Create API test
                                         API_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/synthetics/tests" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$API_TEST_CONFIG")
                                         
                                         if echo $API_RESPONSE | grep -q '"test_id":'; then
@@ -6858,7 +6858,7 @@ EOF
                                         # Create browser test
                                         BROWSER_RESPONSE=$(curl -s -X POST "https://api.datadoghq.com/api/v1/synthetics/tests" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \\
                                             -d "$BROWSER_TEST_CONFIG")
                                         
                                         if echo $BROWSER_RESPONSE | grep -q '"test_id":'; then
@@ -6880,7 +6880,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
-                                            -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                            -H "DD-API-KEY: \\\$DATADOG_API_KEY" \
                                             -d @-
 {
     "series": [
