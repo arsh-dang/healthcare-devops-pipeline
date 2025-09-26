@@ -1856,10 +1856,10 @@ EOF
                                     echo "Running TruffleHog filesystem scan..."
                                     
                                     # Run TruffleHog on the entire workspace
-                                    if trufflehog filesystem --directory=${WORKSPACE} --json --concurrency=4 > trufflehog-results.json 2>/dev/null; then
+                                    if trufflehog filesystem --directory=$WORKSPACE --json --concurrency=4 > trufflehog-results.json 2>/dev/null; then
                                         # Parse results to count findings
                                         SECRETS_FOUND=$(jq 'length' trufflehog-results.json 2>/dev/null || echo "0")
-                                        HIGH_SECRETS=$(jq '[.[] | select(.DetectorName and (.ExtraData.verified == true or .ExtraData.verified == "true"))] | length' trufflehog-results.json 2>/dev/null || echo "0")
+                                        HIGH_SECRETS=$(jq '.[] | select(.DetectorName and (.ExtraData.verified == true or .ExtraData.verified == "true")) | length' trufflehog-results.json 2>/dev/null || echo "0")
                                         
                                         echo "TruffleHog scan completed - found $SECRETS_FOUND potential secrets"
                                         echo "High-confidence secrets: $HIGH_SECRETS"
@@ -1897,7 +1897,11 @@ EOF
                                 echo "High-confidence secrets: $HIGH_SECRETS"
                                 
                                 # Send TruffleHog metrics
-                                TRUFFLEHOG_RESULT=$([ "$TRUFFLEHOG_STATUS" = "clean" ] && echo 1 || echo 0)
+                                if [ "$TRUFFLEHOG_STATUS" = "clean" ]; then
+                                    TRUFFLEHOG_RESULT=1
+                                else
+                                    TRUFFLEHOG_RESULT=0
+                                fi
                                 if [ -n "$DATADOG_API_KEY" ]; then
                                     curl -X POST "https://api.datadoghq.com/api/v1/series" \
                                         -H "Content-Type: application/json" \
@@ -1928,7 +1932,7 @@ EOF
                                 echo "TruffleHog secrets scan completed"
                             '''
                         }
-                    )
+                    
                     
                     def qualityDuration = System.currentTimeMillis() - qualityStartTime
                         
