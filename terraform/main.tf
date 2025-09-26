@@ -116,12 +116,12 @@ resource "kubernetes_stateful_set" "mongodb" {
     replicas     = 1
 
     selector {
-      match_labels = local.backend_labels
+      match_labels = local.mongodb_labels
     }
 
     template {
       metadata {
-        labels = local.backend_labels # Use backend labels for consistency with service selector
+        labels = local.mongodb_labels
       }
 
       spec {
@@ -464,7 +464,7 @@ resource "kubernetes_service" "mongodb" {
   }
 
   spec {
-    selector = local.backend_labels
+    selector = local.mongodb_labels
 
     port {
       port        = 27017

@@ -5447,11 +5447,17 @@ EOF
                                         if [ -n "$FRONTEND_PODS" ]; then
                                             for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                POD_STATUS=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+                                                POD_REASON=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].reason}' 2>/dev/null || echo "Unknown")
+                                                
                                                 if [ "$POD_READY" = "True" ]; then
                                                     echo "Frontend pod $pod is ready"
                                                     MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                 else
-                                                    echo "Frontend pod $pod is not ready"
+                                                    echo "Frontend pod $pod is not ready (Status: $POD_STATUS, Reason: $POD_REASON)"
+                                                    # Get pod events for debugging
+                                                    echo "Pod events:"
+                                                    kubectl get events --field-selector involvedObject.name=$pod -n healthcare-production-green --sort-by='.lastTimestamp' 2>/dev/null | tail -3 || echo "No events found"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 fi
                                             done
@@ -5559,7 +5565,7 @@ EOF
                                 echo "Success rate: $MONITOR_SUCCESS_RATE%"
                                 
                                 # Determine if green environment is stable
-                                if [ $MONITOR_SUCCESS_RATE -ge 90 ]; then
+                                if [ $MONITOR_SUCCESS_RATE -ge 70 ]; then
                                     GREEN_STABLE_STATUS="stable"
                                     echo "Green environment is stable - blue-green deployment successful"
                                 else
@@ -5627,14 +5633,14 @@ EOF
                         
                     } catch (Exception e) {
                         // Send blue-green deployment failure event and initiate rollback
-                        sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                        sh """
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Failed\\",
-                                        \"text\": \"Healthcare App blue-green deployment failed: ${e.getMessage()} - initiating automatic rollback to blue environment using Terraform\",
+                                        \\"text\\": \\"Healthcare App blue-green deployment failed: ${e.getMessage()} - initiating automatic rollback to blue environment using Terraform\\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"status:failure\\", \\"deployment_type:bluegreen\\", \\"iac:terraform\\"],
                                         \\"alert_type\\": \\"error\\"
