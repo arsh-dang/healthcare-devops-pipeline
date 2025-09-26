@@ -1827,7 +1827,7 @@ EOF
                                     
                                     echo "SonarQube analysis completed"
                                 '''
-                            }
+                            },
                         }
                     },
 
