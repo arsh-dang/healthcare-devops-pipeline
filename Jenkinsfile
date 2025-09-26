@@ -3,9 +3,8 @@
 node {
     def forcePipelineReload = true
     
-    script {
-        // Notification functions
-        def sendSlackNotification(String message, String color = 'good') {
+    // Notification functions as closures
+    def sendSlackNotification = { String message, String color = 'good' ->
         try {
             def webhookUrl = ''
 
@@ -56,7 +55,7 @@ node {
         }
     }
 
-    def sendEmailNotification(String subject, String body, String status = 'INFO') {
+    def sendEmailNotification = { String subject, String body, String status = 'INFO' ->
         try {
             if (params.SEND_EMAIL && params.EMAIL_RECIPIENTS) {
                 def smtpUser = params.SMTP_USERNAME
@@ -88,7 +87,6 @@ node {
         } catch (Exception e) {
             echo "Failed to send email notification: ${e.getMessage()}"
         }
-    }
     }
     
     // Pipeline properties for automatic builds
