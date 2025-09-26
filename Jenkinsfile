@@ -2358,8 +2358,6 @@ Please review security scan results and address any critical vulnerabilities."""
                 }
             }
             
-            }
-            
             stage('Load Testing') {
                 echo 'Running comprehensive load testing with Artillery...'
                 
