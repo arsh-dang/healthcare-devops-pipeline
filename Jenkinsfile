@@ -136,8 +136,9 @@ node {
             // Setup Datadog credentials globally for the entire pipeline
             withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
                 env.DATADOG_API_KEY = DATADOG_API_KEY
-
-            stage('Force Pipeline Reload Check') {
+                
+                try {
+                    stage('Force Pipeline Reload Check') {
                 echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
                 echo "Current pipeline type: Scripted with parameters"
@@ -7012,9 +7013,11 @@ EOF
             fi
         '''
         
-}
-    }
-    catch (Exception e) {
+                } // End of script block
+            } // End of stage block
+        } // End of withCredentials block
+    } // End of timestamps block
+} catch (Exception e) {
         echo 'Pipeline failed!'
         echo "Check logs for failure details"
         echo "Error: ${e.getMessage()}"
