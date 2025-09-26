@@ -1,17 +1,29 @@
-# Use Node.js as base image
-FROM node:20-alpine
+# Use Node.js with Debian base (includes curl by default)
+FROM node:20-slim
 
-# Install pnpm globally using npm
-RUN npm install -g pnpm --registry=https://registry.npmjs.org/
+# Install curl if not present (Debian slim usually has it)
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install pnpm globally
+RUN npm install -g pnpm --registry=https://registry.npmjs.org/ && \
+    npm cache clean --force
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files from root
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
-RUN pnpm install --no-frozen-lockfile --prod
+# Install dependencies
+RUN if command -v pnpm >/dev/null 2>&1; then \
+        echo "Using pnpm for dependency installation..." && \
+        pnpm install --frozen-lockfile --prod; \
+    else \
+        echo "Using npm for dependency installation..." && \
+        npm install --production; \
+    fi
 
 # Copy server files
 COPY server/ ./server/

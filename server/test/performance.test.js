@@ -29,12 +29,12 @@ describe('Performance and Load Tests', () => {
       }
     });
 
-    // Performance assertions - focus on no failures rather than strict performance
-    expect(result.errors).toBeLessThan(50); // Allow some errors in high load
-    expect(result.timeouts).toBeLessThan(50); // Allow some timeouts in high load
-    expect(result.non2xx).toBeLessThan(50); // Allow some non-2xx responses
-    expect(result.latency.average).toBeLessThan(15000); // Very relaxed latency
-    expect(result.requests.average).toBeGreaterThan(0.1); // Just ensure some requests are processed
+    // Performance assertions
+    expect(result.errors).toBe(0);
+    expect(result.timeouts).toBe(0);
+    expect(result.non2xx).toBe(0);
+    expect(result.latency.average).toBeLessThan(100); // Average latency < 100ms
+    expect(result.requests.average).toBeGreaterThan(100); // > 100 requests/sec
   }, 30000);
 
   test('should handle concurrent POST requests efficiently', async () => {
@@ -57,23 +57,15 @@ describe('Performance and Load Tests', () => {
         'Content-Type': 'application/json'
       },
       body: appointmentData,
-      connections: 10, // Reduced connections for POST
-      duration: 5,
-      requests: [{
-        method: 'POST',
-        path: '/api/appointments',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: appointmentData
-      }]
+      connections: 20,
+      duration: 5
     });
 
     // Performance assertions for POST operations
-    expect(result.errors).toBeLessThan(100); // Allow more errors for POST
-    expect(result.timeouts).toBeLessThan(50); // Allow more timeouts for POST
-    expect(result.latency.average).toBeLessThan(2000); // More relaxed latency for POST
-    expect(result.requests.average).toBeGreaterThan(0); // Just ensure at least some requests are processed
+    expect(result.errors).toBe(0);
+    expect(result.timeouts).toBe(0);
+    expect(result.latency.average).toBeLessThan(200); // Average latency < 200ms for POST
+    expect(result.requests.average).toBeGreaterThan(50); // > 50 POST requests/sec
   }, 30000);
 
   test('should maintain performance under stress', async () => {
@@ -88,8 +80,8 @@ describe('Performance and Load Tests', () => {
     });
 
     // Under stress, we expect some degradation but no failures
-    expect(result.errors).toBeLessThan(100); // Allow some errors under extreme stress
-    expect(result.timeouts).toBeLessThan(100); // Allow some timeouts under extreme stress
-    expect(result.latency.p99).toBeLessThan(15000); // 99th percentile < 15 seconds (very relaxed)
+    expect(result.errors).toBe(0);
+    expect(result.timeouts).toBe(0);
+    expect(result.latency.p99).toBeLessThan(1000); // 99th percentile < 1 second
   }, 30000);
 });

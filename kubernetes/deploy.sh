@@ -80,13 +80,15 @@ echo "Using Terraform-managed namespace: $NAMESPACE"
 
 cd ..
 
-# Deploy monitoring stack (now managed by Terraform)
-echo "Monitoring stack (Prometheus, Grafana) is now managed by Terraform..."
-echo "All resources including monitoring are deployed via Terraform configuration."
+# Deploy monitoring stack (not managed by Terraform yet)
+echo "Deploying Prometheus and Grafana for monitoring..."
+kubectl apply -f kubernetes/prometheus.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/grafana.yaml -n $NAMESPACE
+kubectl apply -f kubernetes/prometheus-rules.yaml -n $NAMESPACE
 
-# Configure ingress (now managed by Terraform)
-echo "Ingress is now managed by Terraform..."
-echo "All routing configuration is handled via Terraform ingress resource."
+# Configure ingress
+echo "Configuring ingress..."
+kubectl apply -f kubernetes/ingress.yaml -n $NAMESPACE
 
 # Wait for deployments to be ready with appropriate error handling
 echo "Waiting for all deployments to be ready..."
@@ -135,7 +137,8 @@ fi
 echo ""
 echo "Infrastructure Information:"
 echo "--------------------------"
-echo "ALL infrastructure (MongoDB, Backend, Frontend, Prometheus, Grafana, Ingress) deployed via Terraform"
+echo "Core infrastructure (MongoDB, Backend, Frontend) deployed via Terraform"
+echo "Monitoring stack (Prometheus, Grafana) deployed via Kubernetes manifests"
 echo "Namespace: $NAMESPACE"
 echo ""
 echo "To view Terraform-managed resources:"
@@ -152,5 +155,5 @@ echo "Port forwarding enabled. Access the application at: http://localhost:8081"
 
 # Also setup direct port forwarding to frontend service
 echo "Setting up direct port forwarding to frontend service..."
-kubectl port-forward -n $NAMESPACE service/frontend 3000:30285 &> /dev/null &
+kubectl port-forward -n $NAMESPACE service/frontend 30285:3000 &> /dev/null &
 echo "Frontend service directly accessible at: http://localhost:30285"

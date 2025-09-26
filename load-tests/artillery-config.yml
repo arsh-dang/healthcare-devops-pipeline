@@ -1,5 +1,5 @@
 config:
-  target: 'http://localhost:30285'
+  target: 'http://backend-test:5001'
   phases:
     - duration: 15
       arrivalRate: 1
@@ -19,7 +19,7 @@ scenarios:
     weight: 60
     flow:
       - get:
-          url: "/api/health"
+          url: "/health"
           expect:
             - statusCode: 200
 

@@ -97,7 +97,7 @@ Select option 1 to validate your configuration.
 ./deploy-monitoring.sh staging
 ```
 
-## Gmail Setup (Most Important)
+## 📧 Gmail Setup (Most Important)
 
 ### **Quick Gmail Setup:**
 1. **Enable 2FA**: https://myaccount.google.com/security
@@ -110,7 +110,7 @@ smtp_username = "your-email@gmail.com"
 smtp_password = "abcd-efgh-ijkl-mnop"  # 16-char app password
 ```
 
-## Slack Setup (Optional)
+## 💬 Slack Setup (Optional)
 
 ### **Quick Slack Setup:**
 1. **Create App**: https://api.slack.com/apps
@@ -123,7 +123,7 @@ slack_webhook_critical = "https://hooks.slack.com/services/YOUR/WEBHOOK"
 slack_webhook_warning = "https://hooks.slack.com/services/YOUR/WEBHOOK"
 ```
 
-## Dog Datadog Setup (Optional)
+## 🐶 Datadog Setup (Optional)
 
 ### **Quick Datadog Setup:**
 1. **Sign Up**: https://www.datadoghq.com/
@@ -161,7 +161,7 @@ Run `./validate-config.sh` to check:
 - **Required variables** set
 - **Optional variables** configured (if enabled)
 
-## Common Issues & Solutions
+## 🚨 Common Issues & Solutions
 
 ### **SMTP Authentication Failed**
 ```bash
@@ -188,7 +188,7 @@ kubectl logs -n monitoring-staging deployment/alertmanager
 kubectl logs -n monitoring-staging deployment/prometheus
 ```
 
-## Ready to Deploy!
+## 🎉 Ready to Deploy!
 
 ### **Complete Setup Process:**
 ```bash

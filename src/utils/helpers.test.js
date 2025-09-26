@@ -21,8 +21,7 @@ describe('helpers utilities', () => {
     });
 
     test('returns empty string for undefined input', () => {
-      const undefinedValue = undefined; // eslint-disable-line no-undefined
-      expect(formatDate(undefinedValue)).toBe('');
+      expect(formatDate(undefined)).toBe('');
     });
 
     test('returns empty string for invalid date', () => {
@@ -65,8 +64,7 @@ describe('helpers utilities', () => {
     });
 
     test('returns empty string for undefined input', () => {
-      const undefinedValue = undefined; // eslint-disable-line no-undefined
-      expect(formatTime(undefinedValue)).toBe('');
+      expect(formatTime(undefined)).toBe('');
     });
 
     test('returns empty string for invalid time', () => {
@@ -104,8 +102,7 @@ describe('helpers utilities', () => {
     });
 
     test('returns empty string for undefined input', () => {
-      const undefinedValue = undefined; // eslint-disable-line no-undefined
-      expect(formatDateTime(undefinedValue)).toBe('');
+      expect(formatDateTime(undefined)).toBe('');
     });
 
     test('returns empty string for invalid datetime', () => {
@@ -170,8 +167,7 @@ describe('helpers utilities', () => {
     });
 
     test('rejects undefined input', () => {
-      const undefinedValue = undefined; // eslint-disable-line no-undefined
-      expect(isValidEmail(undefinedValue)).toBe(false);
+      expect(isValidEmail(undefined)).toBe(false);
     });
 
     test('rejects empty string', () => {
@@ -233,8 +229,7 @@ describe('helpers utilities', () => {
     });
 
     test('rejects undefined input', () => {
-      const undefinedValue = undefined; // eslint-disable-line no-undefined
-      expect(isValidPhone(undefinedValue)).toBe(false);
+      expect(isValidPhone(undefined)).toBe(false);
     });
 
     test('rejects empty string', () => {

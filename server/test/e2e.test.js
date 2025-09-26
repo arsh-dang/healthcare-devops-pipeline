@@ -6,6 +6,7 @@ const Appointment = require('../models/appointment');
 // Advanced E2E test suite with database integration
 describe('E2E Appointment Workflow Tests', () => {
   let server;
+  let appointmentId;
 
   beforeAll(async () => {
     jest.setTimeout(30000); // Increase timeout for database operations
@@ -40,7 +41,6 @@ describe('E2E Appointment Workflow Tests', () => {
 
   describe('Complete Appointment Booking Flow', () => {
     test('should complete full appointment booking workflow', async () => {
-      let appointmentId;
       // Step 1: Check initial empty state
       const initialResponse = await request(app).get('/api/appointments');
       expect(initialResponse.status).toBe(200);

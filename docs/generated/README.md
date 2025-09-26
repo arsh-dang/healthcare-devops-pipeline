@@ -301,4 +301,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with love for healthcare professionals worldwide**
+**Built with ❤️ for healthcare professionals worldwide**

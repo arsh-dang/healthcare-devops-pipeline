@@ -28,7 +28,7 @@
     
     <!-- Datadog RUM (only when DD_RUM_ENABLED=true) -->
     <script>
-      if (typeof process !== 'undefined' && process.env && process.env.DD_RUM_ENABLED === 'true') {
+      if (process.env.DD_RUM_ENABLED === 'true') {
         (function(h,o,u,n,d) {
           h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
           d=o.createElement(u);d.async=1;d.src=n

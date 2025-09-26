@@ -93,22 +93,23 @@ async function testPrometheusTargets(url) {
 
 async function main() {
   const args = process.argv.slice(2);
-  const reverseProxyPort = args[0] || '30285';
+  const grafanaPort = args[0] || '3000';
+  const prometheusPort = args[1] || '9090';
   
   log('Healthcare App Monitoring Verification', 'blue');
   log('=====================================', 'blue');
   
   const results = [];
   
-  // Test Grafana through reverse proxy
-  results.push(await testEndpoint('Grafana Login', `http://localhost:${reverseProxyPort}/grafana/login`));
+  // Test Grafana
+  results.push(await testEndpoint('Grafana Login', `http://localhost:${grafanaPort}/login`));
   
-  // Test Prometheus through reverse proxy
-  results.push(await testEndpoint('Prometheus Ready', `http://localhost:${reverseProxyPort}/prometheus/-/ready`));
-  results.push(await testEndpoint('Prometheus Health', `http://localhost:${reverseProxyPort}/prometheus/-/healthy`));
+  // Test Prometheus
+  results.push(await testEndpoint('Prometheus Ready', `http://localhost:${prometheusPort}/-/ready`));
+  results.push(await testEndpoint('Prometheus Health', `http://localhost:${prometheusPort}/-/healthy`));
   
-  // Test Prometheus targets through reverse proxy
-  results.push(await testPrometheusTargets(`http://localhost:${reverseProxyPort}/prometheus/api/v1/targets`));
+  // Test Prometheus targets
+  results.push(await testPrometheusTargets(`http://localhost:${prometheusPort}/api/v1/targets`));
   
   // Summary
   log('\nSummary:', 'blue');
