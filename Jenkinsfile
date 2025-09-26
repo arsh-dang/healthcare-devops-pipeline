@@ -7015,7 +7015,6 @@ EOF
         
                 } // End of script block
             } // End of stage block
-        } // End of try block
         } catch (Exception e) {
         echo 'Pipeline failed!'
         echo "Check logs for failure details"
