@@ -1830,7 +1830,7 @@ EOF
                             }
                         }
                     },
-                    
+
                     'Secrets Scanning': {
                         echo 'Running TruffleHog secrets detection'
                         sh '''
