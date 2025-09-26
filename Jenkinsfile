@@ -7015,9 +7015,7 @@ EOF
         
                 } // End of script block
             } // End of stage block
-        } // End of withCredentials block
-    } // End of timestamps block
-} catch (Exception e) {
+        } catch (Exception e) {
         echo 'Pipeline failed!'
         echo "Check logs for failure details"
         echo "Error: ${e.getMessage()}"
@@ -7118,7 +7116,7 @@ EOF
             
             echo "Deployment cleanup completed"
         '''
-            } // End of withCredentials block
-        } // End of timestamps block
-    } // End of node block
-}
+        } // End of catch block
+        } // End of withCredentials block
+    } // End of timestamps block
+} // End of node block
