@@ -7117,6 +7117,5 @@ EOF
             echo "Deployment cleanup completed"
         '''
         } // End of catch block
-    } // End of withCredentials block
-} // End of timestamps block
-} // End of node block
+        } // End of withCredentials block
+    } // End of timestamps block
