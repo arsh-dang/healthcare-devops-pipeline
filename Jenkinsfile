@@ -281,7 +281,7 @@ node {
                                 echo 'Building frontend application with optimized caching'
                                 sh """
                                     cd ${env.WORKSPACE}
-                                    echo "Current directory: $(pwd)"
+                                    echo "Current directory: \$(pwd)"
                                     
                                     # Send build start metric to Datadog
                                     if [ -n "\$DATADOG_API_KEY" ]; then
