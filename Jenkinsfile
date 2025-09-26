@@ -236,8 +236,8 @@ node {
                 
                 script {
                     // Setup Datadog credentials
-                    withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DD_API_KEY')]) {
-                        env.DATADOG_API_KEY = DD_API_KEY
+                    withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+                        env.DATADOG_API_KEY = DATADOG_API_KEY
                     }
                     
                     // Send pipeline start event to Datadog
