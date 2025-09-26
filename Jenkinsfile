@@ -279,7 +279,7 @@ node {
                         parallel(
                             'Build Frontend': {
                                 echo 'Building frontend application with optimized caching'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     echo "Current directory: $(pwd)"
                                     
@@ -381,7 +381,7 @@ node {
                             },
                             'Build Backend': {
                                 echo 'Building backend application'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send backend build start metric
@@ -788,7 +788,7 @@ EOF
                             },
                             'Build Documentation': {
                                 echo 'Building project documentation'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send documentation build start metric
@@ -1119,7 +1119,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                             },
                             'Performance Tests': {
                                 echo 'Running performance tests'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send performance test start metric
@@ -1170,7 +1170,7 @@ EOF
                             },
                             'Accessibility Tests': {
                                 echo 'Running accessibility tests'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send accessibility test start metric
@@ -1223,7 +1223,7 @@ EOF
                             },
                             'Security Testing': {
                                 echo 'Running security-focused tests'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send security test start metric
@@ -1306,7 +1306,7 @@ EOF
                             },
                             'Contract Testing': {
                                 echo 'Running contract/API contract tests'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send contract test start metric
@@ -1454,7 +1454,7 @@ Please review test results and fix any failing tests.""", 'danger')
                         parallel(
                             'ESLint Analysis': {
                                 echo 'Running ESLint for code quality'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send ESLint start metric
@@ -1511,7 +1511,7 @@ EOF
                             },
                             'TypeScript Checking': {
                                 echo 'Running TypeScript type checking'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send TypeScript start metric
@@ -1565,7 +1565,7 @@ EOF
                             },
                             'Code Coverage Analysis': {
                                 echo 'Analyzing code coverage'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send coverage start metric
@@ -1623,7 +1623,7 @@ EOF
                             },
                             'Complexity Analysis': {
                                 echo 'Analyzing code complexity'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send complexity start metric
@@ -1679,7 +1679,7 @@ EOF
                             },
                             'SonarQube Analysis': {
                                 echo 'Running SonarQube code quality analysis'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send SonarQube start metric
@@ -2391,7 +2391,7 @@ EOF
                         parallel(
                             'Execute Load Tests': {
                                 echo 'Running Artillery load tests'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send load test execution start metric
@@ -2461,7 +2461,7 @@ EOF
                             },
                             'Performance Analysis': {
                                 echo 'Analyzing load test performance metrics'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send performance analysis start metric
@@ -2537,7 +2537,7 @@ EOF
                             },
                             'Scalability Testing': {
                                 echo 'Testing application scalability under load'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send scalability test start metric
@@ -2696,7 +2696,7 @@ EOF
                         parallel(
                             'Pod Failure Simulation': {
                                 echo 'Simulating pod failures'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send pod failure simulation start metric
@@ -2760,7 +2760,7 @@ EOF
                             },
                             'Network Disruption Test': {
                                 echo 'Testing network disruption scenarios'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send network disruption start metric
@@ -2829,7 +2829,7 @@ EOF
                             },
                             'Resource Stress Test': {
                                 echo 'Testing resource exhaustion scenarios'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send resource stress test start metric
@@ -2988,7 +2988,7 @@ EOF
                         parallel(
                             'API Documentation': {
                                 echo 'Generating OpenAPI and JSDoc documentation'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send API docs start metric
@@ -3051,7 +3051,7 @@ EOF
                             },
                             'Architecture Documentation': {
                                 echo 'Generating system architecture documentation'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send architecture docs start metric
@@ -3114,7 +3114,7 @@ EOF
                             },
                             'Deployment Documentation': {
                                 echo 'Generating deployment and operations documentation'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send deployment docs start metric
@@ -3258,7 +3258,7 @@ EOF
                         parallel(
                             'Security Standards Check': {
                                 echo 'Checking HIPAA, SOC2, GDPR compliance'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send security standards start metric
@@ -3321,7 +3321,7 @@ EOF
                             },
                             'Policy Validation': {
                                 echo 'Validating security policies and configurations'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send policy validation start metric
@@ -3397,7 +3397,7 @@ EOF
                             },
                             'Audit Report Generation': {
                                 echo 'Generating compliance audit reports'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send audit report start metric
@@ -3525,7 +3525,7 @@ EOF
                         parallel(
                             'Infrastructure Validation': {
                                 echo 'Validating Terraform configuration'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send validation start metric
@@ -3587,7 +3587,7 @@ EOF
                             },
                             'Infrastructure Planning': {
                                 echo 'Planning Terraform deployment'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send planning start metric
@@ -3706,7 +3706,7 @@ EOF
                             },
                             'Security Compliance Check': {
                                 echo 'Checking infrastructure security compliance'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send compliance start metric
@@ -3769,7 +3769,7 @@ EOF
                             },
                             'Infrastructure Application': {
                                 echo 'Applying Terraform configuration'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send application start metric
@@ -3971,7 +3971,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
                         parallel(
                             'Terraform Init & Plan': {
                                 echo 'Initializing Terraform and creating deployment plan'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send deployment start metric
@@ -4017,7 +4017,7 @@ EOF
                             },
                             'Build Docker Images': {
                                 echo 'Building Docker images for deployment'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send build start metric
@@ -4114,7 +4114,7 @@ EOF
                             },
                             'Push Images to Registry': {
                                 echo 'Pushing Docker images to container registry'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send push start metric
@@ -4199,7 +4199,7 @@ EOF
                             },
                             'Database Migration': {
                                 echo 'Running database migrations'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send migration start metric
@@ -4611,7 +4611,7 @@ EOF
                         parallel(
                             'Deploy Canary Version': {
                                 echo 'Deploying canary version to 10% of traffic'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send canary deployment start metric
@@ -4674,7 +4674,7 @@ EOF
                             },
                             'Monitor Canary Health': {
                                 echo 'Monitoring canary deployment health metrics'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send monitoring start metric
@@ -4855,7 +4855,7 @@ EOF
                             },
                             'Traffic Analysis': {
                                 echo 'Analyzing traffic patterns during canary deployment'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send traffic analysis start metric
@@ -4944,7 +4944,7 @@ EOF
                             },
                             'Automated Rollback Check': {
                                 echo 'Monitoring for automatic rollback conditions'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send rollback check start metric
@@ -5695,7 +5695,7 @@ EOF
                         parallel(
                             'Version Management': {
                                 echo 'Managing version tags and release artifacts'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send version management start metric
@@ -5771,11 +5771,11 @@ EOF
 }
 EOF
                                     fi
-                                '''
+                                """
                             },
                             'Artifact Management': {
                                 echo 'Managing and promoting release artifacts'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send artifact management start metric
@@ -5875,7 +5875,7 @@ EOF
                             },
                             'Release Notes Generation': {
                                 echo 'Generating comprehensive release notes'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send release notes start metric
@@ -6028,7 +6028,7 @@ EOF
                             },
                             'Release Validation': {
                                 echo 'Validating release readiness and compliance'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send release validation start metric
@@ -6232,7 +6232,7 @@ EOF
                         parallel(
                             'Dashboard Creation': {
                                 echo 'Creating comprehensive monitoring dashboards'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send dashboard creation start metric
@@ -6443,7 +6443,7 @@ EOF
                             },
                             'Alert Configuration': {
                                 echo 'Setting up comprehensive alerting rules'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send alert configuration start metric
@@ -6601,7 +6601,7 @@ EOF
                             },
                             'Log Monitoring Setup': {
                                 echo 'Configuring log monitoring and analysis'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send log monitoring start metric
@@ -6722,7 +6722,7 @@ EOF
                             },
                             'Synthetics Monitoring': {
                                 echo 'Setting up synthetic tests for critical user journeys'
-                                sh '''
+                                sh """
                                     cd ${env.WORKSPACE}
                                     
                                     # Send synthetics start metric
