@@ -3942,11 +3942,20 @@ EOF
                             fi
                         '''
                         // Send Slack notification for infrastructure failure
-                        sendSlackNotification(
-                            color: 'danger',
-                            message: "🚨 Infrastructure as Code Failed",
-                            details: "Healthcare App infrastructure deployment failed: ${e.getMessage()}\n\nBuild: #${BUILD_NUMBER}\nJob: ${JOB_NAME}\nEnvironment: ${ENVIRONMENT}\n\nImpact: Infrastructure provisioning failed - deployment cannot proceed\nAction Required: Check Terraform configuration and cloud provider status"
-                        )
+                        // First, construct the entire message as one variable.
+                        // Note the correction from ENVIRONMENT to params.ENVIRONMENT.
+                        def failureMessage = """🚨 Infrastructure as Code Failed
+Healthcare App infrastructure deployment failed: ${e.getMessage()}
+
+Build: #${BUILD_NUMBER}
+Job: ${JOB_NAME}
+Environment: ${params.ENVIRONMENT}
+
+Impact: Infrastructure provisioning failed - deployment cannot proceed
+Action Required: Check Terraform configuration and cloud provider status"""
+
+                        // Now, call the function with the correct positional arguments.
+                        sendSlackNotification(failureMessage, 'danger')
                         throw e
                     }
                 }
