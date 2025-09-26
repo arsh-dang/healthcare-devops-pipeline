@@ -291,7 +291,7 @@ node {
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.frontend.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:frontend\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -340,7 +340,7 @@ node {
                                                     -d "{
                                                         \\\"series\\\": [{
                                                             \\\"metric\\\": \\\"jenkins.build.frontend.success\\\",
-                                                            \\\"points\\\": [[$(date +%s), 1]],
+                                                            \\\"points\\\": [[\\$(date +%s), 1]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:frontend\\\"]
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
@@ -357,7 +357,7 @@ node {
                                                     -d "{
                                                         \\\"series\\\": [{
                                                             \\\"metric\\\": \\\"jenkins.build.frontend.failure\\\",
-                                                            \\\"points\\\": [[$(date +%s), 1]],
+                                                            \\\"points\\\": [[\\$(date +%s), 1]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:frontend\\\"]
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
@@ -392,7 +392,7 @@ node {
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.backend.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:backend\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -427,7 +427,7 @@ node {
                                                 -d "{
                                                     \\\"series\\\": [{
                                                         \\\"metric\\\": \\\"jenkins.build.backend.success\\\",
-                                                        \\\"points\\\": [[$(date +%s), 1]],
+                                                        \\\"points\\\": [[\\$(date +%s), 1]],
                                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:backend\\\"]
                                                     }]
                                                 }" || echo "Failed to send Datadog metric"
@@ -449,7 +449,7 @@ node {
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.docker.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:docker\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -569,7 +569,7 @@ node {
                                                     -d "{
                                                         \\\"series\\\": [{
                                                             \\\"metric\\\": \\\"jenkins.build.base_images_missing\\\",
-                                                            \\\"points\\\": [[$(date +%s), 1]],
+                                                            \\\"points\\\": [[\\$(date +%s), 1]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"issue:missing_base_images\\\"]
                                                         }]
                                                     }" || echo "Failed to send Datadog metric"
@@ -723,7 +723,7 @@ node {
 {
     "series": [{
         "metric": "jenkins.build.docker.failure",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "component:docker", "reason:missing_base_images"]
     }]
 }
@@ -739,7 +739,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.build.docker.partial_success",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "component:docker", "frontend_failed:$FRONTEND_FAILED", "backend_failed:$BACKEND_FAILED"]
     }]
 }
@@ -755,7 +755,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.build.docker.success",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "component:docker"]
     }]
 }
@@ -777,7 +777,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.build.docker.failure",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "component:docker"]
     }]
 }
@@ -799,7 +799,7 @@ EOF
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.docs.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:docs\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -830,7 +830,7 @@ EOF
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.build.docs.success\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"component:docs\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -850,7 +850,7 @@ EOF
                                     -d "{
                                         \\\"series\\\": [{
                                             \\\"metric\\\": \\\"jenkins.build.duration\\\",
-                                            \\\"points\\\": [[\$(date +%s), ${buildDuration}]],
+                                            \\\"points\\\": [[\\$(date +%s), ${buildDuration}]],
                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\"]
                                         }]
                                     }" || echo "Failed to send Datadog metric"
@@ -931,7 +931,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.unit.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -972,17 +972,17 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                                     \\\"series\\\": [
                                                         {
                                                             \\\"metric\\\": \\\"jenkins.test.unit.total\\\",
-                                                            \\\"points\\\": [[$(date +%s), ${TEST_COUNT:-0}]],
+                                                            \\\"points\\\": [[\$(date +%s), ${TEST_COUNT:-0}]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                         },
                                                         {
                                                             \\\"metric\\\": \\\"jenkins.test.unit.passed\\\",
-                                                            \\\"points\\\": [[$(date +%s), ${TEST_PASSED:-0}]],
+                                                            \\\"points\\\": [[\$(date +%s), ${TEST_PASSED:-0}]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                         },
                                                         {
                                                             \\\"metric\\\": \\\"jenkins.test.unit.failed\\\",
-                                                            \\\"points\\\": [[$(date +%s), ${TEST_FAILED:-0}]],
+                                                            \\\"points\\\": [[\$(date +%s), ${TEST_FAILED:-0}]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:unit\\\"]
                                                         }
                                                     ]
@@ -1007,7 +1007,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.integration.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:integration\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -1041,7 +1041,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                                 -d "{
                                                     \\\"series\\\": [{
                                                         \\\"metric\\\": \\\"jenkins.test.integration.result\\\",
-                                                        \\\"points\\\": [[$(date +%s), \$([ \\\"$INT_TEST_STATUS\\\" = \\\"success\\\" ] && echo 1 || echo 0)]],
+                                                        \\\"points\\\": [[\$(date +%s), \$([ \\\"$INT_TEST_STATUS\\\" = \\\"success\\\" ] && echo 1 || echo 0)]],
                                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:integration\\\"]
                                                     }]
                                                 }" || echo "Failed to send Datadog metric"
@@ -1063,7 +1063,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.api.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -1093,17 +1093,17 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                                     \\\"series\\\": [
                                                         {
                                                             \\\"metric\\\": \\\"jenkins.test.api.total\\\",
-                                                            \\\"points\\\": [[$(date +%s), $API_TESTS_TOTAL]],
+                                                            \\\"points\\\": [[\$(date +%s), $API_TESTS_TOTAL]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                         },
                                                         {
                                                             \\\"metric\\\": \\\"jenkins.test.api.passed\\\",
-                                                            \\\"points\\\": [[$(date +%s), $API_TESTS_PASSED]],
+                                                            \\\"points\\\": [[\$(date +%s), $API_TESTS_PASSED]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                         },
                                                         {
                                                             \\\"metric\\\": \\\"jenkins.test.api.failed\\\",
-                                                            \\\"points\\\": [[$(date +%s), $API_TESTS_FAILED]],
+                                                            \\\"points\\\": [[\$(date +%s), $API_TESTS_FAILED]],
                                                             \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:api\\\"]
                                                         }
                                                     ]
@@ -1130,7 +1130,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.performance.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:performance\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -1160,7 +1160,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
 {
     "series": [{
         "metric": "jenkins.test.performance.success",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "test_type:performance"]
     }]
 }
@@ -1182,7 +1182,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.test.accessibility.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "test_type:accessibility"]
     }]
 }
@@ -1214,7 +1214,7 @@ EOF
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.accessibility.success\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:accessibility\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -1234,7 +1234,7 @@ EOF
                                             -d "{
                                                 \\\"series\\\": [{
                                                     \\\"metric\\\": \\\"jenkins.test.security.start\\\",
-                                                    \\\"points\\\": [[$(date +%s), 1]],
+                                                    \\\"points\\\": [[\\$(date +%s), 1]],
                                                     \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:security\\\"]
                                                 }]
                                             }" || echo "Failed to send Datadog metric"
@@ -1291,12 +1291,12 @@ EOF
                                                 \\\"series\\\": [
                                                     {
                                                         \\\"metric\\\": \\\"jenkins.test.security.result\\\",
-                                                        \\\"points\\\": [[$(date +%s), \$([ \\\"$SECURITY_TEST_STATUS\\\" = \\\"success\\\" ] && echo 1 || echo 0)]],
+                                                        \\\"points\\\": [[\$(date +%s), \$([ \\\"$SECURITY_TEST_STATUS\\\" = \\\"success\\\" ] && echo 1 || echo 0)]],
                                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:security\\\"]
                                                     },
                                                     {
                                                         \\\"metric\\\": \\\"jenkins.test.security.issues\\\",
-                                                        \\\"points\\\": [[$(date +%s), ${SEC_ISSUES:-0}]],
+                                                        \\\"points\\\": [[\$(date +%s), ${SEC_ISSUES:-0}]],
                                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"test_type:security\\\"]
                                                     }
                                                 ]
@@ -1318,7 +1318,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.test.contract.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "test_type:contract"]
     }]
 }
@@ -1363,7 +1363,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.test.contract.result",
-        "points": [[$(date +%s), $([ "$CONTRACT_TEST_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$CONTRACT_TEST_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "test_type:contract"]
     }]
 }
@@ -1385,7 +1385,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.test.duration",
-        "points": [[\$(date +%s), ${testDuration}]],
+        "points": [[\\$(date +%s), ${testDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -1466,7 +1466,7 @@ Please review test results and fix any failing tests.""", 'danger')
 {
     "series": [{
         "metric": "jenkins.quality.eslint.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "tool:eslint"]
     }]
 }
@@ -1497,7 +1497,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.eslint.result",
-        "points": [[$(date +%s), $([ "$ESLINT_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$ESLINT_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "tool:eslint"]
     }]
 }
@@ -1523,7 +1523,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.typescript.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "tool:typescript"]
     }]
 }
@@ -1551,7 +1551,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.typescript.result",
-        "points": [[$(date +%s), \$([ "$TSC_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), \$([ "$TSC_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "tool:typescript"]
     }]
 }
@@ -1577,7 +1577,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.coverage.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "tool:coverage"]
     }]
 }
@@ -1613,7 +1613,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.coverage.result",
-        "points": [[$(date +%s), \$([ "$COVERAGE_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), \$([ "$COVERAGE_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "tool:coverage"]
     }]
 }
@@ -1635,7 +1635,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.complexity.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "tool:complexity"]
     }]
 }
@@ -1661,12 +1661,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.quality.complexity.files",
-            "points": [[$(date +%s), $JS_FILES]],
+            "points": [[\$(date +%s), $JS_FILES]],
             "tags": ["env:staging", "service:healthcare-app", "tool:complexity"]
         },
         {
             "metric": "jenkins.quality.complexity.functions",
-            "points": [[$(date +%s), $FUNCTIONS]],
+            "points": [[\$(date +%s), $FUNCTIONS]],
             "tags": ["env:staging", "service:healthcare-app", "tool:complexity"]
         }
     ]
@@ -1691,7 +1691,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.sonarqube.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
     }]
 }
@@ -1799,27 +1799,27 @@ EOF
     "series": [
         {
             "metric": "jenkins.quality.sonarqube.result",
-            "points": [[$(date +%s), $SONARQUBE_RESULT]],
+            "points": [[\$(date +%s), $SONARQUBE_RESULT]],
             "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
         },
         {
             "metric": "jenkins.quality.sonarqube.bugs",
-            "points": [[$(date +%s), ${SONARQUBE_BUGS:-0}]],
+            "points": [[\$(date +%s), ${SONARQUBE_BUGS:-0}]],
             "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
         },
         {
             "metric": "jenkins.quality.sonarqube.vulnerabilities",
-            "points": [[$(date +%s), ${SONARQUBE_VULNERABILITIES:-0}]],
+            "points": [[\$(date +%s), ${SONARQUBE_VULNERABILITIES:-0}]],
             "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
         },
         {
             "metric": "jenkins.quality.sonarqube.code_smells",
-            "points": [[$(date +%s), ${SONARQUBE_CODE_SMELLS:-0}]],
+            "points": [[\$(date +%s), ${SONARQUBE_CODE_SMELLS:-0}]],
             "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
         },
         {
             "metric": "jenkins.quality.sonarqube.coverage",
-            "points": [[$(date +%s), ${SONARQUBE_COVERAGE:-0}]],
+            "points": [[\$(date +%s), ${SONARQUBE_COVERAGE:-0}]],
             "tags": ["env:staging", "service:healthcare-app", "tool:sonarqube"]
         }
     ]
@@ -1843,7 +1843,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.quality.trufflehog.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "tool:trufflehog"]
     }]
 }
@@ -1911,17 +1911,17 @@ EOF
     "series": [
         {
             "metric": "jenkins.quality.trufflehog.result",
-            "points": [[$(date +%s), $TRUFFLEHOG_RESULT]],
+            "points": [[\$(date +%s), $TRUFFLEHOG_RESULT]],
             "tags": ["env:staging", "service:healthcare-app", "tool:trufflehog"]
         },
         {
             "metric": "jenkins.quality.trufflehog.secrets_found",
-            "points": [[$(date +%s), $SECRETS_FOUND]],
+            "points": [[\$(date +%s), $SECRETS_FOUND]],
             "tags": ["env:staging", "service:healthcare-app", "tool:trufflehog"]
         },
         {
             "metric": "jenkins.quality.trufflehog.high_secrets",
-            "points": [[$(date +%s), $HIGH_SECRETS]],
+            "points": [[\$(date +%s), $HIGH_SECRETS]],
             "tags": ["env:staging", "service:healthcare-app", "tool:trufflehog"]
         }
     ]
@@ -1949,7 +1949,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.quality.duration",
-    "points": [[\$(date +%s), ${qualityDuration}]],
+    "points": [[\\$(date +%s), ${qualityDuration}]],
     "tags": ["env:staging", "service:healthcare-app"]
   }]
 }
@@ -2016,7 +2016,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.security.dependency.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "scan_type:dependency"]
   }]
 }
@@ -2047,12 +2047,12 @@ EOF
   "series": [
     {
       "metric": "jenkins.security.vulnerabilities.found",
-      "points": [[$(date +%s), ${VULNERABILITIES:-0}]],
+      "points": [[\$(date +%s), ${VULNERABILITIES:-0}]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:dependency"]
     },
     {
       "metric": "jenkins.security.dependency.scan",
-      "points": [[$(date +%s), \$([ \"\$SCAN_STATUS\" = \"completed\" ] && echo 1 || echo 0)]],
+      "points": [[\$(date +%s), \$([ \"\$SCAN_STATUS\" = \"completed\" ] && echo 1 || echo 0)]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:dependency"]
     }
   ]
@@ -2080,7 +2080,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.security.sast.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "scan_type:sast"]
   }]
 }
@@ -2110,22 +2110,22 @@ EOF
   "series": [
     {
       "metric": "jenkins.security.sast.issues",
-      "points": [[$(date +%s), \$SAST_ISSUES]],
+      "points": [[\$(date +%s), \$SAST_ISSUES]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:sast"]
     },
     {
       "metric": "jenkins.security.sast.critical",
-      "points": [[$(date +%s), \$SAST_CRITICAL]],
+      "points": [[\$(date +%s), \$SAST_CRITICAL]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:sast", "severity:critical"]
     },
     {
       "metric": "jenkins.security.sast.high",
-      "points": [[$(date +%s), \$SAST_HIGH]],
+      "points": [[\$(date +%s), \$SAST_HIGH]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:sast", "severity:high"]
     },
     {
       "metric": "jenkins.security.sast.medium",
-      "points": [[$(date +%s), \$SAST_MEDIUM]],
+      "points": [[\$(date +%s), \$SAST_MEDIUM]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:sast", "severity:medium"]
     }
   ]
@@ -2148,7 +2148,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.security.container.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
   }]
 }
@@ -2197,12 +2197,12 @@ EOF
   "series": [
     {
       "metric": "jenkins.security.container.vulnerabilities",
-      "points": [[$(date +%s), \${TOTAL_VULN:-0}]],
+      "points": [[\$(date +%s), \${TOTAL_VULN:-0}]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
     },
     {
       "metric": "jenkins.security.container.scan",
-      "points": [[$(date +%s), \$([ \"\$CONTAINER_SCAN_STATUS\" = \"completed\" ] && echo 1 || echo 0)]],
+      "points": [[\$(date +%s), \$([ \"\$CONTAINER_SCAN_STATUS\" = \"completed\" ] && echo 1 || echo 0)]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
     }
   ]
@@ -2222,7 +2222,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.security.container.failure",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "scan_type:container"]
   }]
 }
@@ -2244,7 +2244,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.security.secrets.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "scan_type:secrets"]
   }]
 }
@@ -2272,12 +2272,12 @@ EOF
   "series": [
     {
       "metric": "jenkins.security.secrets.found",
-      "points": [[$(date +%s), \$SECRETS_FOUND]],
+      "points": [[\$(date +%s), \$SECRETS_FOUND]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:secrets"]
     },
     {
       "metric": "jenkins.security.secrets.scan",
-      "points": [[$(date +%s), 1]],
+      "points": [[\$(date +%s), 1]],
       "tags": ["env:staging", "service:healthcare-app", "scan_type:secrets"]
     }
   ]
@@ -2302,7 +2302,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.security.duration",
-    "points": [[\$(date +%s), ${securityDuration}]],
+    "points": [[\\$(date +%s), ${securityDuration}]],
     "tags": ["env:staging", "service:healthcare-app"]
   }]
 }
@@ -2403,7 +2403,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.loadtest.execution.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:execution"]
   }]
 }
@@ -2451,7 +2451,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.loadtest.execution.result",
-    "points": [[$(date +%s), \$([ \"\$LOAD_TEST_STATUS\" = \"success\" ] && echo 1 || echo 0)]],
+    "points": [[\$(date +%s), \$([ \"\$LOAD_TEST_STATUS\" = \"success\" ] && echo 1 || echo 0)]],
     "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:execution"]
   }]
 }
@@ -2473,7 +2473,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.loadtest.analysis.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
   }]
 }
@@ -2511,22 +2511,22 @@ EOF
   "series": [
     {
       "metric": "jenkins.loadtest.analysis.response_time",
-      "points": [[$(date +%s), \$RESPONSE_TIME_AVG]],
+      "points": [[\$(date +%s), \$RESPONSE_TIME_AVG]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
     },
     {
       "metric": "jenkins.loadtest.analysis.error_rate",
-      "points": [[$(date +%s), \$ERROR_RATE]],
+      "points": [[\$(date +%s), \$ERROR_RATE]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
     },
     {
       "metric": "jenkins.loadtest.analysis.throughput",
-      "points": [[$(date +%s), \$THROUGHPUT]],
+      "points": [[\$(date +%s), \$THROUGHPUT]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
     },
     {
       "metric": "jenkins.loadtest.analysis.result",
-      "points": [[$(date +%s), \$([ \"\$PERFORMANCE_STATUS\" = \"good\" ] && echo 1 || echo 0)]],
+      "points": [[\$(date +%s), \$([ \"\$PERFORMANCE_STATUS\" = \"good\" ] && echo 1 || echo 0)]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:analysis"]
     }
   ]
@@ -2549,7 +2549,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.loadtest.scalability.start",
-    "points": [[$(date +%s), 1]],
+    "points": [[\$(date +%s), 1]],
     "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
   }]
 }
@@ -2587,22 +2587,22 @@ EOF
   "series": [
     {
       "metric": "jenkins.loadtest.scalability.cpu",
-      "points": [[$(date +%s), \$CPU_USAGE]],
+      "points": [[\$(date +%s), \$CPU_USAGE]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
     },
     {
       "metric": "jenkins.loadtest.scalability.memory",
-      "points": [[$(date +%s), \$MEMORY_USAGE]],
+      "points": [[\$(date +%s), \$MEMORY_USAGE]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
     },
     {
       "metric": "jenkins.loadtest.scalability.users",
-      "points": [[$(date +%s), \$CONCURRENT_USERS]],
+      "points": [[\$(date +%s), \$CONCURRENT_USERS]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
     },
     {
       "metric": "jenkins.loadtest.scalability.result",
-      "points": [[$(date +%s), \$([ \"\$SCALABILITY_STATUS\" = \"good\" ] && echo 1 || echo 0)]],
+      "points": [[\$(date +%s), \$([ \"\$SCALABILITY_STATUS\" = \"good\" ] && echo 1 || echo 0)]],
       "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "task:scalability"]
     }
   ]
@@ -2625,7 +2625,7 @@ EOF
 {
   "series": [{
     "metric": "jenkins.loadtest.duration",
-    "points": [[\$(date +%s), ${loadTestDuration}]],
+    "points": [[\\$(date +%s), ${loadTestDuration}]],
     "tags": ["env:staging", "service:healthcare-app"]
   }]
 }
@@ -2708,7 +2708,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.chaos.pod_failure.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:pod_failure"]
     }]
 }
@@ -2750,7 +2750,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.chaos.pod_failure.result",
-        "points": [[$(date +%s), \$([ "$POD_FAILURE_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), \$([ "$POD_FAILURE_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:pod_failure"]
     }]
 }
@@ -2772,7 +2772,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.chaos.network.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
     }]
 }
@@ -2808,17 +2808,17 @@ EOF
     "series": [
         {
             "metric": "jenkins.chaos.network.latency",
-            "points": [[$(date +%s), $NETWORK_LATENCY]],
+            "points": [[\$(date +%s), $NETWORK_LATENCY]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
         },
         {
             "metric": "jenkins.chaos.network.packet_loss",
-            "points": [[$(date +%s), $PACKET_LOSS]],
+            "points": [[\$(date +%s), $PACKET_LOSS]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
         },
         {
             "metric": "jenkins.chaos.network.result",
-            "points": [[$(date +%s), \$([ "$NETWORK_STATUS" = "resilient" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), \$([ "$NETWORK_STATUS" = "resilient" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:network"]
         }
     ]
@@ -2841,7 +2841,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.chaos.resource.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
     }]
 }
@@ -2879,22 +2879,22 @@ EOF
     "series": [
         {
             "metric": "jenkins.chaos.resource.cpu",
-            "points": [[$(date +%s), $CPU_STRESS]],
+            "points": [[\$(date +%s), $CPU_STRESS]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
         },
         {
             "metric": "jenkins.chaos.resource.memory",
-            "points": [[$(date +%s), $MEMORY_STRESS]],
+            "points": [[\$(date +%s), $MEMORY_STRESS]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
         },
         {
             "metric": "jenkins.chaos.resource.disk",
-            "points": [[$(date +%s), $DISK_STRESS]],
+            "points": [[\$(date +%s), $DISK_STRESS]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
         },
         {
             "metric": "jenkins.chaos.resource.result",
-            "points": [[$(date +%s), \$([ "$RESOURCE_STATUS" = "resilient" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), \$([ "$RESOURCE_STATUS" = "resilient" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "task:resource"]
         }
     ]
@@ -2917,7 +2917,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.chaos.duration",
-        "points": [[\$(date +%s), ${chaosDuration}]],
+        "points": [[\\$(date +%s), ${chaosDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3000,7 +3000,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.docs.api.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:api"]
     }]
 }
@@ -3041,7 +3041,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.docs.api.result",
-        "points": [[$(date +%s), \$([ "$API_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), \$([ "$API_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:api"]
     }]
 }
@@ -3063,7 +3063,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.docs.arch.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
     }]
 }
@@ -3093,17 +3093,17 @@ EOF
     "series": [
         {
             "metric": "jenkins.docs.arch.documents",
-            "points": [[$(date +%s), $DOCS_GENERATED]],
+            "points": [[\$(date +%s), $DOCS_GENERATED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
         },
         {
             "metric": "jenkins.docs.arch.diagrams",
-            "points": [[$(date +%s), $DIAGRAMS_CREATED]],
+            "points": [[\$(date +%s), $DIAGRAMS_CREATED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
         },
         {
             "metric": "jenkins.docs.arch.result",
-            "points": [[$(date +%s), \$([ "$ARCH_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), \$([ "$ARCH_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:architecture"]
         }
     ]
@@ -3126,7 +3126,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.docs.deploy.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
     }]
 }
@@ -3156,17 +3156,17 @@ EOF
     "series": [
         {
             "metric": "jenkins.docs.deploy.guides",
-            "points": [[$(date +%s), $GUIDES_CREATED]],
+            "points": [[\$(date +%s), $GUIDES_CREATED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
         },
         {
             "metric": "jenkins.docs.deploy.runbooks",
-            "points": [[$(date +%s), $RUNBOOKS_GENERATED]],
+            "points": [[\$(date +%s), $RUNBOOKS_GENERATED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
         },
         {
             "metric": "jenkins.docs.deploy.result",
-            "points": [[$(date +%s), \$([ "$DEPLOY_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), \$([ "$DEPLOY_DOCS_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:docs", "task:deployment"]
         }
     ]
@@ -3189,7 +3189,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.docs.duration",
-        "points": [[\$(date +%s), ${docsDuration}]],
+        "points": [[\\$(date +%s), ${docsDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3270,7 +3270,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.compliance.security.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:security"]
     }]
 }
@@ -3311,7 +3311,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.compliance.security.result",
-        "points": [[$(date +%s), $([ "$COMPLIANCE_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$COMPLIANCE_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:security"]
     }]
 }
@@ -3333,7 +3333,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.compliance.policy.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
     }]
 }
@@ -3371,22 +3371,22 @@ EOF
     "series": [
         {
             "metric": "jenkins.compliance.policy.checked",
-            "points": [[$(date +%s), $POLICIES_CHECKED]],
+            "points": [[\$(date +%s), $POLICIES_CHECKED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
         },
         {
             "metric": "jenkins.compliance.policy.passed",
-            "points": [[$(date +%s), $POLICIES_PASSED]],
+            "points": [[\$(date +%s), $POLICIES_PASSED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
         },
         {
             "metric": "jenkins.compliance.policy.failed",
-            "points": [[$(date +%s), $POLICIES_FAILED]],
+            "points": [[\$(date +%s), $POLICIES_FAILED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
         },
         {
             "metric": "jenkins.compliance.policy.result",
-            "points": [[$(date +%s), $([ "$POLICY_STATUS" = "compliant" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$POLICY_STATUS" = "compliant" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:policy"]
         }
     ]
@@ -3409,7 +3409,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.compliance.audit.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
     }]
 }
@@ -3439,17 +3439,17 @@ EOF
     "series": [
         {
             "metric": "jenkins.compliance.audit.reports",
-            "points": [[$(date +%s), $REPORTS_GENERATED]],
+            "points": [[\$(date +%s), $REPORTS_GENERATED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
         },
         {
             "metric": "jenkins.compliance.audit.standards",
-            "points": [[$(date +%s), $STANDARDS_COVERED]],
+            "points": [[\$(date +%s), $STANDARDS_COVERED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
         },
         {
             "metric": "jenkins.compliance.audit.result",
-            "points": [[$(date +%s), $([ "$AUDIT_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$AUDIT_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:compliance", "task:audit"]
         }
     ]
@@ -3472,7 +3472,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.compliance.duration",
-        "points": [[\$(date +%s), ${complianceDuration}]],
+        "points": [[\\$(date +%s), ${complianceDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3537,7 +3537,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.validation.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:validation"]
     }]
 }
@@ -3573,7 +3573,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.validation.result",
-        "points": [[$(date +%s), $([ "$VALIDATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$VALIDATION_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:validation"]
     }]
 }
@@ -3599,7 +3599,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.planning.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:planning"]
     }]
 }
@@ -3686,12 +3686,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.infra.planning.result",
-            "points": [[$(date +%s), $([ "$PLANNING_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$PLANNING_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:planning"]
         },
         {
             "metric": "jenkins.infra.planning.changes",
-            "points": [[$(date +%s), ${PLAN_CHANGES:-0}]],
+            "points": [[\$(date +%s), ${PLAN_CHANGES:-0}]],
             "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:planning"]
         }
     ]
@@ -3718,7 +3718,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.compliance.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:compliance"]
     }]
 }
@@ -3753,12 +3753,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.infra.compliance.result",
-            "points": [[$(date +%s), $([ "$COMPLIANCE_STATUS" = "compliant" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$COMPLIANCE_STATUS" = "compliant" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:compliance"]
         },
         {
             "metric": "jenkins.infra.compliance.secure_configs",
-            "points": [[$(date +%s), $SECURE_CONFIGS]],
+            "points": [[\$(date +%s), $SECURE_CONFIGS]],
             "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:compliance"]
         }
     ]
@@ -3781,7 +3781,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.application.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
     }]
 }
@@ -3877,7 +3877,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.application.result",
-        "points": [[$(date +%s), $([ "$APPLICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$APPLICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
     }]
 }
@@ -3903,7 +3903,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.duration",
-        "points": [[\$(date +%s), ${infraDuration}]],
+        "points": [[\\$(date +%s), ${infraDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3983,7 +3983,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
 {
     "series": [{
         "metric": "jenkins.deploy.terraform.init.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
     }]
 }
@@ -4007,7 +4007,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.terraform.init.result",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
     }]
 }
@@ -4029,7 +4029,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.docker.build.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:docker"]
     }]
 }
@@ -4104,7 +4104,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.docker.build.result",
-        "points": [[$(date +%s), $([ "$DOCKER_BUILD_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$DOCKER_BUILD_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:docker"]
     }]
 }
@@ -4126,7 +4126,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.docker.push.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:registry"]
     }]
 }
@@ -4189,7 +4189,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.docker.push.result",
-        "points": [[$(date +%s), $([ "$REGISTRY_PUSH_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$REGISTRY_PUSH_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:registry"]
     }]
 }
@@ -4211,7 +4211,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.migration.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:migration"]
     }]
 }
@@ -4249,7 +4249,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.migration.result",
-        "points": [[$(date +%s), $([ "$MIGRATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$MIGRATION_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:migration"]
     }]
 }
@@ -4274,7 +4274,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.terraform.apply.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
     }]
 }
@@ -4295,7 +4295,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.terraform.apply.result",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:terraform"]
     }]
 }
@@ -4319,7 +4319,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.manual_fixes.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:manual_fixes"]
     }]
 }
@@ -4454,7 +4454,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.manual_fixes.result",
-        "points": [[$(date +%s), $([ "$MANUAL_FIXES_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$MANUAL_FIXES_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:manual_fixes"]
     }]
 }
@@ -4478,7 +4478,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.verify.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:verify"]
     }]
 }
@@ -4521,7 +4521,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.verify.result",
-        "points": [[$(date +%s), $([ "$VERIFICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$VERIFICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:deploy", "task:verify"]
     }]
 }
@@ -4542,7 +4542,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.duration",
-        "points": [[\$(date +%s), ${deployDuration}]],
+        "points": [[\\$(date +%s), ${deployDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -4623,7 +4623,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.canary.deploy.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:deploy"]
     }]
 }
@@ -4658,12 +4658,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.canary.deploy.result",
-            "points": [[$(date +%s), $([ "$CANARY_DEPLOY_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$CANARY_DEPLOY_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:deploy"]
         },
         {
             "metric": "jenkins.canary.traffic_split",
-            "points": [[$(date +%s), 10]],
+            "points": [[\$(date +%s), 10]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary"]
         }
     ]
@@ -4686,7 +4686,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.canary.monitor.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
     }]
 }
@@ -4738,12 +4738,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.canary.health.passed",
-            "points": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+            "points": [[\$(date +%s), $HEALTH_CHECKS_PASSED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
         },
         {
             "metric": "jenkins.canary.health.failed",
-            "points": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+            "points": [[\$(date +%s), $HEALTH_CHECKS_FAILED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
         }
     ]
@@ -4788,12 +4788,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.canary.health.passed",
-            "points": [[$(date +%s), $HEALTH_CHECKS_PASSED]],
+            "points": [[\$(date +%s), $HEALTH_CHECKS_PASSED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
         },
         {
             "metric": "jenkins.canary.health.failed",
-            "points": [[$(date +%s), $HEALTH_CHECKS_FAILED]],
+            "points": [[\$(date +%s), $HEALTH_CHECKS_FAILED]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
         }
     ]
@@ -4839,12 +4839,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.canary.health.success_rate",
-            "points": [[$(date +%s), $SUCCESS_RATE]],
+            "points": [[\$(date +%s), $SUCCESS_RATE]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
         },
         {
             "metric": "jenkins.canary.health.status",
-            "points": [[$(date +%s), $([ "$CANARY_HEALTH_STATUS" = "healthy" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$CANARY_HEALTH_STATUS" = "healthy" ] && echo 1 || echo 0)]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:monitor"]
         }
     ]
@@ -4867,7 +4867,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.canary.traffic.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
     }]
 }
@@ -4913,27 +4913,27 @@ EOF
     "series": [
         {
             "metric": "jenkins.canary.traffic.baseline_requests",
-            "points": [[$(date +%s), $BASELINE_REQUESTS]],
+            "points": [[\$(date +%s), $BASELINE_REQUESTS]],
             "tags": ["env:staging", "service:healthcare-app", "version:baseline"]
         },
         {
             "metric": "jenkins.canary.traffic.canary_requests",
-            "points": [[$(date +%s), $CANARY_REQUESTS]],
+            "points": [[\$(date +%s), $CANARY_REQUESTS]],
             "tags": ["env:staging", "service:healthcare-app", "version:canary"]
         },
         {
             "metric": "jenkins.canary.traffic.latency_improvement",
-            "points": [[$(date +%s), $LATENCY_IMPROVEMENT]],
+            "points": [[\$(date +%s), $LATENCY_IMPROVEMENT]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
         },
         {
             "metric": "jenkins.canary.traffic.error_improvement",
-            "points": [[$(date +%s), $ERROR_IMPROVEMENT]],
+            "points": [[\$(date +%s), $ERROR_IMPROVEMENT]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
         },
         {
             "metric": "jenkins.canary.traffic.analysis_result",
-            "points": [[$(date +%s), $([ "$TRAFFIC_ANALYSIS_STATUS" = "positive" ] && echo 2 || ([ "$TRAFFIC_ANALYSIS_STATUS" = "neutral" ] && echo 1 || echo 0))]],
+            "points": [[\$(date +%s), $([ "$TRAFFIC_ANALYSIS_STATUS" = "positive" ] && echo 2 || ([ "$TRAFFIC_ANALYSIS_STATUS" = "neutral" ] && echo 1 || echo 0))]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:analysis"]
         }
     ]
@@ -4956,7 +4956,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.canary.rollback.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
     }]
 }
@@ -4996,12 +4996,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.canary.rollback.error_rate",
-            "points": [[$(date +%s), $CURRENT_ERROR_RATE]],
+            "points": [[\$(date +%s), $CURRENT_ERROR_RATE]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
         },
         {
             "metric": "jenkins.canary.rollback.latency",
-            "points": [[$(date +%s), $CURRENT_LATENCY]],
+            "points": [[\$(date +%s), $CURRENT_LATENCY]],
             "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
         }
     ]
@@ -5032,7 +5032,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.canary.rollback.result",
-        "points": [[$(date +%s), $([ "$ROLLBACK_STATUS" = "not_triggered" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$ROLLBACK_STATUS" = "not_triggered" ] && echo 1 || echo 0)]],
         "tags": ["env:staging", "service:healthcare-app", "stage:canary", "task:rollback"]
     }]
 }
@@ -5054,7 +5054,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.canary.duration",
-        "points": [[\$(date +%s), ${canaryDuration}]],
+        "points": [[\\$(date +%s), ${canaryDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -5133,7 +5133,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.green.deploy.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green", "iac:terraform"]
     }]
 }
@@ -5163,7 +5163,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.green.deploy.result",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green", "iac:terraform"]
     }]
 }
@@ -5187,7 +5187,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.green.health.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green"]
     }]
 }
@@ -5322,7 +5322,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.green.health.status",
-        "points": [[$(date +%s), $([ "$GREEN_HEALTH_STATUS" = "healthy" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$GREEN_HEALTH_STATUS" = "healthy" ] && echo 1 || echo 0)]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "environment:green"]
     }]
 }
@@ -5346,7 +5346,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.traffic.switch.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:traffic_switch"]
     }]
 }
@@ -5380,7 +5380,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.traffic.switch.result",
-        "points": [[$(date +%s), $([ "$TRAFFIC_SWITCH_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$TRAFFIC_SWITCH_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:traffic_switch"]
     }]
 }
@@ -5404,7 +5404,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.monitor.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
     }]
 }
@@ -5538,12 +5538,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.bluegreen.monitor.passed",
-            "points": [[$(date +%s), $MONITOR_CHECKS_PASSED]],
+            "points": [[\$(date +%s), $MONITOR_CHECKS_PASSED]],
             "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
         },
         {
             "metric": "jenkins.bluegreen.monitor.failed",
-            "points": [[$(date +%s), $MONITOR_CHECKS_FAILED]],
+            "points": [[\$(date +%s), $MONITOR_CHECKS_FAILED]],
             "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
         }
     ]
@@ -5584,12 +5584,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.bluegreen.monitor.success_rate",
-            "points": [[$(date +%s), $MONITOR_SUCCESS_RATE]],
+            "points": [[\$(date +%s), $MONITOR_SUCCESS_RATE]],
             "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
         },
         {
             "metric": "jenkins.bluegreen.monitor.stable",
-            "points": [[$(date +%s), $([ "$GREEN_STABLE_STATUS" = "stable" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$GREEN_STABLE_STATUS" = "stable" ] && echo 1 || echo 0)]],
             "tags": ["env:production", "service:healthcare-app", "stage:bluegreen", "task:monitor"]
         }
     ]
@@ -5611,7 +5611,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.bluegreen.duration",
-        "points": [[\$(date +%s), ${blueGreenDuration}]],
+        "points": [[\\$(date +%s), ${blueGreenDuration}]],
         "tags": ["env:production", "service:healthcare-app"]
     }]
 }
@@ -5707,7 +5707,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.version.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:release", "task:version"]
     }]
 }
@@ -5765,7 +5765,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.version.result",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:release", "task:version", "version:$RELEASE_VERSION"]
     }]
 }
@@ -5787,7 +5787,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.artifact.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:release", "task:artifact"]
     }]
 }
@@ -5859,12 +5859,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.release.artifact.count",
-            "points": [[$(date +%s), $ARTIFACT_COUNT]],
+            "points": [[\$(date +%s), $ARTIFACT_COUNT]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:artifact"]
         },
         {
             "metric": "jenkins.release.artifact.result",
-            "points": [[$(date +%s), 1]],
+            "points": [[\\$(date +%s), 1]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:artifact"]
         }
     ]
@@ -5887,7 +5887,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.notes.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:release", "task:notes"]
     }]
 }
@@ -6012,12 +6012,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.release.notes.lines",
-            "points": [[$(date +%s), $NOTES_LENGTH]],
+            "points": [[\$(date +%s), $NOTES_LENGTH]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:notes"]
         },
         {
             "metric": "jenkins.release.notes.result",
-            "points": [[$(date +%s), 1]],
+            "points": [[\\$(date +%s), 1]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:notes"]
         }
     ]
@@ -6040,7 +6040,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.validation.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
     }]
 }
@@ -6125,22 +6125,22 @@ EOF
     "series": [
         {
             "metric": "jenkins.release.validation.checks",
-            "points": [[$(date +%s), $VALIDATION_CHECKS]],
+            "points": [[\$(date +%s), $VALIDATION_CHECKS]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
         },
         {
             "metric": "jenkins.release.validation.passed",
-            "points": [[$(date +%s), $VALIDATION_PASSED]],
+            "points": [[\$(date +%s), $VALIDATION_PASSED]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
         },
         {
             "metric": "jenkins.release.validation.rate",
-            "points": [[$(date +%s), $VALIDATION_RATE]],
+            "points": [[\$(date +%s), $VALIDATION_RATE]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
         },
         {
             "metric": "jenkins.release.validation.result",
-            "points": [[$(date +%s), $([ "$RELEASE_READY" = "ready" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$RELEASE_READY" = "ready" ] && echo 1 || echo 0)]],
             "tags": ["env:production", "service:healthcare-app", "stage:release", "task:validation"]
         }
     ]
@@ -6165,7 +6165,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.duration",
-        "points": [[\$(date +%s), ${releaseDuration}]],
+        "points": [[\\$(date +%s), ${releaseDuration}]],
         "tags": ["env:production", "service:healthcare-app", "version:\$RELEASE_VERSION"]
     }]
 }
@@ -6244,7 +6244,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.monitoring.dashboard.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:dashboard"]
     }]
 }
@@ -6433,7 +6433,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.monitoring.dashboard.result",
-        "points": [[$(date +%s), $([ "$DASHBOARD_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "points": [[\$(date +%s), $([ "$DASHBOARD_STATUS" = "success" ] && echo 1 || echo 0)]],
         "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:dashboard"]
     }]
 }
@@ -6455,7 +6455,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.monitoring.alert.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:alert"]
     }]
 }
@@ -6585,12 +6585,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.monitoring.alert.count",
-            "points": [[$(date +%s), $ALERTS_CREATED]],
+            "points": [[\$(date +%s), $ALERTS_CREATED]],
             "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:alert"]
         },
         {
             "metric": "jenkins.monitoring.alert.result",
-            "points": [[$(date +%s), $([ "$ALERT_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$ALERT_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:alert"]
         }
     ]
@@ -6613,7 +6613,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.monitoring.log.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:log"]
     }]
 }
@@ -6706,12 +6706,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.monitoring.log.configs",
-            "points": [[$(date +%s), $LOG_CONFIGS_CREATED]],
+            "points": [[\$(date +%s), $LOG_CONFIGS_CREATED]],
             "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:log"]
         },
         {
             "metric": "jenkins.monitoring.log.result",
-            "points": [[$(date +%s), $([ "$LOG_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$LOG_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:log"]
         }
     ]
@@ -6734,7 +6734,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.monitoring.synthetics.start",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:synthetics"]
     }]
 }
@@ -6886,12 +6886,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.monitoring.synthetics.count",
-            "points": [[$(date +%s), $SYNTHETICS_CREATED]],
+            "points": [[\$(date +%s), $SYNTHETICS_CREATED]],
             "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:synthetics"]
         },
         {
             "metric": "jenkins.monitoring.synthetics.result",
-            "points": [[$(date +%s), $([ "$SYNTHETICS_STATUS" = "success" ] && echo 1 || echo 0)]],
+            "points": [[\$(date +%s), $([ "$SYNTHETICS_STATUS" = "success" ] && echo 1 || echo 0)]],
             "tags": ["env:production", "service:healthcare-app", "stage:monitoring", "task:synthetics"]
         }
     ]
@@ -6914,7 +6914,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.monitoring.duration",
-        "points": [[\$(date +%s), ${monitoringDuration}]],
+        "points": [[\\$(date +%s), ${monitoringDuration}]],
         "tags": ["env:production", "service:healthcare-app"]
     }]
 }
@@ -6976,7 +6976,7 @@ EOF
         // Send pipeline success event to Datadog
         sh '''
             if [ -n "$DATADOG_API_KEY" ]; then
-                PIPELINE_DURATION=$(( $(date +%s) - $(date -d "$(date -r Jenkinsfile)" +%s 2>/dev/null || echo "$(date +%s)") ))
+                PIPELINE_DURATION=$(( \$(date +%s) - $(date -d "$(date -r Jenkinsfile)" +%s 2>/dev/null || echo "\$(date +%s)") ))
                 
                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                     -H "Content-Type: application/json" \\
@@ -7000,12 +7000,12 @@ EOF
     "series": [
         {
             "metric": "jenkins.pipeline.success",
-            "points": [[$(date +%s), 1]],
+            "points": [[\\$(date +%s), 1]],
             "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins"]
         },
         {
             "metric": "jenkins.pipeline.duration",
-            "points": [[$(date +%s), ${PIPELINE_DURATION:-0}]],
+            "points": [[\$(date +%s), ${PIPELINE_DURATION:-0}]],
             "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins"]
         }
     ]
@@ -7068,7 +7068,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.pipeline.failure",
-        "points": [[$(date +%s), 1]],
+        "points": [[\\$(date +%s), 1]],
         "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins"]
     }]
 }
