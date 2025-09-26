@@ -436,7 +436,7 @@ node {
                                         echo "npm not found - skipping backend build for now"
                                         echo "Backend build would happen here with proper Node.js setup"
                                     fi
-                                '''
+                                """
                             },
                             'Build Docker Images': {
                                 echo 'Building Docker Images with Multi-stage Optimization...'
