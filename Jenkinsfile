@@ -7052,7 +7052,6 @@ EOF
         
                         } // End of script block
                     } // End of stage block
-                } // End of try block
             } catch (Exception e) {
         echo 'Pipeline failed!'
         echo "Check logs for failure details"
@@ -7114,8 +7113,9 @@ EOF
         '''
         
         throw e
-    } finally {
-        echo 'Cleaning up workspace...'
+            } // End of catch block
+            finally {
+                echo 'Cleaning up workspace...'
         
         // Clean up Docker images
         sh 'docker image prune -f || true'
@@ -7154,5 +7154,8 @@ EOF
             
             echo "Deployment cleanup completed"
         '''
-            } // End of catch block
+            } // End of finally block
+        } // End of withCredentials block
+        } // End of timestamps block
+} // End of node block
     
