@@ -174,8 +174,14 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
             env.DATADOG_API_KEY = DATADOG_API_KEY
 
-            try {
-            stage('Force Pipeline Reload Check') {
+            script {
+                try {
+                    script {
+                        script {
+                            script {
+                                // Main pipeline stages block
+                                {
+                                    stage('Force Pipeline Reload Check') {
                 echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
                 echo "Current pipeline type: Scripted with parameters"
@@ -238,6 +244,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                         '''
                     }
                 }
+                } // End of script block
             }
             
             stage('Checkout') {
@@ -303,6 +310,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                     
                     echo "Datadog monitoring setup completed"
                 }
+                } // End of script block
             }
             
             stage('Build') {
@@ -944,6 +952,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                         throw e
                     }
                 }
+                } // End of script block
             }
             
             if (params.RUN_TESTS) {
@@ -1479,6 +1488,7 @@ Please review test results and fix any failing tests.""", 'danger')
             }
             
             }
+            } // End of script block
             
             stage('Code Quality') {
                 echo 'Running comprehensive code quality analysis with Datadog monitoring...'
@@ -2028,6 +2038,7 @@ EOF
                         throw e
                     }
                 }
+                } // End of script block
             }
             
             if (params.RUN_SECURITY_SCAN) {
@@ -2397,6 +2408,7 @@ Please review security scan results and address any critical vulnerabilities."""
                         throw e
                     }
                 }
+                } // End of script block
             }
             
             stage('Load Testing') {
@@ -2704,6 +2716,7 @@ EOF
                         throw e
                     }
                 }
+                } // End of script block
             }
             
             stage('Chaos Engineering') {
@@ -2997,6 +3010,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Documentation Generation') {
                 echo 'Generating comprehensive API documentation and project docs...'
@@ -3267,6 +3281,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Compliance Automation') {
                 echo 'Running automated compliance checks for security standards...'
@@ -3550,6 +3565,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Infrastructure as Code') {
                 echo 'Deploying infrastructure with Terraform and parallel validation...'
@@ -3996,6 +4012,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
                     }
                 }
             }
+            } // End of script block
             
             stage('Deploy to Staging') {
                 echo 'Deploying to staging environment using Terraform IaC...'
@@ -4620,6 +4637,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Canary Deployment') {
                 echo 'Performing canary deployment with traffic splitting...'
@@ -5130,6 +5148,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Blue-Green Deployment') {
                 echo 'Performing blue-green deployment using Terraform IaC...'
@@ -5704,6 +5723,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Release to Production') {
                 echo 'Performing advanced production release with version management and artifact promotion...'
@@ -6241,6 +6261,7 @@ EOF
                     }
                 }
             }
+            } // End of script block
             
             stage('Monitoring Setup') {
                 echo 'Setting up comprehensive monitoring, dashboards, and alerting for production environment...'
@@ -7052,8 +7073,14 @@ EOF
         
                         } // End of script block
                     } // End of stage block
-            } catch (Exception e) {
-                script {
+                            } // End of script block
+                        } // End of script block
+                    } // End of script block
+                                } // End of main pipeline stages block
+                } catch (Exception e) {
+                    // Error handling block
+                    {
+                        script {
                     echo 'Pipeline failed!'
         echo "Check logs for failure details"
         echo "Error: ${e.getMessage()}"
@@ -7114,7 +7141,8 @@ EOF
         '''
         
         throw e
-                } // End of script block
+                        } // End of script block
+                    } // End of error handling block
             } // End of catch block
             finally {
                 script {
@@ -7159,6 +7187,7 @@ EOF
         '''
                 } // End of script block
             } // End of finally block
+                } // End of script block
         } // End of withCredentials block
         } // End of timestamps block
 } // End of node block
