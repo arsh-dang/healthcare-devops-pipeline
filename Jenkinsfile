@@ -279,8 +279,8 @@ node {
                         parallel(
                             'Build Frontend': {
                                 echo 'Building frontend application with optimized caching'
-                                sh """
-                                    cd ${env.WORKSPACE}
+                                sh '''
+                                    cd \$(pwd)
                                     echo "Current directory: \$(pwd)"
                                     
                                     # Send build start metric to Datadog
