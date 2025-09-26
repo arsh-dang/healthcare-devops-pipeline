@@ -788,7 +788,7 @@ EOF
                             },
                             'Build Documentation': {
                                 echo 'Building project documentation'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send documentation build start metric
@@ -842,7 +842,7 @@ EOF
                         def buildDuration = System.currentTimeMillis() - buildStartTime
                         
                         // Send build duration metric
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -855,10 +855,10 @@ EOF
                                         }]
                                     }" || echo "Failed to send Datadog metric"
                             fi
-                        """
+                        '''
                         
                         // Send build completion event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -871,11 +871,11 @@ EOF
                                         \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send build failure event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -888,7 +888,7 @@ EOF
                                         \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         // Send Slack notification for build failure
                         sendSlackNotification("""🚨 Build Stage Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
@@ -1119,7 +1119,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                             },
                             'Performance Tests': {
                                 echo 'Running performance tests'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send performance test start metric
@@ -1170,7 +1170,7 @@ EOF
                             },
                             'Accessibility Tests': {
                                 echo 'Running accessibility tests'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send accessibility test start metric
@@ -1223,7 +1223,7 @@ EOF
                             },
                             'Security Testing': {
                                 echo 'Running security-focused tests'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send security test start metric
@@ -1306,7 +1306,7 @@ EOF
                             },
                             'Contract Testing': {
                                 echo 'Running contract/API contract tests'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send contract test start metric
@@ -1376,7 +1376,7 @@ EOF
                         def testDuration = System.currentTimeMillis() - testStartTime
                         
                         // Send test duration and completion metrics
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
@@ -1403,7 +1403,7 @@ EOF
                                         \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send test failure event
@@ -1454,7 +1454,7 @@ Please review test results and fix any failing tests.""", 'danger')
                         parallel(
                             'ESLint Analysis': {
                                 echo 'Running ESLint for code quality'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send ESLint start metric
@@ -1511,7 +1511,7 @@ EOF
                             },
                             'TypeScript Checking': {
                                 echo 'Running TypeScript type checking'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send TypeScript start metric
@@ -1565,7 +1565,7 @@ EOF
                             },
                             'Code Coverage Analysis': {
                                 echo 'Analyzing code coverage'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send coverage start metric
@@ -1623,7 +1623,7 @@ EOF
                             },
                             'Complexity Analysis': {
                                 echo 'Analyzing code complexity'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send complexity start metric
@@ -1679,7 +1679,7 @@ EOF
                             },
                             'SonarQube Analysis': {
                                 echo 'Running SonarQube code quality analysis'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send SonarQube start metric
@@ -1940,7 +1940,7 @@ EOF
                         // Force Jenkins cache invalidation - syntax fix applied
                         
                         // Send code quality completion metrics
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -1969,7 +1969,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send code quality failure event
@@ -2293,7 +2293,7 @@ EOF
                         def securityDuration = System.currentTimeMillis() - securityStartTime
                         
                         // Send security scan completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -2322,7 +2322,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send security failure event
@@ -2391,7 +2391,7 @@ EOF
                         parallel(
                             'Execute Load Tests': {
                                 echo 'Running Artillery load tests'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send load test execution start metric
@@ -2461,7 +2461,7 @@ EOF
                             },
                             'Performance Analysis': {
                                 echo 'Analyzing load test performance metrics'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send performance analysis start metric
@@ -2537,7 +2537,7 @@ EOF
                             },
                             'Scalability Testing': {
                                 echo 'Testing application scalability under load'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send scalability test start metric
@@ -2616,7 +2616,7 @@ EOF
                         def loadTestDuration = System.currentTimeMillis() - loadTestStartTime
                         
                         // Send load testing completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -2645,7 +2645,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send load testing failure event
@@ -2696,7 +2696,7 @@ EOF
                         parallel(
                             'Pod Failure Simulation': {
                                 echo 'Simulating pod failures'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send pod failure simulation start metric
@@ -2760,7 +2760,7 @@ EOF
                             },
                             'Network Disruption Test': {
                                 echo 'Testing network disruption scenarios'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send network disruption start metric
@@ -2829,7 +2829,7 @@ EOF
                             },
                             'Resource Stress Test': {
                                 echo 'Testing resource exhaustion scenarios'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send resource stress test start metric
@@ -2908,7 +2908,7 @@ EOF
                         def chaosDuration = System.currentTimeMillis() - chaosStartTime
                         
                         // Send chaos engineering completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
@@ -2937,7 +2937,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send chaos engineering failure event
@@ -2988,7 +2988,7 @@ EOF
                         parallel(
                             'API Documentation': {
                                 echo 'Generating OpenAPI and JSDoc documentation'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send API docs start metric
@@ -3051,7 +3051,7 @@ EOF
                             },
                             'Architecture Documentation': {
                                 echo 'Generating system architecture documentation'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send architecture docs start metric
@@ -3114,7 +3114,7 @@ EOF
                             },
                             'Deployment Documentation': {
                                 echo 'Generating deployment and operations documentation'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send deployment docs start metric
@@ -3180,7 +3180,7 @@ EOF
                         def docsDuration = System.currentTimeMillis() - docsStartTime
                         
                         // Send documentation generation completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
@@ -3209,7 +3209,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send documentation generation failure event
@@ -3258,7 +3258,7 @@ EOF
                         parallel(
                             'Security Standards Check': {
                                 echo 'Checking HIPAA, SOC2, GDPR compliance'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send security standards start metric
@@ -3321,7 +3321,7 @@ EOF
                             },
                             'Policy Validation': {
                                 echo 'Validating security policies and configurations'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send policy validation start metric
@@ -3397,7 +3397,7 @@ EOF
                             },
                             'Audit Report Generation': {
                                 echo 'Generating compliance audit reports'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send audit report start metric
@@ -3463,7 +3463,7 @@ EOF
                         def complianceDuration = System.currentTimeMillis() - complianceStartTime
                         
                         // Send compliance automation completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
@@ -3492,7 +3492,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send compliance automation failure event
@@ -3525,7 +3525,7 @@ EOF
                         parallel(
                             'Infrastructure Validation': {
                                 echo 'Validating Terraform configuration'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send validation start metric
@@ -3587,7 +3587,7 @@ EOF
                             },
                             'Infrastructure Planning': {
                                 echo 'Planning Terraform deployment'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send planning start metric
@@ -3706,7 +3706,7 @@ EOF
                             },
                             'Security Compliance Check': {
                                 echo 'Checking infrastructure security compliance'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send compliance start metric
@@ -3769,7 +3769,7 @@ EOF
                             },
                             'Infrastructure Application': {
                                 echo 'Applying Terraform configuration'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send application start metric
@@ -3894,7 +3894,7 @@ EOF
                         def infraDuration = System.currentTimeMillis() - infraStartTime
                         
                         // Send infrastructure completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
@@ -3923,7 +3923,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send infrastructure failure event
@@ -3971,7 +3971,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
                         parallel(
                             'Terraform Init & Plan': {
                                 echo 'Initializing Terraform and creating deployment plan'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}/terraform
                                     
                                     # Send deployment start metric
@@ -4017,7 +4017,7 @@ EOF
                             },
                             'Build Docker Images': {
                                 echo 'Building Docker images for deployment'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send build start metric
@@ -4114,7 +4114,7 @@ EOF
                             },
                             'Push Images to Registry': {
                                 echo 'Pushing Docker images to container registry'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send push start metric
@@ -4199,7 +4199,7 @@ EOF
                             },
                             'Database Migration': {
                                 echo 'Running database migrations'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send migration start metric
@@ -4533,7 +4533,7 @@ EOF
                         def deployDuration = System.currentTimeMillis() - deployStartTime
                         
                         // Send deployment completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
@@ -4562,7 +4562,7 @@ EOF
 }
 EOF
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send deployment failure event
@@ -4611,7 +4611,7 @@ EOF
                         parallel(
                             'Deploy Canary Version': {
                                 echo 'Deploying canary version to 10% of traffic'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send canary deployment start metric
@@ -4674,7 +4674,7 @@ EOF
                             },
                             'Monitor Canary Health': {
                                 echo 'Monitoring canary deployment health metrics'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send monitoring start metric
@@ -4855,7 +4855,7 @@ EOF
                             },
                             'Traffic Analysis': {
                                 echo 'Analyzing traffic patterns during canary deployment'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send traffic analysis start metric
@@ -4944,7 +4944,7 @@ EOF
                             },
                             'Automated Rollback Check': {
                                 echo 'Monitoring for automatic rollback conditions'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send rollback check start metric
@@ -5045,7 +5045,7 @@ EOF
                         def canaryDuration = System.currentTimeMillis() - canaryStartTime
                         
                         // Send canary deployment completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -5072,7 +5072,7 @@ EOF
                                         \\"alert_type\\": \\"success\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send canary deployment failure event
@@ -5602,7 +5602,7 @@ EOF
                         def blueGreenDuration = System.currentTimeMillis() - blueGreenStartTime
                         
                         // Send blue-green deployment completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -5629,11 +5629,11 @@ EOF
                                         \\"alert_type\\": \\"success\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send blue-green deployment failure event and initiate rollback
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -5695,7 +5695,7 @@ EOF
                         parallel(
                             'Version Management': {
                                 echo 'Managing version tags and release artifacts'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send version management start metric
@@ -5771,11 +5771,11 @@ EOF
 }
 EOF
                                     fi
-                                """
+                                '''
                             },
                             'Artifact Management': {
                                 echo 'Managing and promoting release artifacts'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send artifact management start metric
@@ -5875,7 +5875,7 @@ EOF
                             },
                             'Release Notes Generation': {
                                 echo 'Generating comprehensive release notes'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send release notes start metric
@@ -6028,7 +6028,7 @@ EOF
                             },
                             'Release Validation': {
                                 echo 'Validating release readiness and compliance'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send release validation start metric
@@ -6154,7 +6154,7 @@ EOF
                         def releaseDuration = System.currentTimeMillis() - releaseStartTime
                         
                         // Send release completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 RELEASE_VERSION=\$(cat version.txt 2>/dev/null || echo "v1.${BUILD_NUMBER}.0")
                                 
@@ -6183,7 +6183,7 @@ EOF
                                         \\"alert_type\\": \\"success\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send release failure event
@@ -6232,7 +6232,7 @@ EOF
                         parallel(
                             'Dashboard Creation': {
                                 echo 'Creating comprehensive monitoring dashboards'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send dashboard creation start metric
@@ -6443,7 +6443,7 @@ EOF
                             },
                             'Alert Configuration': {
                                 echo 'Setting up comprehensive alerting rules'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send alert configuration start metric
@@ -6601,7 +6601,7 @@ EOF
                             },
                             'Log Monitoring Setup': {
                                 echo 'Configuring log monitoring and analysis'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send log monitoring start metric
@@ -6722,7 +6722,7 @@ EOF
                             },
                             'Synthetics Monitoring': {
                                 echo 'Setting up synthetic tests for critical user journeys'
-                                sh """
+                                sh '''
                                     cd ${env.WORKSPACE}
                                     
                                     # Send synthetics start metric
@@ -6905,7 +6905,7 @@ EOF
                         def monitoringDuration = System.currentTimeMillis() - monitoringStartTime
                         
                         // Send monitoring setup completion metrics and event
-                        sh """
+                        sh '''
                             if [ -n "\\\$DATADOG_API_KEY" ]; then
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\\\
                                     -H "Content-Type: application/json" \\\\
@@ -6932,7 +6932,7 @@ EOF
                                         \\"alert_type\\": \\"success\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        """
+                        '''
                         
                     } catch (Exception e) {
                         // Send monitoring setup failure event
