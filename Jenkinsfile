@@ -7053,7 +7053,8 @@ EOF
                         } // End of script block
                     } // End of stage block
             } catch (Exception e) {
-        echo 'Pipeline failed!'
+                script {
+                    echo 'Pipeline failed!'
         echo "Check logs for failure details"
         echo "Error: ${e.getMessage()}"
         currentBuild.result = 'FAILURE'
@@ -7113,9 +7114,11 @@ EOF
         '''
         
         throw e
+                } // End of script block
             } // End of catch block
             finally {
-                echo 'Cleaning up workspace...'
+                script {
+                    echo 'Cleaning up workspace...'
         
         // Clean up Docker images
         sh 'docker image prune -f || true'
@@ -7154,6 +7157,7 @@ EOF
             
             echo "Deployment cleanup completed"
         '''
+                } // End of script block
             } // End of finally block
         } // End of withCredentials block
         } // End of timestamps block
