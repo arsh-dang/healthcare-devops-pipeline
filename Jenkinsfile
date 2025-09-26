@@ -131,6 +131,11 @@ node {
         // Configure tool paths for macOS environment
         env.PATH = "${env.PATH}:/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin"
 
+        // Setup Datadog credentials globally for the entire pipeline
+        withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+            env.DATADOG_API_KEY = DATADOG_API_KEY
+        }
+
         // Enable timestamps for all output
         timestamps {
 
@@ -235,11 +240,6 @@ node {
                 echo 'Setting up Datadog monitoring and alerting...'
                 
                 script {
-                    // Setup Datadog credentials
-                    withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
-                        env.DATADOG_API_KEY = DATADOG_API_KEY
-                    }
-                    
                     // Send pipeline start event to Datadog
                     sh '''
                         if [ -n "\$DATADOG_API_KEY" ]; then
