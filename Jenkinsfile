@@ -381,8 +381,8 @@ node {
                             },
                             'Build Backend': {
                                 echo 'Building backend application'
-                                sh """
-                                    cd ${env.WORKSPACE}
+                                sh '''
+                                    cd \$(pwd)
                                     
                                     # Send backend build start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -436,7 +436,7 @@ node {
                                         echo "npm not found - skipping backend build for now"
                                         echo "Backend build would happen here with proper Node.js setup"
                                     fi
-                                """
+                                '''
                             },
                             'Build Docker Images': {
                                 echo 'Building Docker Images with Multi-stage Optimization...'
