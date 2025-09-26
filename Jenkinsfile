@@ -789,7 +789,7 @@ EOF
                             'Build Documentation': {
                                 echo 'Building project documentation'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send documentation build start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1120,7 +1120,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                             'Performance Tests': {
                                 echo 'Running performance tests'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send performance test start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1171,7 +1171,7 @@ EOF
                             'Accessibility Tests': {
                                 echo 'Running accessibility tests'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send accessibility test start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1224,7 +1224,7 @@ EOF
                             'Security Testing': {
                                 echo 'Running security-focused tests'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send security test start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1307,7 +1307,7 @@ EOF
                             'Contract Testing': {
                                 echo 'Running contract/API contract tests'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send contract test start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1455,7 +1455,7 @@ Please review test results and fix any failing tests.""", 'danger')
                             'ESLint Analysis': {
                                 echo 'Running ESLint for code quality'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send ESLint start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1512,7 +1512,7 @@ EOF
                             'TypeScript Checking': {
                                 echo 'Running TypeScript type checking'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send TypeScript start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1566,7 +1566,7 @@ EOF
                             'Code Coverage Analysis': {
                                 echo 'Analyzing code coverage'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send coverage start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1624,7 +1624,7 @@ EOF
                             'Complexity Analysis': {
                                 echo 'Analyzing code complexity'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send complexity start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -1680,7 +1680,7 @@ EOF
                             'SonarQube Analysis': {
                                 echo 'Running SonarQube code quality analysis'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send SonarQube start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2392,7 +2392,7 @@ EOF
                             'Execute Load Tests': {
                                 echo 'Running Artillery load tests'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send load test execution start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2462,7 +2462,7 @@ EOF
                             'Performance Analysis': {
                                 echo 'Analyzing load test performance metrics'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send performance analysis start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2538,7 +2538,7 @@ EOF
                             'Scalability Testing': {
                                 echo 'Testing application scalability under load'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send scalability test start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2697,7 +2697,7 @@ EOF
                             'Pod Failure Simulation': {
                                 echo 'Simulating pod failures'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send pod failure simulation start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2761,7 +2761,7 @@ EOF
                             'Network Disruption Test': {
                                 echo 'Testing network disruption scenarios'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send network disruption start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2830,7 +2830,7 @@ EOF
                             'Resource Stress Test': {
                                 echo 'Testing resource exhaustion scenarios'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send resource stress test start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -2989,7 +2989,7 @@ EOF
                             'API Documentation': {
                                 echo 'Generating OpenAPI and JSDoc documentation'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send API docs start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3052,7 +3052,7 @@ EOF
                             'Architecture Documentation': {
                                 echo 'Generating system architecture documentation'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send architecture docs start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3115,7 +3115,7 @@ EOF
                             'Deployment Documentation': {
                                 echo 'Generating deployment and operations documentation'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send deployment docs start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3259,7 +3259,7 @@ EOF
                             'Security Standards Check': {
                                 echo 'Checking HIPAA, SOC2, GDPR compliance'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send security standards start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3322,7 +3322,7 @@ EOF
                             'Policy Validation': {
                                 echo 'Validating security policies and configurations'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send policy validation start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3398,7 +3398,7 @@ EOF
                             'Audit Report Generation': {
                                 echo 'Generating compliance audit reports'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send audit report start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3526,7 +3526,7 @@ EOF
                             'Infrastructure Validation': {
                                 echo 'Validating Terraform configuration'
                                 sh '''
-                                    cd ${env.WORKSPACE}/terraform
+                                    # cd to workspace (already in workspace)/terraform
                                     
                                     # Send validation start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3588,7 +3588,7 @@ EOF
                             'Infrastructure Planning': {
                                 echo 'Planning Terraform deployment'
                                 sh '''
-                                    cd ${env.WORKSPACE}/terraform
+                                    # cd to workspace (already in workspace)/terraform
                                     
                                     # Send planning start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3707,7 +3707,7 @@ EOF
                             'Security Compliance Check': {
                                 echo 'Checking infrastructure security compliance'
                                 sh '''
-                                    cd ${env.WORKSPACE}/terraform
+                                    # cd to workspace (already in workspace)/terraform
                                     
                                     # Send compliance start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3770,7 +3770,7 @@ EOF
                             'Infrastructure Application': {
                                 echo 'Applying Terraform configuration'
                                 sh '''
-                                    cd ${env.WORKSPACE}/terraform
+                                    # cd to workspace (already in workspace)/terraform
                                     
                                     # Send application start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3972,7 +3972,7 @@ Action Required: Check Terraform configuration and cloud provider status"""
                             'Terraform Init & Plan': {
                                 echo 'Initializing Terraform and creating deployment plan'
                                 sh '''
-                                    cd ${env.WORKSPACE}/terraform
+                                    # cd to workspace (already in workspace)/terraform
                                     
                                     # Send deployment start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4018,7 +4018,7 @@ EOF
                             'Build Docker Images': {
                                 echo 'Building Docker images for deployment'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send build start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4115,7 +4115,7 @@ EOF
                             'Push Images to Registry': {
                                 echo 'Pushing Docker images to container registry'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send push start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4200,7 +4200,7 @@ EOF
                             'Database Migration': {
                                 echo 'Running database migrations'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send migration start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4263,7 +4263,7 @@ EOF
                         stage('Terraform Apply') {
                             echo 'Applying Terraform infrastructure changes'
                             sh '''
-                                cd ${env.WORKSPACE}/terraform
+                                # cd to workspace (already in workspace)/terraform
                                 
                                 # Send apply start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4308,7 +4308,7 @@ EOF
                         stage('Apply Manual Fixes') {
                             echo 'Applying manual fixes for CPU limits, HPA config, service selectors, and ingress routing'
                             sh '''
-                                cd ${env.WORKSPACE}
+                                # cd to workspace (already in workspace)
 
                                 # Send manual fixes start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4467,7 +4467,7 @@ EOF
                         stage('Verify Deployment') {
                             echo 'Verifying deployment and service accessibility'
                             sh '''
-                                cd ${env.WORKSPACE}
+                                # cd to workspace (already in workspace)
                                 
                                 # Send verification start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4612,7 +4612,7 @@ EOF
                             'Deploy Canary Version': {
                                 echo 'Deploying canary version to 10% of traffic'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send canary deployment start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4675,7 +4675,7 @@ EOF
                             'Monitor Canary Health': {
                                 echo 'Monitoring canary deployment health metrics'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send monitoring start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4856,7 +4856,7 @@ EOF
                             'Traffic Analysis': {
                                 echo 'Analyzing traffic patterns during canary deployment'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send traffic analysis start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -4945,7 +4945,7 @@ EOF
                             'Automated Rollback Check': {
                                 echo 'Monitoring for automatic rollback conditions'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send rollback check start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5122,7 +5122,7 @@ EOF
                         stage('Deploy to Green Environment') {
                             echo 'Deploying new version to green environment using Terraform'
                             sh '''
-                                cd ${env.WORKSPACE}/terraform
+                                # cd to workspace (already in workspace)/terraform
                                 
                                 # Send green deployment start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5176,7 +5176,7 @@ EOF
                         stage('Health Check Green Environment') {
                             echo 'Running comprehensive health checks on green environment'
                             sh '''
-                                cd ${env.WORKSPACE}
+                                # cd to workspace (already in workspace)
                                 
                                 # Send green health check start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5335,7 +5335,7 @@ EOF
                         stage('Switch Traffic to Green') {
                             echo 'Switching traffic from blue to green environment'
                             sh '''
-                                cd ${env.WORKSPACE}/terraform
+                                # cd to workspace (already in workspace)/terraform
                                 
                                 # Send traffic switch start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5393,7 +5393,7 @@ EOF
                         stage('Monitor Green Environment') {
                             echo 'Monitoring green environment performance after traffic switch'
                             sh '''
-                                cd ${env.WORKSPACE}
+                                # cd to workspace (already in workspace)
                                 
                                 # Send monitoring start metric
                                 if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5648,7 +5648,7 @@ EOF
                             fi
                             
                             # Attempt automatic rollback
-                            cd ${env.WORKSPACE}/terraform
+                                    cd terraform
                             echo "Attempting automatic rollback to blue environment..."
                             
                             if command -v kubectl >/dev/null 2>&1; then
@@ -5696,7 +5696,7 @@ EOF
                             'Version Management': {
                                 echo 'Managing version tags and release artifacts'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send version management start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5776,7 +5776,7 @@ EOF
                             'Artifact Management': {
                                 echo 'Managing and promoting release artifacts'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send artifact management start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5876,7 +5876,7 @@ EOF
                             'Release Notes Generation': {
                                 echo 'Generating comprehensive release notes'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send release notes start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -6029,7 +6029,7 @@ EOF
                             'Release Validation': {
                                 echo 'Validating release readiness and compliance'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send release validation start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -6233,7 +6233,7 @@ EOF
                             'Dashboard Creation': {
                                 echo 'Creating comprehensive monitoring dashboards'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send dashboard creation start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -6444,7 +6444,7 @@ EOF
                             'Alert Configuration': {
                                 echo 'Setting up comprehensive alerting rules'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send alert configuration start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -6602,7 +6602,7 @@ EOF
                             'Log Monitoring Setup': {
                                 echo 'Configuring log monitoring and analysis'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send log monitoring start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -6723,7 +6723,7 @@ EOF
                             'Synthetics Monitoring': {
                                 echo 'Setting up synthetic tests for critical user journeys'
                                 sh '''
-                                    cd ${env.WORKSPACE}
+                                    # cd to workspace (already in workspace)
                                     
                                     # Send synthetics start metric
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -7037,7 +7037,7 @@ ${e.getMessage()}
 • Commit Message: ${env.GIT_COMMIT_MSG ?: 'Unknown'}
 
 **Recent Logs:**
-```${sh(script: 'tail -20 ${env.WORKSPACE}/console.log 2>/dev/null || echo "No console logs available"', returnStdout: true).trim()}```
+```${sh(script: 'tail -20 console.log 2>/dev/null || echo "No console logs available"', returnStdout: true).trim()}```
 
 **Failure Location:**
 ${e.getStackTrace()?.find { it.toString().contains('.groovy') } ?: 'Unknown'}
