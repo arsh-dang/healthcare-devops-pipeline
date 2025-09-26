@@ -94,7 +94,7 @@ node {
         // Build parameters
         parameters([
             choice(name: 'BUILD_TYPE', choices: ['full', 'frontend-only', 'backend-only', 'test-only'], description: 'Type of build to perform'),
-            choice(name: 'ENVIRONMENT', choices: ['development', 'staging', 'production'], defaultValue: 'staging', description: 'Target environment'),
+            choice(name: 'ENVIRONMENT', choices: ['staging', 'development', 'production'], description: 'Target environment'),
             booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Run test suite'),
             booleanParam(name: 'RUN_SECURITY_SCAN', defaultValue: true, description: 'Run security scanning'),
             // Slack parameters (webhooks include channel info)
