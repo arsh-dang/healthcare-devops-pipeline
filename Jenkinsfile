@@ -1,7 +1,7 @@
 // Force Jenkins to reload pipeline - add this at the very top of Jenkinsfile
-def forcePipelineReload = true
 
 node {
+    def forcePipelineReload = true
     // Notification functions
     def sendSlackNotification(String message, String color = 'good') {
         try {
@@ -594,7 +594,7 @@ node {
                                             
                                             # Exit with success to allow pipeline to continue with other stages
                                             echo "Skipping Docker build stage..."
-                                            continue
+                                            exit 0
                                         fi
                                         
                                         # Check for existing frontend image in local registry
@@ -856,37 +856,37 @@ EOF
                         """
                         
                         // Send build completion event
-                        sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                        sh """
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\\"title\\\": \\\"Build Stage Completed\\\",
-                                        \\\"text\\\": \\\"Healthcare App build completed successfully in ''' + "${buildDuration}" + '''ms\\\",
+                                        \\\"text\\\": \\\"Healthcare App build completed successfully in ${buildDuration}ms\\\",
                                         \\\"priority\\\": \\\"normal\\\",
                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:success\\\"],
                                         \\\"alert_type\\\": \\\"success\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        '''
+                        """
                         
                     } catch (Exception e) {
                         // Send build failure event
-                        sh '''
-                            if [ -n "$DATADOG_API_KEY" ]; then
+                        sh """
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: $DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\\"title\\\": \\\"Build Stage Failed\\\",
-                                        \\\"text\\\": \\\"Healthcare App build failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \\\"text\\\": \\\"Healthcare App build failed: ${e.getMessage()}\\\",
                                         \\\"priority\\\": \\\"normal\\\",
                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:build\\\", \\\"status:failure\\\"],
                                         \\\"alert_type\\\": \\\"error\\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        '''
+                        """
                         // Send Slack notification for build failure
                         sendSlackNotification("""🚨 Build Stage Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
@@ -1412,7 +1412,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\\"title\\\": \\\"Test Stage Failed\\\",
-                                        \\\"text\\\": \\\"Healthcare App tests failed: ''' + "${e.getMessage()}" + '''\\\",
+                                        \"text\": \"Healthcare App tests failed: ${e.getMessage()}\",
                                         \\\"priority\\\": \\\"high\\\",
                                         \\\"tags\\\": [\\\"env:staging\\\", \\\"service:healthcare-app\\\", \\\"stage:test\\\", \\\"status:failure\\\"],
                                         \\\"alert_type\\\": \\\"error\\\"
@@ -1976,7 +1976,7 @@ EOF
                                     -d @-
 {
     "title": "Code Quality Analysis Failed",
-    "text": "Healthcare App code quality analysis failed: ''' + "${e.getMessage()}" + '''",
+    "text": "Healthcare App code quality analysis failed: ${e.getMessage()}",
     "priority": "normal",
     "tags": ["env:staging", "service:healthcare-app", "stage:quality", "status:failure"],
     "alert_type": "error"
@@ -2329,7 +2329,7 @@ EOF
                                     -d @-
 {
     "title": "Security Stage Failed",
-    "text": "Healthcare App security scans failed: ''' + "${e.getMessage()}" + '''",
+    "text": "Healthcare App security scans failed: ${e.getMessage()}",
     "priority": "high",
     "tags": ["env:staging", "service:healthcare-app", "stage:security", "status:failure"],
     "alert_type": "error"
@@ -2654,7 +2654,7 @@ EOF
                                     -d @- << EOF
 {
     "title": "Load Testing Failed",
-    "text": "Healthcare App load testing failed: ''' + "${e.getMessage()}" + '''",
+    "text": "Healthcare App load testing failed: ${e.getMessage()}",
     "priority": "high",
     "tags": ["env:staging", "service:healthcare-app", "stage:loadtest", "status:failure"],
     "alert_type": "error"
@@ -2946,7 +2946,7 @@ EOF
                                     -d @- << EOF
 {
     "title": "Chaos Engineering Failed",
-    "text": "Healthcare App chaos engineering tests failed: ''' + "${e.getMessage()}" + '''",
+    "text": "Healthcare App chaos engineering tests failed: ${e.getMessage()}",
     "priority": "high",
     "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "status:failure"],
     "alert_type": "error"
@@ -3217,7 +3217,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Documentation Generation Failed\\",
-                                        \\"text\\": \\"Healthcare App documentation generation failed: ''' + "${e.getMessage()}" + '''\\",
+                                        \"text\": \"Healthcare App documentation generation failed: ${e.getMessage()}\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:docs\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -3500,7 +3500,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Compliance Automation Failed\\",
-                                        \\"text\\": \\"Healthcare App compliance automation failed: ''' + "${e.getMessage()}" + '''\\",
+                                        \"text\": \"Healthcare App compliance automation failed: ${e.getMessage()}\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:compliance\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -3931,7 +3931,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Infrastructure as Code Failed\\",
-                                        \\"text\\": \\"Healthcare App infrastructure deployment failed: ''' + "${e.getMessage()}" + '''\\",
+                                        \"text\": \"Healthcare App infrastructure deployment failed: ${e.getMessage()}\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -4561,7 +4561,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Staging Deployment Failed\\",
-                                        \\"text\\": \\"Healthcare App staging deployment failed: ''' + "${e.getMessage()}" + ''' - Terraform IaC deployment encountered an error\\",
+                                        \"text\": \"Healthcare App staging deployment failed: ${e.getMessage()} - Terraform IaC deployment encountered an error\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"status:failure\\", \\"deployment_type:terraform\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -5071,7 +5071,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Canary Deployment Failed\\",
-                                        \\"text\\": \\"Healthcare App canary deployment failed: ''' + "${e.getMessage()}" + ''' - automatic rollback initiated\\",
+                                        \"text\": \"Healthcare App canary deployment failed: ${e.getMessage()} - automatic rollback initiated\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:canary\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -5622,7 +5622,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Failed\\",
-                                        \\"text\\": \\"Healthcare App blue-green deployment failed: ''' + "${e.getMessage()}" + ''' - initiating automatic rollback to blue environment using Terraform\\",
+                                        \"text\": \"Healthcare App blue-green deployment failed: ${e.getMessage()} - initiating automatic rollback to blue environment using Terraform\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"status:failure\\", \\"deployment_type:bluegreen\\", \\"iac:terraform\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -6176,7 +6176,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Production Release Failed\\",
-                                        \\"text\\": \\"Healthcare App production release failed: ''' + "${e.getMessage()}" + ''' - version management, artifact promotion, or validation checks encountered an error\\",
+                                        \"text\": \"Healthcare App production release failed: ${e.getMessage()} - version management, artifact promotion, or validation checks encountered an error\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:release\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -6925,7 +6925,7 @@ EOF
                                     -H "DD-API-KEY: $DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Monitoring Setup Failed\\",
-                                        \\"text\\": \\"Healthcare App monitoring setup failed: ''' + "${e.getMessage()}" + ''' - dashboard creation, alerting configuration, or synthetic tests encountered an error\\",
+                                        \"text\": \"Healthcare App monitoring setup failed: ${e.getMessage()} - dashboard creation, alerting configuration, or synthetic tests encountered an error\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -7035,7 +7035,7 @@ Please check the Jenkins console output for complete details.""", 'danger')
                     -d @-
 {
     "title": "Jenkins Pipeline Failed",
-    "text": "Healthcare App CI/CD Pipeline #${BUILD_NUMBER} failed: ''' + "${e.getMessage()}" + '''. Check Jenkins logs for details.",
+    "text": "Healthcare App CI/CD Pipeline #${BUILD_NUMBER} failed: ${e.getMessage()}. Check Jenkins logs for details.",
     "priority": "high",
     "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins", "event:pipeline_failure", "status:failure"],
     "alert_type": "error"
