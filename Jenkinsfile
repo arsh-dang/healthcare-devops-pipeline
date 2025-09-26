@@ -2,8 +2,10 @@
 
 node {
     def forcePipelineReload = true
-    // Notification functions
-    def sendSlackNotification(String message, String color = 'good') {
+    
+    script {
+        // Notification functions
+        def sendSlackNotification(String message, String color = 'good') {
         try {
             def webhookUrl = ''
 
@@ -87,6 +89,8 @@ node {
             echo "Failed to send email notification: ${e.getMessage()}"
         }
     }
+    }
+    
     // Pipeline properties for automatic builds
     properties([
         // Build parameters
