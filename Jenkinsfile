@@ -182,7 +182,8 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 echo "SUCCESS: Datadog API key loaded!"
                 echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
                 echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
-        script {
+                
+                script {
         mainPipelineBlock: {                try {
                     script {
                         script {
@@ -7206,7 +7207,7 @@ EOF
             } // End of finally block
                 } // End of script block
         } // End of timestamps block
-        } // End of script block
+                } // End of script block
             } // End of withCredentials block
         } catch (Exception e) {
             echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
