@@ -168,8 +168,6 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         }
     }
 
-        // Enable timestamps for all output
-        timestamps {
         // Setup Datadog credentials globally for the entire pipeline
         echo "Attempting to load Datadog credentials..."
         try {
@@ -197,6 +195,9 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 env.DATADOG_API_KEY = ''
             }
         }
+
+        // Enable timestamps for all output
+        timestamps {
         script {
         mainPipelineBlock: {                try {
                     script {
