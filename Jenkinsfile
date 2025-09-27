@@ -7163,9 +7163,7 @@ EOF
                         } // End of script block
                     } // End of error handling block
         } // End of withCredentials block
-     } // End of try block
-    } // End of timestamps block
-            } // End of try block
+    } // End of try block
     } catch (Exception e) {
             echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
             echo "Trying alternative credential ID: DATADOG_API_KEY"
@@ -7481,5 +7479,6 @@ EOF
     }
 }
     } // End of catch block
+} // End of timestamps block
 } // End of node block
     
