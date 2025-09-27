@@ -4065,7 +4065,7 @@ EOF
                                     terraform init -upgrade
                                     
                                     echo "Creating Terraform plan..."
-                                    terraform plan -var-file="terraform.tfvars" -out=tfplan
+                                    terraform plan -var-file="terraform.tfvars" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" -out=tfplan
                                     
                                     echo "Terraform initialization and planning completed"
                                     
@@ -5222,7 +5222,7 @@ EOF
                                 
                                 # Initialize and plan green deployment
                                 terraform init -upgrade
-                                terraform plan -var-file="terraform.tfvars" -out=tfplan-green
+                                terraform plan -var-file="terraform.tfvars" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" -out=tfplan-green
                                 
                                 # Apply green deployment
                                 terraform apply -auto-approve tfplan-green
@@ -7217,3 +7217,4 @@ EOF
 } // End of timestamps block
 } // End of node block
     
+\

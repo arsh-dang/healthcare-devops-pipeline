@@ -6,8 +6,9 @@ environment = "staging"
 app_version = "latest"
 
 # Docker images (will be built by Jenkins pipeline)
-frontend_image = "healthcare-app-frontend:${BUILD_NUMBER}"
-backend_image = "healthcare-app-backend:${BUILD_NUMBER}"
+# Note: BUILD_NUMBER is passed as a Terraform variable via -var parameter
+frontend_image = "healthcare-app-frontend:latest"
+backend_image = "healthcare-app-backend:latest"
 
 # MongoDB Configuration
 mongodb_root_password = "healthcare-staging-2024"
