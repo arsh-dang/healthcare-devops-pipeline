@@ -7161,27 +7161,47 @@ EOF
             } // End of withCredentials block
         } // End of first try block
     } catch (Exception e) {
-            echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
-            echo "Continuing without Datadog monitoring..."
-            env.DATADOG_API_KEY = ''
-            
-            // Send failure notification
-            sendSlackNotification("""⚠️ Pipeline Warning - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
+        echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
+        echo "CRITICAL: Datadog monitoring is required for this pipeline"
+        
+        // Set build result to failure
+        currentBuild.result = 'FAILURE'
+        
+        // Send failure notification
+        sendSlackNotification("""🚨 Pipeline Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
-**Warning:** Datadog API key could not be loaded
+**CRITICAL ERROR:** Datadog API key could not be loaded
 **Error:** ${e.getMessage()}
 
-**Impact:** Pipeline will continue without Datadog monitoring
+**Impact:** Pipeline execution stopped - Datadog monitoring is required
 
 **Build Information:**
 • Build: #${BUILD_NUMBER}
 • Environment: ${params.ENVIRONMENT}
 • Build Type: ${params.BUILD_TYPE}
+• Duration: ${currentBuild.durationString}
 
-Pipeline execution will continue normally.""", 'warning')
-            
-            // Continue with pipeline execution (Datadog monitoring will be disabled)
-            currentBuild.result = 'SUCCESS' // Don't fail the build for missing Datadog credentials
+**Action Required:** Please ensure the 'datadog-api-key' credential is properly configured in Jenkins.""", 'danger')
+        
+        // Send email notification if configured
+        if (params.SEND_EMAIL && params.EMAIL_RECIPIENTS) {
+            sendEmailNotification(
+                "Pipeline Failed - Datadog Credential Missing - Healthcare App",
+                """<h2>Pipeline Failed - Critical Credential Missing</h2>
+                <p><strong>Build:</strong> #${BUILD_NUMBER}</p>
+                <p><strong>Environment:</strong> ${params.ENVIRONMENT}</p>
+                <p><strong>Build Type:</strong> ${params.BUILD_TYPE}</p>
+                <p><strong>Error:</strong> Failed to load datadog-api-key credential</p>
+                <p><strong>Details:</strong> ${e.getMessage()}</p>
+                <p><strong>Duration:</strong> ${currentBuild.durationString}</p>
+                <h3>Action Required:</h3>
+                <p>Please ensure the 'datadog-api-key' credential is properly configured in Jenkins before retrying the pipeline.</p>""",
+                'CRITICAL'
+            )
+        }
+        
+        // Throw the exception to fail the pipeline
+        throw new Exception("Pipeline failed: Unable to load required datadog-api-key credential. Error: ${e.getMessage()}")
     } // End of catch block
 } // End of timestamps block
 } // End of node block
