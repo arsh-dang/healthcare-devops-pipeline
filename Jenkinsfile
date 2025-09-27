@@ -4061,8 +4061,10 @@ Action Required: Check Terraform configuration and cloud provider status"""
 EOF
                                     fi
                                     
-                                    # Change to terraform directory
-                                    cd terraform
+                                    # Change to terraform directory if not already there
+                                    if [ ! -f "main.tf" ]; then
+                                        cd terraform
+                                    fi
                                     
                                     echo "Initializing Terraform..."
                                     terraform init -upgrade
@@ -4367,8 +4369,10 @@ EOF
                         stage('Terraform Apply') {
                             echo 'Applying Terraform infrastructure changes'
                             sh '''
-                                        # Change to terraform directory
-                                        cd terraform
+                                        # Change to terraform directory if not already there
+                                        if [ ! -f "main.tf" ]; then
+                                            cd terraform
+                                        fi
                                 
                                 # Send apply start metric
                                         if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5251,8 +5255,10 @@ EOF
                                 
                                 echo "Deploying to green environment with Terraform..."
                                 
-                                # Change to terraform directory
-                                cd terraform
+                                # Change to terraform directory if not already there
+                                if [ ! -f "main.tf" ]; then
+                                    cd terraform
+                                fi
                                 
                                 # Using environment variable for green deployment
                                 
@@ -5789,7 +5795,9 @@ EOF
                             fi
                             
                             # Attempt automatic rollback
-                                            cd terraform
+                            if [ ! -f "main.tf" ]; then
+                                cd terraform
+                            fi
                             echo "Attempting automatic rollback to blue environment..."
                             
                             if command -v kubectl >/dev/null 2>&1; then
