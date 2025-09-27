@@ -171,7 +171,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         // Enable timestamps for all output
         timestamps {
         // Setup Datadog credentials globally for the entire pipeline
-        withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+        withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
             env.DATADOG_API_KEY = DATADOG_API_KEY
 
             script {
