@@ -3787,10 +3787,10 @@ EOF
                                     echo "Checking infrastructure security compliance..."
                                     
                                     # Check for security configurations in Terraform files only (with timeout)
-                                    SECURE_CONFIGS=$(timeout 30 find . -name "*.tf" -exec grep -l "security_group" {} \; 2>/dev/null | wc -l || echo "0")
-                                    SECURE_CONFIGS=$((SECURE_CONFIGS + $(timeout 30 find . -name "*.tf" -exec grep -l "firewall" {} \; 2>/dev/null | wc -l || echo "0")))
-                                    SECURE_CONFIGS=$((SECURE_CONFIGS + $(timeout 30 find . -name "*.tf" -exec grep -l "encryption" {} \; 2>/dev/null | wc -l || echo "0")))
-                                    PUBLIC_IPS=$(timeout 30 find . -name "*.tf" -exec grep -l "associate_public_ip_address.*true" {} \; 2>/dev/null | wc -l || echo "0")
+                                    SECURE_CONFIGS=$(timeout 30 find . -name "*.tf" -print0 | xargs -0 grep -l "security_group" 2>/dev/null | wc -l || echo "0")
+                                    SECURE_CONFIGS=$((SECURE_CONFIGS + $(timeout 30 find . -name "*.tf" -print0 | xargs -0 grep -l "firewall" 2>/dev/null | wc -l || echo "0")))
+                                    SECURE_CONFIGS=$((SECURE_CONFIGS + $(timeout 30 find . -name "*.tf" -print0 | xargs -0 grep -l "encryption" 2>/dev/null | wc -l || echo "0")))
+                                    PUBLIC_IPS=$(timeout 30 find . -name "*.tf" -print0 | xargs -0 grep -l "associate_public_ip_address.*true" 2>/dev/null | wc -l || echo "0")
                                     
                                     echo "Found $SECURE_CONFIGS security configurations"
                                     echo "Found $PUBLIC_IPS public IP associations"
