@@ -7221,7 +7221,7 @@ EOF
                                         
                                         // Validate Terraform configuration
                                         if (fileExists('terraform/main.tf')) {
-                                            sh '''
+        sh '''
                                                 cd terraform
                                                 echo "Validating Terraform configuration..."
                                                 terraform init -backend=false
@@ -7308,16 +7308,16 @@ EOF
                             sh '''
                                 echo "Cleaning up deployment resources..."
                                 if [ -d terraform ]; then
-                                    cd terraform
-                                    echo "Cleaning up Terraform state files..."
-                                    rm -f tfplan tfplan-green terraform.tfstate.backup
-                                    echo "Terraform cleanup completed"
-                                    cd ..
-                                fi
-                                
+                cd terraform
+                echo "Cleaning up Terraform state files..."
+                rm -f tfplan tfplan-green terraform.tfstate.backup
+                echo "Terraform cleanup completed"
+                cd ..
+            fi
+            
                                 # Check if kubectl is available
-                                if command -v kubectl >/dev/null 2>&1; then
-                                    echo "Checking for any remaining green environment resources..."
+            if command -v kubectl >/dev/null 2>&1; then
+                echo "Checking for any remaining green environment resources..."
                                     kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-app || echo "No green deployments to scale down"
                                     kubectl delete service -l environment=production-green -n healthcare-app || echo "No resources found"
                                     echo "Kubernetes cleanup completed"
@@ -7466,17 +7466,17 @@ EOF
                             echo "Checking for any remaining green environment resources..."
                             kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-app || echo "No green deployments to scale down"
                             kubectl delete service -l environment=production-green -n healthcare-app || echo "No resources found"
-                            echo "Kubernetes cleanup completed"
-                        fi
-                        
-                        # Clean up any remaining log files
-                        echo "Cleaning up log files..."
-                        rm -f *.log green-*.log backend-*.log frontend-*.log
-                        
-                        echo "Deployment cleanup completed"
-                    '''
-                }
-            }
+                echo "Kubernetes cleanup completed"
+            fi
+            
+            # Clean up any remaining log files
+            echo "Cleaning up log files..."
+            rm -f *.log green-*.log backend-*.log frontend-*.log
+            
+            echo "Deployment cleanup completed"
+        '''
+    }
+}
         }
         } // End of try block (for the second try in catch block)
     } // End of catch block
