@@ -3786,9 +3786,9 @@ EOF
                                     
                                     echo "Checking infrastructure security compliance..."
                                     
-                                    # Check for security configurations in Terraform files
-                                    SECURE_CONFIGS=$(grep -r "security_group\\|firewall\\|encryption" . 2>/dev/null | wc -l)
-                                    PUBLIC_IPS=$(grep -r "associate_public_ip_address.*true" . 2>/dev/null | wc -l)
+                                    # Check for security configurations in Terraform files only (with timeout)
+                                    SECURE_CONFIGS=$(timeout 30 find . -name "*.tf" -exec grep -l "security_group\\|firewall\\|encryption" {} \; 2>/dev/null | wc -l || echo "0")
+                                    PUBLIC_IPS=$(timeout 30 find . -name "*.tf" -exec grep -l "associate_public_ip_address.*true" {} \; 2>/dev/null | wc -l || echo "0")
                                     
                                     echo "Found $SECURE_CONFIGS security configurations"
                                     echo "Found $PUBLIC_IPS public IP associations"
