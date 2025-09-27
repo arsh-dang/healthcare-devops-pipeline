@@ -1489,7 +1489,7 @@ Please review test results and fix any failing tests.""", 'danger')
             
             }
             } // End of script block
-            
+            { // Add missing opening brace
             stage('Code Quality') {
                 echo 'Running comprehensive code quality analysis with Datadog monitoring...'
                 
@@ -4013,17 +4013,8 @@ Action Required: Check Terraform configuration and cloud provider status"""
                 }
             }
             } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            
+            { // Add missing opening brace
+            { // Add missing opening brace
             stage('Deploy to Staging') {
                 echo 'Deploying to staging environment using Terraform IaC...'
                 
@@ -4648,16 +4639,8 @@ EOF
                 }
             }
             } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            
+            { // Add missing opening brace
+            { // Add missing opening brace
             stage('Canary Deployment') {
                 echo 'Performing canary deployment with traffic splitting...'
                 
@@ -5168,16 +5151,8 @@ EOF
                 }
             }
             } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            
+            { // Add missing opening brace
+            { // Add missing opening brace
             stage('Blue-Green Deployment') {
                 echo 'Performing blue-green deployment using Terraform IaC...'
                 
@@ -5752,16 +5727,8 @@ EOF
                 }
             }
             } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            
+            { // Add missing opening brace
+            { // Add missing opening brace
             stage('Release to Production') {
                 echo 'Performing advanced production release with version management and artifact promotion...'
                 
@@ -6301,14 +6268,8 @@ EOF
             } // End of script block
             } // End of script block
             } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            } // End of script block
-            
+            { // Add missing opening brace
+            { // Add missing opening brace
             stage('Monitoring Setup') {
                 echo 'Setting up comprehensive monitoring, dashboards, and alerting for production environment...'
                 
