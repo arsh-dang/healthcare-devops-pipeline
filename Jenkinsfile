@@ -4061,6 +4061,9 @@ Action Required: Check Terraform configuration and cloud provider status"""
 EOF
                                     fi
                                     
+                                    # Change to terraform directory
+                                    cd terraform
+                                    
                                     echo "Initializing Terraform..."
                                     terraform init -upgrade
                                     
@@ -4364,7 +4367,8 @@ EOF
                         stage('Terraform Apply') {
                             echo 'Applying Terraform infrastructure changes'
                             sh '''
-                                        # cd to workspace (already in workspace)/terraform
+                                        # Change to terraform directory
+                                        cd terraform
                                 
                                 # Send apply start metric
                                         if [ -n "\$DATADOG_API_KEY" ]; then
@@ -5246,6 +5250,9 @@ EOF
                                 fi
                                 
                                 echo "Deploying to green environment with Terraform..."
+                                
+                                # Change to terraform directory
+                                cd terraform
                                 
                                 # Using environment variable for green deployment
                                 
