@@ -954,7 +954,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                 }
                 } // End of script block
             }
-            { // Add missing opening brace
+            testConditionalBlock: { // Add missing opening brace
             if (params.RUN_TESTS) {
             stage('Test') {
                 echo 'Running comprehensive tests with Datadog monitoring...'
@@ -1489,7 +1489,7 @@ Please review test results and fix any failing tests.""", 'danger')
             
             }
             } // End of script block
-            { // Add missing opening brace
+            codeQualityBlock: { // Add missing opening brace
             stage('Code Quality') {
                 echo 'Running comprehensive code quality analysis with Datadog monitoring...'
                 
@@ -2041,7 +2041,7 @@ EOF
                 } // End of script block
             }
             
-            { // Add missing opening brace
+            securityConditionalBlock: { // Add missing opening brace
             if (params.RUN_SECURITY_SCAN) {
             stage('Security') {
                 echo 'Running comprehensive security analysis with Datadog monitoring...'
@@ -2411,7 +2411,7 @@ Please review security scan results and address any critical vulnerabilities."""
                 }
                 } // End of script block
             }
-            { // Add missing opening brace
+            loadTestingBlock: { // Add missing opening brace
             stage('Load Testing') {
                 echo 'Running comprehensive load testing with Artillery...'
                 
@@ -2719,7 +2719,7 @@ EOF
                 }
                 } // End of script block
             }
-            { // Add missing opening brace
+            chaosEngineeringBlock: { // Add missing opening brace
             stage('Chaos Engineering') {
                 echo 'Running chaos engineering tests for resilience validation...'
                 
@@ -3012,7 +3012,7 @@ EOF
                 }
             }
             } // End of script block
-            { // Add missing opening brace
+            documentationBlock: { // Add missing opening brace
             stage('Documentation Generation') {
                 echo 'Generating comprehensive API documentation and project docs...'
                 
@@ -3283,7 +3283,7 @@ EOF
                 }
             }
             } // End of script block
-            { // Add missing opening brace
+            complianceAutomationBlock: { // Add missing opening brace
             stage('Compliance Automation') {
                 echo 'Running automated compliance checks for security standards...'
                 
@@ -3567,7 +3567,7 @@ EOF
                 }
             }
             } // End of script block
-            { // Add missing opening brace
+            infrastructureBlock: { // Add missing opening brace
             stage('Infrastructure as Code') {
                 echo 'Deploying infrastructure with Terraform and parallel validation...'
                 
@@ -4014,8 +4014,8 @@ Action Required: Check Terraform configuration and cloud provider status"""
                 }
             }
             } // End of script block
-            { // Add missing opening brace
-            { // Add missing opening brace
+            deployStagingBlock1: { // Add missing opening brace
+            deployStagingBlock2: { // Add missing opening brace
             stage('Deploy to Staging') {
                 echo 'Deploying to staging environment using Terraform IaC...'
                 
@@ -4640,8 +4640,8 @@ EOF
                 }
             }
             } // End of script block
-            { // Add missing opening brace
-            { // Add missing opening brace
+            canaryDeploymentBlock1: { // Add missing opening brace
+            canaryDeploymentBlock2: { // Add missing opening brace
             stage('Canary Deployment') {
                 echo 'Performing canary deployment with traffic splitting...'
                 
@@ -5152,8 +5152,8 @@ EOF
                 }
             }
             } // End of script block
-            { // Add missing opening brace
-            { // Add missing opening brace
+            blueGreenBlock1: { // Add missing opening brace
+            blueGreenBlock2: { // Add missing opening brace
             stage('Blue-Green Deployment') {
                 echo 'Performing blue-green deployment using Terraform IaC...'
                 
@@ -5728,8 +5728,8 @@ EOF
                 }
             }
             } // End of script block
-            { // Add missing opening brace
-            { // Add missing opening brace
+            releaseProductionBlock1: { // Add missing opening brace
+            releaseProductionBlock2: { // Add missing opening brace
             stage('Release to Production') {
                 echo 'Performing advanced production release with version management and artifact promotion...'
                 
@@ -6269,8 +6269,8 @@ EOF
             } // End of script block
             } // End of script block
             } // End of script block
-            { // Add missing opening brace
-            { // Add missing opening brace
+            monitoringSetupBlock1: { // Add missing opening brace
+            monitoringSetupBlock2: { // Add missing opening brace
             stage('Monitoring Setup') {
                 echo 'Setting up comprehensive monitoring, dashboards, and alerting for production environment...'
                 
