@@ -174,8 +174,8 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
     echo "Attempting to load Datadog credentials..."
     echo "Credential ID: datadog-api-key"
 
-    // Enable timestamps for all output
-    timestamps {
+        // Enable timestamps for all output
+        timestamps {
         try {
             withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
                 env.DATADOG_API_KEY = DATADOG_API_KEY
@@ -7200,10 +7200,10 @@ EOF
                             
                             sh '''
                                 tail -20 console.log 2>/dev/null || echo "No console logs available"
-                            '''
-                            
-                            throw e
-                        } finally {
+        '''
+        
+        throw e
+    } finally {
                             echo "Cleaning up workspace..."
                             sh '''
                                 # Clean up Docker images
