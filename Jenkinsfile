@@ -4013,6 +4013,16 @@ Action Required: Check Terraform configuration and cloud provider status"""
                 }
             }
             } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
             
             stage('Deploy to Staging') {
                 echo 'Deploying to staging environment using Terraform IaC...'
@@ -4638,6 +4648,15 @@ EOF
                 }
             }
             } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
             
             stage('Canary Deployment') {
                 echo 'Performing canary deployment with traffic splitting...'
@@ -5148,6 +5167,15 @@ EOF
                     }
                 }
             }
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
             } // End of script block
             
             stage('Blue-Green Deployment') {
@@ -5724,6 +5752,15 @@ EOF
                 }
             }
             } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
             
             stage('Release to Production') {
                 echo 'Performing advanced production release with version management and artifact promotion...'
@@ -6261,6 +6298,15 @@ EOF
                     }
                 }
             }
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
+            } // End of script block
             } // End of script block
             
             stage('Monitoring Setup') {
