@@ -177,7 +177,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
             echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
         }
         script {
-        {                try {
+        mainPipelineBlock: {                try {
                     script {
                         script {
                             script {
