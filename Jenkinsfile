@@ -1,6 +1,7 @@
 // Force Jenkins to reload pipeline - add this at the very top of Jenkinsfile
 
 node {
+    echo "=== PIPELINE STARTED - NODE BLOCK BEGINNING ==="
     def forcePipelineReload = true
     
     // Notification functions as closures
