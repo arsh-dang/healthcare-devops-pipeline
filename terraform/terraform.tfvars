@@ -6,8 +6,8 @@ environment = "staging"
 app_version = "latest"
 
 # Docker images (will be built by Jenkins pipeline)
-frontend_image = "healthcare-app-frontend:latest"
-backend_image = "healthcare-app-backend:latest"
+frontend_image = "healthcare-app-frontend:${BUILD_NUMBER}"
+backend_image = "healthcare-app-backend:${BUILD_NUMBER}"
 
 # MongoDB Configuration
 mongodb_root_password = "healthcare-staging-2024"
