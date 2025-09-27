@@ -184,8 +184,8 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
                 
                 script {
-        mainPipelineBlock: {
-                    try {
+                    mainPipelineBlock: {
+                        try {
                     script {
                         script {
                             script {
@@ -7522,7 +7522,6 @@ EOF
                 }
             }
         }
-            } // End of script block
         } // End of withCredentials block
     } // End of try block
 } // End of timestamps block
