@@ -7155,10 +7155,11 @@ EOF
         throw e
                         } // End of script block
                     } // End of error handling block
-        } // End of withCredentials block
-    } // End of try block
                     } // End of mainPipelineBlock
-} catch (Exception e) {
+                } // End of script block
+            } // End of withCredentials block
+        } // End of first try block
+    } catch (Exception e) {
             echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
             echo "Trying alternative credential ID: DATADOG_API_KEY"
             try {
