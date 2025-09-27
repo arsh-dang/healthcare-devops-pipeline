@@ -3646,7 +3646,8 @@ EOF
                             'Infrastructure Planning': {
                                 echo 'Planning Terraform deployment'
                                 sh '''
-                                            # cd to workspace (already in workspace)/terraform
+                                            # Change to terraform directory
+                                            cd terraform
                                     
                                     # Send planning start metric
                                             if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3828,7 +3829,8 @@ EOF
                             'Infrastructure Application': {
                                 echo 'Applying Terraform configuration'
                                 sh '''
-                                            # cd to workspace (already in workspace)/terraform
+                                            # Change to terraform directory
+                                            cd terraform
                                     
                                     # Send application start metric
                                             if [ -n "\$DATADOG_API_KEY" ]; then
@@ -3985,20 +3987,20 @@ EOF
                         
                     } catch (Exception e) {
                         // Send infrastructure failure event
-                        sh '''
+                        sh """
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Infrastructure as Code Failed\\",
-                                        \"text\": \"Healthcare App infrastructure deployment failed: ${e.getMessage()}\",
+                                        \\"text\\": \\"Healthcare App infrastructure deployment failed: ${e.getMessage()}\\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
                                     }" || echo "Failed to send Datadog event"
                             fi
-                        '''
+                        """
                         // Send Slack notification for infrastructure failure
                         // First, construct the entire message as one variable.
                         // Note the correction from ENVIRONMENT to params.ENVIRONMENT.
