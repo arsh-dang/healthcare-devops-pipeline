@@ -7085,11 +7085,9 @@ EOF
             fi
         '''
         
-                        } // End of script block
                     } // End of stage block
                             } // End of script block
                         } // End of script block
-                    } // End of script block
                                 } // End of main pipeline stages block
                         } // End of try block
                     } // End of mainPipelineBlock
