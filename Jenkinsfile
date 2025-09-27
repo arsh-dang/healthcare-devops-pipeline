@@ -298,7 +298,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                 -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                 -d "{
                                     \"title\": \"Jenkins Pipeline Started\",
-                                    \"text\": \"Healthcare App CI/CD Pipeline #${BUILD_NUMBER} started for commit ${GIT_COMMIT}\",
+                                    \"text\": \"Healthcare App CI/CD Pipeline #${BUILD_NUMBER} started\",
                                     \"priority\": \"normal\",
                                     \"tags\": [\"env:staging\", \"service:healthcare-app\", \"pipeline:jenkins\", \"event:pipeline_start\"],
                                     \"alert_type\": \"info\"
