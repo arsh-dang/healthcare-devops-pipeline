@@ -171,8 +171,25 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         // Enable timestamps for all output
         timestamps {
         // Setup Datadog credentials globally for the entire pipeline
-        withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
-            env.DATADOG_API_KEY = DATADOG_API_KEY
+        try {
+            withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+                env.DATADOG_API_KEY = DATADOG_API_KEY
+                echo "Datadog API key loaded: ${env.DATADOG_API_KEY ? 'YES' : 'NO'}"
+                echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
+            }
+        } catch (Exception e) {
+            echo "Warning: Could not load datadog-api-key credential: ${e.getMessage()}"
+            echo "Trying alternative credential ID: DATADOG_API_KEY"
+            try {
+                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+                    env.DATADOG_API_KEY = DATADOG_API_KEY
+                    echo "Datadog API key loaded from alternative: ${env.DATADOG_API_KEY ? 'YES' : 'NO'}"
+                }
+            } catch (Exception e2) {
+                echo "Warning: Could not load DATADOG_API_KEY credential either: ${e2.getMessage()}"
+                echo "Continuing without Datadog API key - monitoring will be disabled"
+            }
+        }
 
             script {
                 try {
