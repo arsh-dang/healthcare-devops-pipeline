@@ -7088,7 +7088,7 @@ EOF
                                 } // End of main pipeline stages block
                 } catch (Exception e) {
                     // Error handling block
-                    {
+                    errorHandlingBlock: {
                         script {
                     echo 'Pipeline failed!'
         echo "Check logs for failure details"
