@@ -7208,6 +7208,7 @@ EOF
                 } // End of script block
         } // End of timestamps block
             } // End of withCredentials block
+        } // End of try block
         } catch (Exception e) {
             echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
             echo "Trying alternative credential ID: DATADOG_API_KEY"
