@@ -173,7 +173,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
     echo "=== CREDENTIAL LOADING DEBUG ==="
     echo "Attempting to load Datadog credentials..."
     echo "Credential ID: datadog-api-key"
-    
+
     try {
         withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
             env.DATADOG_API_KEY = DATADOG_API_KEY
@@ -206,7 +206,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                             script {
                                 // Main pipeline stages block
                                 pipelineStages: {
-                                    stage('Force Pipeline Reload Check') {
+            stage('Force Pipeline Reload Check') {
                 echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
                 echo "Current pipeline type: Scripted with parameters"
@@ -7115,7 +7115,7 @@ EOF
                     // Error handling block
                     errorHandlingBlock: {
                         script {
-                    echo 'Pipeline failed!'
+        echo 'Pipeline failed!'
         echo "Check logs for failure details"
         echo "Error: ${e.getMessage()}"
         currentBuild.result = 'FAILURE'
@@ -7180,7 +7180,7 @@ EOF
             } // End of catch block
             finally {
                 script {
-                    echo 'Cleaning up workspace...'
+        echo 'Cleaning up workspace...'
         
         // Clean up Docker images
         sh 'docker image prune -f || true'
