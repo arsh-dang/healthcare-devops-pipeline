@@ -2227,8 +2227,18 @@ EOF
                                             fi
                                             
                                             # Ensure variables are numeric and clean
-                                            FRONTEND_VULN=$(echo "$FRONTEND_VULN" | tr -d '\n\r' | grep -E '^[0-9]+$' || echo "0")
-                                            BACKEND_VULN=$(echo "$BACKEND_VULN" | tr -d '\n\r' | grep -E '^[0-9]+$' || echo "0")
+                                            FRONTEND_VULN=$(echo "$FRONTEND_VULN" | tr -d '\n\r\t ' | sed 's/[^0-9]//g')
+                                            BACKEND_VULN=$(echo "$BACKEND_VULN" | tr -d '\n\r\t ' | sed 's/[^0-9]//g')
+                                            # Set to 0 if empty or non-numeric
+                                            FRONTEND_VULN=${FRONTEND_VULN:-0}
+                                            BACKEND_VULN=${BACKEND_VULN:-0}
+                                            # Ensure they're valid numbers
+                                            if ! [[ "$FRONTEND_VULN" =~ ^[0-9]+$ ]]; then
+                                                FRONTEND_VULN=0
+                                            fi
+                                            if ! [[ "$BACKEND_VULN" =~ ^[0-9]+$ ]]; then
+                                                BACKEND_VULN=0
+                                            fi
                                             TOTAL_VULN=$((FRONTEND_VULN + BACKEND_VULN))
                                             CONTAINER_SCAN_STATUS="completed"
                                         else
