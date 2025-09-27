@@ -2,7 +2,6 @@
 // This ensures consistent API endpoint usage across the application
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = process.env.NODE_ENV === 'development';
 
 // API Base URLs for different environments
 const API_BASE_URLS = {
