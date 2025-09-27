@@ -184,7 +184,8 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
                 
                 script {
-        mainPipelineBlock: {                try {
+        mainPipelineBlock: {
+                    try {
                     script {
                         script {
                             script {
@@ -7220,7 +7221,8 @@ EOF
                     
                     // Run the same pipeline but with alternative credential
                     script {
-                        mainPipelineBlock: { try {
+                        mainPipelineBlock: {
+                            try {
                             // Main pipeline stages block
                             pipelineStages: {
                                 stage('Force Pipeline Reload Check') {
@@ -7384,7 +7386,8 @@ EOF
             
             // Run pipeline without Datadog monitoring
             script {
-                mainPipelineBlock: { try {
+                mainPipelineBlock: {
+                    try {
                     // Main pipeline stages block
                     pipelineStages: {
                         stage('Force Pipeline Reload Check') {
