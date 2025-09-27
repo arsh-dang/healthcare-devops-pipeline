@@ -7094,14 +7094,14 @@ EOF
                         script {
         echo 'Pipeline failed!'
         echo "Check logs for failure details"
-        echo "Error: ${e.getMessage()}"
+        echo "Error: Pipeline execution failed"
         currentBuild.result = 'FAILURE'
         
         // Send detailed failure notification to Slack
         sendSlackNotification("""🚨 Pipeline Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
 **Error Details:**
-${e.getMessage()}
+Pipeline execution failed - check Jenkins logs for details
 
 **Build Information:**
 • Build: #${BUILD_NUMBER}
@@ -7159,7 +7159,7 @@ EOF
             } // End of withCredentials block
         } // End of first try block
     } catch (Exception e) {
-        echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
+        echo "ERROR: Failed to load datadog-api-key credential: credential loading failed"
         echo "CRITICAL: Datadog monitoring is required for this pipeline"
         
         // Set build result to failure
@@ -7169,7 +7169,7 @@ EOF
         sendSlackNotification("""🚨 Pipeline Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
 **CRITICAL ERROR:** Datadog API key could not be loaded
-**Error:** ${e.getMessage()}
+**Error:** Credential loading failed
 
 **Impact:** Pipeline execution stopped - Datadog monitoring is required
 
@@ -7199,7 +7199,7 @@ EOF
         }
         
         // Throw the exception to fail the pipeline
-        error("Pipeline failed: Unable to load required datadog-api-key credential. Error: ${e.getMessage()}")
+        error("Pipeline failed: Unable to load required datadog-api-key credential. Error: credential loading failed")
     } // End of catch block
 } // End of timestamps block
 } // End of node block
