@@ -7021,7 +7021,7 @@ EOF
             }
         }
         
-        { // Add final missing opening brace
+        successMessageBlock: { // Add final missing opening brace
         // Success message
         echo 'Pipeline completed successfully!'
         echo "10-stage DevOps pipeline executed successfully"
