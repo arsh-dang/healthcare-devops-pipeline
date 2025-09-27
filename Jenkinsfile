@@ -2213,7 +2213,7 @@ EOF
                                                 FRONTEND_VULN=0
                                                 echo "Frontend image scan passed"
                                             else
-                                                FRONTEND_VULN=$(trivy image --quiet --severity HIGH,CRITICAL healthcare-app-frontend:${BUILD_NUMBER} 2>&1 | grep -c "HIGH\\|CRITICAL" || echo "1")
+                                                FRONTEND_VULN=$(trivy image --quiet --severity HIGH,CRITICAL healthcare-app-frontend:${BUILD_NUMBER} 2>&1 | grep -c "HIGH\\|CRITICAL" 2>/dev/null || echo "1")
                                                 echo "Frontend image has $FRONTEND_VULN high/critical vulnerabilities"
                                             fi
                                             
@@ -2222,10 +2222,13 @@ EOF
                                                 BACKEND_VULN=0
                                                 echo "Backend image scan passed"
                                             else
-                                                BACKEND_VULN=$(trivy image --quiet --severity HIGH,CRITICAL healthcare-app-backend:${BUILD_NUMBER} 2>&1 | grep -c "HIGH\\|CRITICAL" || echo "1")
+                                                BACKEND_VULN=$(trivy image --quiet --severity HIGH,CRITICAL healthcare-app-backend:${BUILD_NUMBER} 2>&1 | grep -c "HIGH\\|CRITICAL" 2>/dev/null || echo "1")
                                                 echo "Backend image has $BACKEND_VULN high/critical vulnerabilities"
                                             fi
                                             
+                                            # Ensure variables are numeric and clean
+                                            FRONTEND_VULN=$(echo "$FRONTEND_VULN" | tr -d '\n\r' | grep -E '^[0-9]+$' || echo "0")
+                                            BACKEND_VULN=$(echo "$BACKEND_VULN" | tr -d '\n\r' | grep -E '^[0-9]+$' || echo "0")
                                             TOTAL_VULN=$((FRONTEND_VULN + BACKEND_VULN))
                                             CONTAINER_SCAN_STATUS="completed"
                                         else
