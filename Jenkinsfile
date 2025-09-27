@@ -7376,6 +7376,8 @@ EOF
                     }
                 }
             }
+        }
+        } // End of withCredentials block
         } catch (Exception e2) {
             echo "ERROR: Failed to load DATADOG_API_KEY credential: ${e2.getMessage()}"
             echo "Continuing without Datadog monitoring..."
@@ -7520,8 +7522,6 @@ EOF
             }
         }
         } // End of try block (for the second try in catch block)
-        } // End of withCredentials block
-    } // End of try block
     } // End of catch block
 } // End of timestamps block
 } // End of node block
