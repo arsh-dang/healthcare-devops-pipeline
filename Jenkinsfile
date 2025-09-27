@@ -289,20 +289,14 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 echo 'Setting up Datadog monitoring and alerting...'
                 
                 script {
-                    // Send pipeline start event to Datadog
+                    // Send pipeline start event to Datadog using a simpler approach
                     sh '''
-                                if [ -n "\$DATADOG_API_KEY" ]; then
+                        if [ -n "$DATADOG_API_KEY" ]; then
                             echo "Sending pipeline start event to Datadog..."
-                            curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                -H "Content-Type: application/json" \\
-                                -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                -d "{
-                                    \"title\": \"Jenkins Pipeline Started\",
-                                    \"text\": \"Healthcare App CI/CD Pipeline #\${BUILD_NUMBER} started\",
-                                    \"priority\": \"normal\",
-                                    \"tags\": [\"env:staging\", \"service:healthcare-app\", \"pipeline:jenkins\", \"event:pipeline_start\"],
-                                    \"alert_type\": \"info\"
-                                }" || echo "Failed to send Datadog event"
+                            curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                -H "Content-Type: application/json" \
+                                -H "DD-API-KEY: $DATADOG_API_KEY" \
+                                -d '{"title": "Jenkins Pipeline Started", "text": "Healthcare App CI/CD Pipeline started", "priority": "normal", "tags": ["env:staging", "service:healthcare-app", "pipeline:jenkins", "event:pipeline_start"], "alert_type": "info"}' || echo "Failed to send Datadog event"
                         else
                             echo "Datadog API key not configured - monitoring disabled"
                         fi
