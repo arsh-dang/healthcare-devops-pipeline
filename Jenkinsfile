@@ -7091,7 +7091,7 @@ EOF
                         } // End of script block
                     } // End of script block
                                 } // End of main pipeline stages block
-                } catch (Exception e) {
+                        } catch (Exception e) {
                     // Error handling block
                     errorHandlingBlock: {
                         script {
