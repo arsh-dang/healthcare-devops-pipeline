@@ -911,7 +911,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\\"title\\\": \\\"Build Stage Completed\\\",
                                         \\\"text\\\": \\\"Healthcare App build completed successfully in ${buildDuration}ms\\\",
@@ -928,7 +928,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\\"title\\\": \\\"Build Stage Failed\\\",
                                         \\\"text\\\": \\\"Healthcare App build failed: ${e.getMessage()}\\\",
@@ -1995,7 +1995,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "series": [{
@@ -2350,7 +2350,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "series": [{
@@ -2674,7 +2674,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "series": [{
@@ -5111,7 +5111,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
     "series": [{
@@ -5670,7 +5670,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
     "series": [{
@@ -5701,7 +5701,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Failed\\",
                                                 \\"text\\": \\"Healthcare App blue-green deployment failed: ${e.getMessage()} - initiating automatic rollback to blue environment using Terraform\\",
@@ -6979,7 +6979,7 @@ EOF
                                     if [ -n "\$DATADOG_API_KEY" ]; then
                                         cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\\\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
     "series": [{
