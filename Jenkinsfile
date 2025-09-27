@@ -7207,7 +7207,6 @@ EOF
             } // End of finally block
                 } // End of script block
         } // End of timestamps block
-                } // End of script block
             } // End of withCredentials block
         } catch (Exception e) {
             echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
