@@ -2384,7 +2384,7 @@ EOF
                                     -d @-
 {
     "title": "Security Stage Failed",
-    "text": "Healthcare App security scans failed: ${e.getMessage()}",
+    "text": "Healthcare App security scans failed. Check Jenkins logs for details.",
     "priority": "high",
     "tags": ["env:staging", "service:healthcare-app", "stage:security", "status:failure"],
     "alert_type": "error"
@@ -2396,7 +2396,7 @@ EOF
                         sendSlackNotification("""🚨 Security Stage Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
 **Error Details:**
-${e.getMessage()}
+Security scan failed - check Jenkins logs for details
 
 **Build Information:**
 • Build: #${BUILD_NUMBER}
