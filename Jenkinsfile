@@ -186,9 +186,6 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 script {
                     mainPipelineBlock: {
                         try {
-                    script {
-                        script {
-                            script {
                                 // Main pipeline stages block
                                 pipelineStages: {
             stage('Force Pipeline Reload Check') {
@@ -254,7 +251,6 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                         '''
                     }
                 }
-                } // End of script block
             }
             
             stage('Checkout') {
@@ -320,7 +316,6 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                     
                     echo "Datadog monitoring setup completed"
                 }
-                } // End of script block
             }
             
             stage('Build') {
