@@ -170,34 +170,14 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
 
         // Setup Datadog credentials globally for the entire pipeline
         echo "Attempting to load Datadog credentials..."
-        try {
-            withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
-                env.DATADOG_API_KEY = DATADOG_API_KEY
-                echo "SUCCESS: Datadog API key loaded!"
-                echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
-                echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
-            }
-        } catch (Exception e) {
-            echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
-            echo "Available credentials check:"
-            echo "Trying alternative credential IDs..."
+        withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+            env.DATADOG_API_KEY = DATADOG_API_KEY
+            echo "SUCCESS: Datadog API key loaded!"
+            echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
+            echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
             
-            // Try alternative credential IDs
-            try {
-                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
-                    env.DATADOG_API_KEY = DATADOG_API_KEY
-                    echo "SUCCESS: Loaded from DATADOG_API_KEY credential!"
-                    echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
-                }
-            } catch (Exception e2) {
-                echo "ERROR: Failed to load DATADOG_API_KEY credential: ${e2.getMessage()}"
-                echo "Continuing without Datadog monitoring..."
-                env.DATADOG_API_KEY = ''
-            }
-        }
-
-        // Enable timestamps for all output
-        timestamps {
+            // Enable timestamps for all output
+            timestamps {
         script {
         mainPipelineBlock: {                try {
                     script {
@@ -7221,7 +7201,8 @@ EOF
                 } // End of script block
             } // End of finally block
                 } // End of script block
+            } // End of timestamps block
         } // End of withCredentials block
-        } // End of timestamps block
+        } // End of try block
 } // End of node block
     
