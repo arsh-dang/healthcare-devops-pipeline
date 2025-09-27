@@ -180,7 +180,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                         script {
                             script {
                                 // Main pipeline stages block
-                                {
+                                pipelineStages: {
                                     stage('Force Pipeline Reload Check') {
                 echo 'Checking if pipeline reload is needed...'
                 echo "Pipeline reload flag: ${forcePipelineReload}"
