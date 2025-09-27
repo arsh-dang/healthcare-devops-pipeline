@@ -4065,7 +4065,37 @@ EOF
                                     terraform init -upgrade
                                     
                                     echo "Creating Terraform plan..."
-                                    terraform plan -var-file="terraform.tfvars" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" -out=tfplan
+                                    terraform plan \
+                                        -var="environment=staging" \
+                                        -var="app_version=${BUILD_NUMBER}" \
+                                        -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                        -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
+                                        -var="mongodb_root_password=healthcare-staging-2024" \
+                                        -var="enable_monitoring=true" \
+                                        -var="enable_datadog=false" \
+                                        -var="replica_count={\"frontend\":1,\"backend\":1}" \
+                                        -var="smtp_server=smtp.gmail.com" \
+                                        -var="smtp_port=587" \
+                                        -var="smtp_username=admin@healthcare.local" \
+                                        -var="smtp_password=mock-password" \
+                                        -var="smtp_from_email=alerts@healthcare-staging.local" \
+                                        -var="alert_email_critical=admin@healthcare.local" \
+                                        -var="alert_email_warning=team@healthcare.local" \
+                                        -var="alert_email_info=info@healthcare.local" \
+                                        -var="slack_webhook_critical=" \
+                                        -var="slack_webhook_warning=" \
+                                        -var="slack_webhook_info=" \
+                                        -var="slack_channel_critical=#alerts-critical" \
+                                        -var="slack_channel_warning=#alerts-warning" \
+                                        -var="slack_channel_info=#alerts-info" \
+                                        -var="enable_persistent_storage=false" \
+                                        -var="enable_network_policies=true" \
+                                        -var="enable_data_transfer_controls=true" \
+                                        -var="enable_ingress_monitoring=false" \
+                                        -var="enable_log_aggregation=false" \
+                                        -var="enable_synthetic_monitoring=false" \
+                                        -var="enable_distributed_tracing=true" \
+                                        -out=tfplan
                                     
                                     echo "Terraform initialization and planning completed"
                                     
@@ -5217,12 +5247,41 @@ EOF
                                 
                                 echo "Deploying to green environment with Terraform..."
                                 
-                                # Update Terraform variables for green environment
-                                sed -i '' 's/environment = "staging"/environment = "production-green"/g' terraform.tfvars
+                                # Using environment variable for green deployment
                                 
                                 # Initialize and plan green deployment
                                 terraform init -upgrade
-                                terraform plan -var-file="terraform.tfvars" -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" -out=tfplan-green
+                                terraform plan \
+                                    -var="environment=production-green" \
+                                    -var="app_version=${BUILD_NUMBER}" \
+                                    -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                    -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
+                                    -var="mongodb_root_password=healthcare-staging-2024" \
+                                    -var="enable_monitoring=true" \
+                                    -var="enable_datadog=false" \
+                                    -var="replica_count={\"frontend\":1,\"backend\":1}" \
+                                    -var="smtp_server=smtp.gmail.com" \
+                                    -var="smtp_port=587" \
+                                    -var="smtp_username=admin@healthcare.local" \
+                                    -var="smtp_password=mock-password" \
+                                    -var="smtp_from_email=alerts@healthcare-staging.local" \
+                                    -var="alert_email_critical=admin@healthcare.local" \
+                                    -var="alert_email_warning=team@healthcare.local" \
+                                    -var="alert_email_info=info@healthcare.local" \
+                                    -var="slack_webhook_critical=" \
+                                    -var="slack_webhook_warning=" \
+                                    -var="slack_webhook_info=" \
+                                    -var="slack_channel_critical=#alerts-critical" \
+                                    -var="slack_channel_warning=#alerts-warning" \
+                                    -var="slack_channel_info=#alerts-info" \
+                                    -var="enable_persistent_storage=false" \
+                                    -var="enable_network_policies=true" \
+                                    -var="enable_data_transfer_controls=true" \
+                                    -var="enable_ingress_monitoring=false" \
+                                    -var="enable_log_aggregation=false" \
+                                    -var="enable_synthetic_monitoring=false" \
+                                    -var="enable_distributed_tracing=true" \
+                                    -out=tfplan-green
                                 
                                 # Apply green deployment
                                 terraform apply -auto-approve tfplan-green
