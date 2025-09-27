@@ -7163,7 +7163,146 @@ EOF
                         } // End of script block
                     } // End of error handling block
             } // End of catch block
-            finally {
+        } catch (Exception e) {
+            echo "ERROR: Failed to load datadog-api-key credential: ${e.getMessage()}"
+            echo "Trying alternative credential ID: DATADOG_API_KEY"
+            try {
+                withCredentials([string(credentialsId: 'DATADOG_API_KEY', variable: 'DATADOG_API_KEY')]) {
+                    env.DATADOG_API_KEY = DATADOG_API_KEY
+                    echo "SUCCESS: Loaded from DATADOG_API_KEY credential!"
+                    echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
+                    
+                    // Run the same pipeline but with alternative credential
+                    script {
+                        mainPipelineBlock: {
+                            try {
+                            // Main pipeline stages block
+                            pipelineStages: {
+                                stage('Force Pipeline Reload Check') {
+                                    echo 'Checking if pipeline reload is needed...'
+                                    echo "Pipeline reload flag: ${forcePipelineReload}"
+                                    echo "Current pipeline type: Scripted with parameters"
+                                    echo "Build Number: ${BUILD_NUMBER}"
+                                    echo "Job Name: ${JOB_NAME}"
+                                    echo "Node Name: ${NODE_NAME}"
+                                    echo "Build Type: ${params.BUILD_TYPE}"
+                                    echo "Environment: ${params.ENVIRONMENT}"
+                                    echo "Branch: ${params.BRANCH_NAME ?: 'main'}"
+                                    echo "Commit: ${params.COMMIT_HASH ?: 'latest'}"
+                                }
+                                // (This is a simplified version - the full pipeline would continue here)
+                            }
+                        } catch (Exception e) {
+                            echo "Pipeline failed!"
+                            echo "Check logs for failure details"
+                            echo "Error: ${e.getMessage()}"
+                            
+                            sh '''
+                                tail -20 console.log 2>/dev/null || echo "No console logs available"
+                            '''
+                            
+                            throw e
+                        } finally {
+                            echo "Cleaning up workspace..."
+                            sh '''
+                                # Clean up Docker images
+                                docker image prune -f || true
+                                
+                                # Clean up Kubernetes resources and Terraform state
+                                if [ -d terraform ]; then
+                                    cd terraform
+                                    echo "Cleaning up Terraform state files..."
+                                    rm -f tfplan tfplan-green terraform.tfstate.backup
+                                    echo "Terraform cleanup completed"
+                                    cd ..
+                                fi
+                                
+                                # Check if kubectl is available
+                                if command -v kubectl >/dev/null 2>&1; then
+                                    echo "Checking for any remaining green environment resources..."
+                                    kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-app 2>/dev/null || echo "No green deployments to scale down"
+                                    kubectl delete service -l environment=production-green -n healthcare-app 2>/dev/null || echo "No green services to delete"
+                                    echo "Kubernetes cleanup completed"
+                                fi
+                                
+                                # Clean up any remaining log files
+                                echo "Cleaning up log files..."
+                                rm -f *.log green-*.log backend-*.log frontend-*.log
+                                
+                                echo "Deployment cleanup completed"
+                            '''
+                        }
+                    }
+                }
+            }
+        } catch (Exception e2) {
+            echo "ERROR: Failed to load DATADOG_API_KEY credential: ${e2.getMessage()}"
+            echo "Continuing without Datadog monitoring..."
+            env.DATADOG_API_KEY = ''
+            
+            // Run pipeline without Datadog monitoring
+            script {
+                mainPipelineBlock: {
+                    try {
+                    // Main pipeline stages block
+                    pipelineStages: {
+                        stage('Force Pipeline Reload Check') {
+                            echo 'Checking if pipeline reload is needed...'
+                            echo "Pipeline reload flag: ${forcePipelineReload}"
+                            echo "Current pipeline type: Scripted with parameters"
+                            echo "Build Number: ${BUILD_NUMBER}"
+                            echo "Job Name: ${JOB_NAME}"
+                            echo "Node Name: ${NODE_NAME}"
+                            echo "Build Type: ${params.BUILD_TYPE}"
+                            echo "Environment: ${params.ENVIRONMENT}"
+                            echo "Branch: ${params.BRANCH_NAME ?: 'main'}"
+                            echo "Commit: ${params.COMMIT_HASH ?: 'latest'}"
+                        }
+                        // (This is a simplified version - the full pipeline would continue here)
+                    }
+                } catch (Exception e) {
+                    echo "Pipeline failed!"
+                    echo "Check logs for failure details"
+                    echo "Error: ${e.getMessage()}"
+                    
+                    sh '''
+                        tail -20 console.log 2>/dev/null || echo "No console logs available"
+                    '''
+                    
+                    throw e
+                } finally {
+                    echo "Cleaning up workspace..."
+                    sh '''
+                        # Clean up Docker images
+                        docker image prune -f || true
+                        
+                        # Clean up Kubernetes resources and Terraform state
+                        if [ -d terraform ]; then
+                            cd terraform
+                            echo "Cleaning up Terraform state files..."
+                            rm -f tfplan tfplan-green terraform.tfstate.backup
+                            echo "Terraform cleanup completed"
+                            cd ..
+                        fi
+                        
+                        # Check if kubectl is available
+                        if command -v kubectl >/dev/null 2>&1; then
+                            echo "Checking for any remaining green environment resources..."
+                            kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-app 2>/dev/null || echo "No green deployments to scale down"
+                            kubectl delete service -l environment=production-green -n healthcare-app 2>/dev/null || echo "No green services to delete"
+                            echo "Kubernetes cleanup completed"
+                        fi
+                        
+                        # Clean up any remaining log files
+                        echo "Cleaning up log files..."
+                        rm -f *.log green-*.log backend-*.log frontend-*.log
+                        
+                        echo "Deployment cleanup completed"
+                    '''
+                }
+            }
+        }
+        } finally {
                 script {
         echo 'Cleaning up workspace...'
         
