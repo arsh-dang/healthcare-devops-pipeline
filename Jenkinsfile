@@ -954,7 +954,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                 }
                 } // End of script block
             }
-            
+            { // Add missing opening brace
             if (params.RUN_TESTS) {
             stage('Test') {
                 echo 'Running comprehensive tests with Datadog monitoring...'
@@ -2041,6 +2041,7 @@ EOF
                 } // End of script block
             }
             
+            { // Add missing opening brace
             if (params.RUN_SECURITY_SCAN) {
             stage('Security') {
                 echo 'Running comprehensive security analysis with Datadog monitoring...'
@@ -2410,7 +2411,7 @@ Please review security scan results and address any critical vulnerabilities."""
                 }
                 } // End of script block
             }
-            
+            { // Add missing opening brace
             stage('Load Testing') {
                 echo 'Running comprehensive load testing with Artillery...'
                 
@@ -2718,7 +2719,7 @@ EOF
                 }
                 } // End of script block
             }
-            
+            { // Add missing opening brace
             stage('Chaos Engineering') {
                 echo 'Running chaos engineering tests for resilience validation...'
                 
@@ -3011,7 +3012,7 @@ EOF
                 }
             }
             } // End of script block
-            
+            { // Add missing opening brace
             stage('Documentation Generation') {
                 echo 'Generating comprehensive API documentation and project docs...'
                 
@@ -3282,7 +3283,7 @@ EOF
                 }
             }
             } // End of script block
-            
+            { // Add missing opening brace
             stage('Compliance Automation') {
                 echo 'Running automated compliance checks for security standards...'
                 
@@ -3566,7 +3567,7 @@ EOF
                 }
             }
             } // End of script block
-            
+            { // Add missing opening brace
             stage('Infrastructure as Code') {
                 echo 'Deploying infrastructure with Terraform and parallel validation...'
                 
@@ -7020,6 +7021,7 @@ EOF
             }
         }
         
+        { // Add final missing opening brace
         // Success message
         echo 'Pipeline completed successfully!'
         echo "10-stage DevOps pipeline executed successfully"
