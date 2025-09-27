@@ -7480,5 +7480,6 @@ EOF
         }
         } // End of try block (for the second try in catch block)
     } // End of catch block
+} // End of timestamps block
 } // End of node block
     
