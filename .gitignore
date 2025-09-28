@@ -28,12 +28,12 @@ load-env.sh
 
 # Terraform
 terraform/.terraform/
-terraform/*.tfstate
+# terraform/*.tfstate  # Commented out to allow main tfstate for pipeline validation
 terraform/*.tfstate.backup
 # terraform/*.tfplan  # Commented out to allow tfplan for pipeline validation
 terraform/terraform.tfstate.d/
 terraform/.terraform.tfstate.lock.info
-*.tfstate
+# *.tfstate  # Commented out to allow main tfstate for pipeline validation
 *.tfstate.backup
 
 # Terraform backup and diagnostic files
