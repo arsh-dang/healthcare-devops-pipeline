@@ -312,6 +312,61 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 }
             }
             
+            stage('Datadog Setup') {
+                echo 'Setting up Datadog monitoring infrastructure...'
+                
+                script {
+                    try {
+                        withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+                            sh '''
+                                echo "Setting up Datadog monitoring infrastructure..."
+                                
+                                # Make scripts executable
+                                chmod +x datadog/scripts/*.sh
+                                
+                                # Deploy Datadog infrastructure using Terraform
+                                echo "Deploying Datadog infrastructure..."
+                                cd datadog/scripts
+                                
+                                # Set environment variables for the deployment script
+                                export ENVIRONMENT="${ENVIRONMENT:-staging}"
+                                
+                                # Run deployment with proper error handling
+                                if ./deploy-datadog.sh --dry-run > /tmp/datadog_plan.log 2>&1; then
+                                    echo "Datadog infrastructure plan successful"
+                                    if ./deploy-datadog.sh > /tmp/datadog_deploy.log 2>&1; then
+                                        echo "Datadog infrastructure deployed successfully"
+                                        
+                                        # Send pipeline start event to Datadog
+                                        cd ..
+                                        ./scripts/jenkins-datadog-integration.sh pipeline-start
+                                    else
+                                        echo "Datadog infrastructure deployment failed"
+                                        cat /tmp/datadog_deploy.log
+                                        exit 1
+                                    fi
+                                else
+                                    echo "Datadog infrastructure plan failed"
+                                    cat /tmp/datadog_plan.log
+                                    exit 1
+                                fi
+                            '''
+                        }
+                    } catch (Exception e) {
+                        echo "ERROR: Datadog setup failed: ${e.getMessage()}"
+                        withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+                            sh '''
+                                # Send error event to Datadog
+                                cd datadog/scripts
+                                ./jenkins-datadog-integration.sh error "Datadog setup failed: ${e.getMessage()}" "Datadog Setup" || echo "Failed to send error event to Datadog"
+                            '''
+                        }
+                        // Don't fail the pipeline if Datadog setup fails - just log and continue
+                        echo "WARNING: Continuing pipeline without Datadog monitoring"
+                    }
+                }
+            }
+            
             stage('Build') {
                 echo 'Building application with Datadog APM integration...'
                 

@@ -2,23 +2,6 @@
 # DATADOG CLOUD INTEGRATION - INFRASTRUCTURE AS CODE
 # =============================================================================
 
-# Configure Datadog provider
-terraform {
-  required_providers {
-    datadog = {
-      source  = "DataDog/datadog"
-      version = "~> 3.0"
-    }
-  }
-}
-
-# Datadog provider configuration
-provider "datadog" {
-  api_key = var.datadog_api_key
-  app_key = var.datadog_app_key
-  api_url = "https://api.datadoghq.com/"
-}
-
 # =============================================================================
 # DATADOG DASHBOARDS
 # =============================================================================
