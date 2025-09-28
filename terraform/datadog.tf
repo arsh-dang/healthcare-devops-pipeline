@@ -488,7 +488,6 @@ resource "datadog_monitor" "healthcare_high_error_rate" {
   renotify_interval = 0
   require_full_window = true
   new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "api", "error-rate", "critical", "terraform"]
   priority = 1
@@ -513,8 +512,6 @@ resource "datadog_monitor" "healthcare_high_response_time" {
   no_data_timeframe = 20
   renotify_interval = 30
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "api", "performance", "warning", "terraform"]
   priority = 2
@@ -539,8 +536,6 @@ resource "datadog_monitor" "healthcare_database_connections" {
   no_data_timeframe = 10
   renotify_interval = 60
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "database", "mongodb", "connections", "terraform"]
   priority = 2
@@ -565,8 +560,6 @@ resource "datadog_monitor" "healthcare_high_cpu" {
   no_data_timeframe = 20
   renotify_interval = 60
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "infrastructure", "cpu", "performance", "terraform"]
   priority = 3
@@ -591,8 +584,6 @@ resource "datadog_monitor" "healthcare_high_memory" {
   no_data_timeframe = 15
   renotify_interval = 60
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "infrastructure", "memory", "performance", "terraform"]
   priority = 3
@@ -620,7 +611,6 @@ resource "datadog_monitor" "healthcare_service_unavailable" {
   renotify_interval  = 10
   require_full_window = false
   new_group_delay    = 300
-  new_host_delay     = 300
 
   tags = ["healthcare", "availability", "critical", "service-down", "terraform"]
   priority = 1
@@ -646,8 +636,6 @@ resource "datadog_monitor" "healthcare_security_events" {
   no_data_timeframe = 10
   renotify_interval = 30
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "security", "failed-logins", "threat-detection", "terraform"]
   priority = 2
@@ -673,8 +661,6 @@ resource "datadog_monitor" "healthcare_sla_breach" {
   no_data_timeframe = 30
   renotify_interval = 120
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "sla", "uptime", "business-impact", "terraform"]
   priority = 2
@@ -699,8 +685,6 @@ resource "datadog_monitor" "healthcare_deployment_failure" {
   no_data_timeframe = 15
   renotify_interval = 60
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "deployment", "ci-cd", "release", "terraform"]
   priority = 2
@@ -725,8 +709,6 @@ resource "datadog_monitor" "jenkins_pipeline_failure" {
   no_data_timeframe = 10
   renotify_interval = 30
   require_full_window = true
-  new_group_delay   = 300
-  new_group_delay   = 300
 
   tags = ["healthcare", "jenkins", "ci-cd", "build-failure", "terraform"]
   priority = 2
