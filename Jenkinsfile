@@ -5438,8 +5438,8 @@ EOF
                                             for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
-                                                    # Check frontend health endpoint directly from the frontend pod using correct NodePort
-                                                    if kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:32710/health >/dev/null 2>&1; then
+                                                    # Check frontend health endpoint directly from the frontend pod using correct port
+                                                    if kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:80/health >/dev/null 2>&1; then
                                                         echo "Green environment frontend health check passed via pod $pod"
                                                         GREEN_HEALTH_STATUS="healthy"
                                                         break
@@ -5574,8 +5574,8 @@ EOF
                                             for pod in $FRONTEND_PODS; do
                                                 POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
-                                                    # Check frontend health endpoint directly from the frontend pod using correct NodePort
-                                                    kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:32710/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    # Check frontend health endpoint directly from the frontend pod using correct port
+                                                    kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:80/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 else
                                                     echo "Frontend pod $pod is not ready"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
@@ -5613,39 +5613,56 @@ EOF
                                             MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                         fi
                                             
-                                            # Check backend pods
-                                            BACKEND_PODS=$(kubectl get pods -l component=backend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
-                                            if [ -n "$BACKEND_PODS" ]; then
-                                                for pod in $BACKEND_PODS; do
-                                                    POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
-                                                    if [ "$POD_READY" = "True" ]; then
-                                                        echo "Backend pod $pod is ready"
-                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
-                                                    else
-                                                        echo "Backend pod $pod is not ready"
-                                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                                    fi
-                                                done
-                                            else
-                                                echo "No backend pods found"
-                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
-                                            fi
-                                            
-                                            # Check MongoDB pods
+                                            # Check backend containers (running as sidecars in MongoDB StatefulSet)
                                             MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$MONGODB_PODS" ]; then
                                                 for pod in $MONGODB_PODS; do
                                                     POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                     if [ "$POD_READY" = "True" ]; then
-                                                        echo "MongoDB pod $pod is ready"
-                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                        # Check if backend container is running in the MongoDB pod
+                                                        if kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.spec.containers[*].name}' | grep -q backend; then
+                                                            # Test backend container is responsive
+                                                            if kubectl exec $pod -n healthcare-production-green -c backend -- node -e "console.log('Backend OK')" >/dev/null 2>&1; then
+                                                                echo "Backend container in MongoDB pod $pod is healthy"
+                                                                MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                            else
+                                                                echo "Backend container in MongoDB pod $pod is not responsive"
+                                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                            fi
+                                                        else
+                                                            echo "Backend container not found in MongoDB pod $pod"
+                                                            MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                        fi
+                                                    else
+                                                        echo "MongoDB pod $pod (containing backend) is not ready"
+                                                        MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    fi
+                                                done
+                                            else
+                                                echo "No MongoDB pods found (which contain backend containers)"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
+                                            
+                                            # Check MongoDB database connectivity (separate from backend container check)
+                                            if [ -n "$MONGODB_PODS" ]; then
+                                                for pod in $MONGODB_PODS; do
+                                                    POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                    if [ "$POD_READY" = "True" ]; then
+                                                        # Check MongoDB database connectivity
+                                                        if kubectl exec $pod -n healthcare-production-green -c mongodb -- mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
+                                                            echo "MongoDB database in pod $pod is healthy"
+                                                            MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                        else
+                                                            echo "MongoDB database in pod $pod is not responding"
+                                                            MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                        fi
                                                     else
                                                         echo "MongoDB pod $pod is not ready"
                                                         MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                     fi
                                                 done
                                             else
-                                                echo "No MongoDB pods found"
+                                                echo "No MongoDB pods found for database connectivity check"
                                                 MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                             fi
                                             
@@ -5664,6 +5681,32 @@ EOF
                                                 done
                                             else
                                                 echo "No green services found"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
+                                            
+                                            # Check ingress health
+                                            INGRESS_COUNT=$(kubectl get ingress -l environment=production-green -n healthcare-production-green --no-headers 2>/dev/null | wc -l)
+                                            if [ "$INGRESS_COUNT" -gt 0 ]; then
+                                                echo "Found $INGRESS_COUNT ingress resources"
+                                                MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                            else
+                                                echo "No ingress resources found"
+                                                MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                            fi
+                                            
+                                            # Check application-level connectivity (frontend to backend)
+                                            FRONTEND_POD=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                            if [ -n "$FRONTEND_POD" ]; then
+                                                # Test if frontend can reach backend service (using netcat or similar)
+                                                if kubectl exec $FRONTEND_POD -n healthcare-production-green -- nc -z backend 5001 2>/dev/null || kubectl exec $FRONTEND_POD -n healthcare-production-green -- timeout 5 bash -c "echo > /dev/tcp/backend/5001" 2>/dev/null; then
+                                                    echo "Frontend can reach backend service"
+                                                    MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                else
+                                                    echo "Frontend cannot reach backend service"
+                                                    MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                fi
+                                            else
+                                                echo "No frontend pod found for connectivity test"
                                                 MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                             fi
                                     else
