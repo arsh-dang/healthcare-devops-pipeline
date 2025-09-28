@@ -87,4 +87,4 @@ terraform/*.yaml
 terraform/monitoring.tf.full
 
 # Misplaced files
-terraform/test-integration.js
+terraform/test-integration.jsterraform/tfplan
