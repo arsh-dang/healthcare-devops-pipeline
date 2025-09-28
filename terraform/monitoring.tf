@@ -2503,180 +2503,181 @@ resource "kubernetes_service_account" "jaeger_operator" {
 }
 
 # Jaeger Cluster Role
-resource "kubernetes_cluster_role" "jaeger_operator" {
-  count = var.enable_distributed_tracing ? 1 : 0
+# resource "kubernetes_cluster_role" "jaeger_operator" {
+#   count = var.enable_distributed_tracing ? 1 : 0
+#
+#   metadata {
+#     name   = "jaeger-operator"
+#     labels = merge(local.common_labels, { component = "jaeger" })
+#   }
+#
+#   rule {
+#     api_groups = [""]
+#     resources  = ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "configmaps", "secrets", "serviceaccounts"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["apps"]
+#     resources  = ["deployments", "daemonsets", "replicasets", "statefulsets"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["monitoring.coreos.com"]
+#     resources  = ["*"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["extensions"]
+#     resources  = ["ingresses"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["networking.k8s.io"]
+#     resources  = ["ingresses"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["batch"]
+#     resources  = ["jobs", "cronjobs"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["route.openshift.io"]
+#     resources  = ["routes"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["image.openshift.io"]
+#     resources  = ["imagestreams", "imagestreamtags"]
+#     verbs      = ["*"]
+#   }
 
-  metadata {
-    name   = "jaeger-operator"
-    labels = merge(local.common_labels, { component = "jaeger" })
-  }
-
-  rule {
-    api_groups = [""]
-    resources  = ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "configmaps", "secrets", "serviceaccounts"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["apps"]
-    resources  = ["deployments", "daemonsets", "replicasets", "statefulsets"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["monitoring.coreos.com"]
-    resources  = ["*"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["extensions"]
-    resources  = ["ingresses"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["networking.k8s.io"]
-    resources  = ["ingresses"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["batch"]
-    resources  = ["jobs", "cronjobs"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["route.openshift.io"]
-    resources  = ["routes"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["image.openshift.io"]
-    resources  = ["imagestreams", "imagestreamtags"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["jaegertracing.io"]
-    resources  = ["*"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["oauth.openshift.io"]
-    resources  = ["oauthclients"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["rbac.authorization.k8s.io"]
-    resources  = ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["console.openshift.io"]
-    resources  = ["consolelinks"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["config.openshift.io"]
-    resources  = ["clusterversions"]
-    verbs      = ["get", "list", "watch"]
-  }
-
-  rule {
-    api_groups = ["authorization.openshift.io"]
-    resources  = ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["template.openshift.io"]
-    resources  = ["templates"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["autoscaling"]
-    resources  = ["horizontalpodautoscalers"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["cert-manager.io"]
-    resources  = ["*"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["logging.openshift.io"]
-    resources  = ["*"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["kafka.strimzi.io"]
-    resources  = ["*"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["elasticsearch.k8s.elastic.co"]
-    resources  = ["*"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["security.openshift.io"]
-    resources  = ["securitycontextconstraints"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["admissionregistration.k8s.io"]
-    resources  = ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["apiextensions.k8s.io"]
-    resources  = ["customresourcedefinitions"]
-    verbs      = ["*"]
-  }
-
-  rule {
-    api_groups = ["*"]
-    resources  = ["*"]
-    verbs      = ["get", "list", "watch"]
-  }
-}
+#   rule {
+#     api_groups = ["jaegertracing.io"]
+#     resources  = ["*"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["oauth.openshift.io"]
+#     resources  = ["oauthclients"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["rbac.authorization.k8s.io"]
+#     resources  = ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["console.openshift.io"]
+#     resources  = ["consolelinks"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["config.openshift.io"]
+#     resources  = ["clusterversions"]
+#     verbs      = ["get", "list", "watch"]
+#   }
+#
+#   rule {
+#     api_groups = ["authorization.openshift.io"]
+#     resources  = ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["template.openshift.io"]
+#     resources  = ["templates"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["autoscaling"]
+#     resources  = ["horizontalpodautoscalers"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["cert-manager.io"]
+#     resources  = ["*"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["logging.openshift.io"]
+#     resources  = ["*"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["kafka.strimzi.io"]
+#     resources  = ["*"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["elasticsearch.k8s.elastic.co"]
+#     resources  = ["*"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["security.openshift.io"]
+#     resources  = ["securitycontextconstraints"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["admissionregistration.k8s.io"]
+#     resources  = ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["apiextensions.k8s.io"]
+#     resources  = ["customresourcedefinitions"]
+#     verbs      = ["*"]
+#   }
+#
+#   rule {
+#     api_groups = ["*"]
+#     resources  = ["*"]
+#     verbs      = ["get", "list", "watch"]
+#   }
+# }
 
 # Jaeger Cluster Role Binding
-resource "kubernetes_cluster_role_binding" "jaeger_operator" {
-  count = var.enable_distributed_tracing ? 1 : 0
-
-  metadata {
-    name   = "jaeger-operator"
-    labels = merge(local.common_labels, { component = "jaeger" })
-  }
-
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = kubernetes_cluster_role.jaeger_operator[0].metadata[0].name
-  }
-
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account.jaeger_operator[0].metadata[0].name
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-  }
-}
+# resource "kubernetes_cluster_role_binding" "jaeger_operator" {
+#   count = var.enable_distributed_tracing ? 1 : 0
+#
+#   metadata {
+#     name   = "jaeger-operator"
+#     labels = merge(local.common_labels, { component = "jaeger" })
+#   }
+#
+#   role_ref {
+#     api_group = "rbac.authorization.k8s.io"
+#     kind      = "ClusterRole"
+#     # name      = kubernetes_cluster_role.jaeger_operator[0].metadata[0].name
+#     name      = "jaeger-operator"
+#   }
+#
+#   subject {
+#     kind      = "ServiceAccount"
+#     name      = kubernetes_service_account.jaeger_operator[0].metadata[0].name
+#     namespace = kubernetes_namespace.monitoring.metadata[0].name
+#   }
+# }
 
 # Jaeger ConfigMap
 resource "kubernetes_config_map" "jaeger_config" {

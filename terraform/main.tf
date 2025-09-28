@@ -330,6 +330,11 @@ resource "kubernetes_stateful_set" "mongodb" {
       }
     }
   }
+
+  timeouts {
+    create = "300s" # 5 minute timeout for stateful set creation
+    update = "300s" # 5 minute timeout for stateful set updates
+  }
 }
 
 # Frontend Deployment
@@ -484,7 +489,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.backend_labels
+    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB StatefulSet
 
     port {
       port        = 5001
