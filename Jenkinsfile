@@ -6457,7 +6457,7 @@ EOF
                                                     \\"type\\": \\"toplist\\",
                                                     \\"requests\\": [
                                                         {
-                                                            \\"q\\": \\"top(avg:healthcare.cpu_usage{env:production,service:healthcare-app} by {host}, 10, \\'mean\\', \\'desc\\')\\",
+                                                            \\"q\\": \\"top(avg:healthcare.cpu_usage{env:production,service:healthcare-app} by {host}, 10, mean, desc)\\",
                                                             \\"conditional_formats\\": []
                                                         }
                                                     ],
