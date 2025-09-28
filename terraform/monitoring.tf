@@ -2035,14 +2035,24 @@ resource "kubernetes_config_map" "fluent_bit_config" {
           Regex log ^(?!.*DEBUG).*
 
       [OUTPUT]
-          Name  stdout
+          Name  es
           Match healthcare.*
-          Format json_lines
+          Host  elasticsearch
+          Port  9200
+          Index healthcare-logs
+          Type  _doc
+          HTTP_User elastic
+          HTTP_Passwd changeme
 
       [OUTPUT]
-          Name  stdout
+          Name  es
           Match mongodb.*
-          Format json_lines
+          Host  elasticsearch
+          Port  9200
+          Index mongodb-logs
+          Type  _doc
+          HTTP_User elastic
+          HTTP_Passwd changeme
     EOT
 
     "parsers.conf" = <<-EOT
@@ -2247,6 +2257,201 @@ resource "kubernetes_cluster_role_binding" "fluent_bit" {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.fluent_bit[0].metadata[0].name
     namespace = kubernetes_namespace.monitoring.metadata[0].name
+  }
+}
+
+# =============================================================================
+# ELASTICSEARCH LOG STORAGE
+# =============================================================================
+
+# Elasticsearch StatefulSet for log storage
+resource "kubernetes_stateful_set" "elasticsearch" {
+  count = var.enable_log_aggregation ? 1 : 0
+
+  depends_on = [kubernetes_namespace.monitoring]
+
+  metadata {
+    name      = "elasticsearch"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "elasticsearch" })
+  }
+
+  spec {
+    service_name = "elasticsearch"
+    replicas     = 1
+
+    selector {
+      match_labels = merge(local.common_labels, { component = "elasticsearch" })
+    }
+
+    template {
+      metadata {
+        labels = merge(local.common_labels, { component = "elasticsearch" })
+      }
+
+      spec {
+        container {
+          name  = "elasticsearch"
+          image = "elasticsearch:8.11.0"
+
+          port {
+            container_port = 9200
+            name           = "http"
+          }
+
+          port {
+            container_port = 9300
+            name           = "transport"
+          }
+
+          env {
+            name  = "node.name"
+            value = "elasticsearch-0"
+          }
+
+          env {
+            name  = "cluster.name"
+            value = "healthcare-logs"
+          }
+
+          env {
+            name  = "discovery.type"
+            value = "single-node"
+          }
+
+          env {
+            name  = "ES_JAVA_OPTS"
+            value = "-Xms512m -Xmx512m"
+          }
+
+          env {
+            name  = "xpack.security.enabled"
+            value = "false"
+          }
+
+          env {
+            name  = "xpack.security.enrollment.enabled"
+            value = "false"
+          }
+
+          env {
+            name  = "bootstrap.memory_lock"
+            value = "true"
+          }
+
+          volume_mount {
+            name       = "elasticsearch-data"
+            mount_path = "/usr/share/elasticsearch/data"
+          }
+
+          resources {
+            requests = {
+              cpu    = "500m"
+              memory = "1Gi"
+            }
+            limits = {
+              cpu    = "1"
+              memory = "2Gi"
+            }
+          }
+
+          liveness_probe {
+            http_get {
+              path = "/_cluster/health"
+              port = "http"
+            }
+            initial_delay_seconds = 60
+            period_seconds        = 30
+          }
+
+          readiness_probe {
+            http_get {
+              path = "/_cluster/health"
+              port = "http"
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+          }
+
+          security_context {
+            privileged = false
+            capabilities {
+              add = ["IPC_LOCK"]
+            }
+          }
+        }
+
+        volume {
+          name = "elasticsearch-data"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.elasticsearch_storage[0].metadata[0].name
+          }
+        }
+
+        security_context {
+          fs_group = 1000
+        }
+      }
+    }
+  }
+
+  timeouts {
+    create = "300s"
+    update = "300s"
+  }
+}
+
+# Elasticsearch PVC for log storage
+resource "kubernetes_persistent_volume_claim" "elasticsearch_storage" {
+  count = var.enable_log_aggregation ? 1 : 0
+
+  depends_on = [kubernetes_namespace.monitoring]
+
+  wait_until_bound = false
+
+  metadata {
+    name      = "elasticsearch-storage"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "elasticsearch" })
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = var.environment == "production" ? "100Gi" : "10Gi"
+      }
+    }
+    storage_class_name = "local-path"
+  }
+
+  timeouts {
+    create = "120s"
+  }
+}
+
+# Elasticsearch Service
+resource "kubernetes_service" "elasticsearch" {
+  count = var.enable_log_aggregation ? 1 : 0
+
+  depends_on = [kubernetes_namespace.monitoring]
+
+  metadata {
+    name      = "elasticsearch"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "elasticsearch" })
+  }
+
+  spec {
+    selector = merge(local.common_labels, { component = "elasticsearch" })
+
+    port {
+      port        = 9200
+      target_port = "http"
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
   }
 }
 
@@ -3069,6 +3274,21 @@ output "prometheus_external_url" {
 output "mongodb_exporter_external_url" {
   description = "External MongoDB Exporter URL"
   value       = var.environment == "production" ? "https://monitoring.company.com/mongodb-exporter" : "http://localhost:30285/staging/mongodb-exporter"
+}
+
+output "elasticsearch_service" {
+  description = "Elasticsearch service name"
+  value       = var.enable_log_aggregation ? kubernetes_service.elasticsearch[0].metadata[0].name : null
+}
+
+output "elasticsearch_url" {
+  description = "Elasticsearch URL for internal access"
+  value       = var.enable_log_aggregation ? "http://${kubernetes_service.elasticsearch[0].metadata[0].name}.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local:9200" : null
+}
+
+output "elasticsearch_external_url" {
+  description = "External Elasticsearch URL"
+  value       = var.environment == "production" ? "https://monitoring.company.com/elasticsearch" : "http://localhost:30285/staging/elasticsearch"
 }
 
 # =============================================================================

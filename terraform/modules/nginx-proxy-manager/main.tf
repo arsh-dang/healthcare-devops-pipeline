@@ -389,6 +389,31 @@ resource "kubernetes_service" "jaeger_external" {
   }
 }
 
+resource "kubernetes_service" "elasticsearch_external" {
+  count = var.enable_monitoring_external_services ? 1 : 0
+
+  metadata {
+    name      = "elasticsearch-external"
+    namespace = var.monitoring_namespace
+    labels = {
+      app = "elasticsearch"
+    }
+  }
+
+  spec {
+    selector = merge(var.common_labels, { component = "elasticsearch" })
+
+    port {
+      port        = 9200
+      target_port = 9200
+      protocol    = "TCP"
+      node_port   = 32716
+    }
+
+    type = "NodePort"
+  }
+}
+
 # ConfigMap for Nginx Proxy Manager default configuration
 resource "kubernetes_config_map" "nginx_proxy_manager_config" {
   count = var.enable_nginx_proxy_manager ? 1 : 0

@@ -3,11 +3,12 @@
 ## Overview
 Your healthcare application now has comprehensive monitoring capabilities including:
 - **Ingress Monitoring** - Nginx Ingress Controller with metrics
-- **Log Aggregation** - Fluent Bit for centralized logging
+- **Log Aggregation** - Fluent Bit with Elasticsearch storage for centralized logging
 - **Synthetic Monitoring** - Automated health checks
-- **Distributed Tracing** - Jaeger for request tracing
+- **Distributed Tracing** - Jaeger for request tracing (all-in-one memory storage)
 - **Enhanced Alerting** - Advanced Prometheus rules
 - **Grafana Dashboards** - Rich visualizations
+- **Persistent Storage** - Data persistence for Prometheus, Grafana, and Elasticsearch
 
 ## Quick Deployment
 
@@ -55,6 +56,13 @@ kubectl port-forward -n monitoring-staging svc/alertmanager 9093:9093
 ```
 - URL: http://localhost:30285/alertmanager
 
+### Elasticsearch (Log Storage & Search)
+```bash
+kubectl port-forward -n monitoring-staging svc/elasticsearch 9200:9200
+```
+- URL: http://localhost:32716
+- Health Check: http://localhost:32716/_cluster/health
+
 ## Key Features Added
 
 ### Ingress Monitoring
@@ -64,10 +72,11 @@ kubectl port-forward -n monitoring-staging svc/alertmanager 9093:9093
 - Traffic pattern analysis
 
 ### Log Aggregation
-- Centralized application logs
+- Centralized application logs with Elasticsearch storage
 - Kubernetes metadata enrichment
 - Structured logging support
 - Log filtering and routing
+- Persistent log storage with search capabilities
 
 ### Synthetic Monitoring
 - Automated health checks
