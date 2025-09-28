@@ -2812,13 +2812,13 @@ EOF
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \"title\": \"Chaos Engineering Started\",
-                                        \"text\": \"Healthcare App chaos engineering tests started for resilience validation\",
-                                        \"priority\": \"normal\",
-                                        \"tags\": [\"env:staging\", \"service:healthcare-app\", \"stage:chaos\", \"testing:resilience\"],
-                                        \"alert_type\": \"info\"
-                                    }" || echo "Failed to send Datadog event"
+                                    -d '{
+                                        "title": "Chaos Engineering Started",
+                                        "text": "Healthcare App chaos engineering tests started for resilience validation",
+                                        "priority": "normal",
+                                        "tags": ["env:staging", "service:healthcare-app", "stage:chaos", "testing:resilience"],
+                                        "alert_type": "info"
+                                    }' || echo "Failed to send Datadog event"
                             fi
                         '''
                         

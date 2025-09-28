@@ -37,12 +37,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
       precision = 2
       text_align = "center"
     }
-    layout {
-      x = 0
-      y = 0
-      width = 3
-      height = 2
-    }
   }
 
   widget {
@@ -65,12 +59,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
         min = "0"
       }
       show_legend = false
-    }
-    layout {
-      x = 3
-      y = 0
-      width = 6
-      height = 2
     }
   }
 
@@ -95,12 +83,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
       }
       show_legend = false
     }
-    layout {
-      x = 9
-      y = 0
-      width = 6
-      height = 2
-    }
   }
 
   widget {
@@ -124,12 +106,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
         max = "100"
       }
       show_legend = false
-    }
-    layout {
-      x = 15
-      y = 0
-      width = 6
-      height = 2
     }
   }
 
@@ -161,12 +137,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
         scale = "linear"
       }
       show_legend = true
-    }
-    layout {
-      x = 0
-      y = 2
-      width = 12
-      height = 4
     }
   }
 
@@ -201,12 +171,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
       }
       show_legend = true
     }
-    layout {
-      x = 12
-      y = 2
-      width = 9
-      height = 4
-    }
   }
 
   widget {
@@ -232,12 +196,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
       precision = 0
       text_align = "center"
     }
-    layout {
-      x = 0
-      y = 6
-      width = 3
-      height = 2
-    }
   }
 
   widget {
@@ -251,12 +209,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
           palette = "dog_classic_area"
         }
       }
-    }
-    layout {
-      x = 3
-      y = 6
-      width = 9
-      height = 4
     }
   }
 
@@ -279,12 +231,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
         scale = "linear"
       }
       show_legend = false
-    }
-    layout {
-      x = 12
-      y = 6
-      width = 9
-      height = 4
     }
   }
 
@@ -311,12 +257,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
       precision = 0
       text_align = "center"
     }
-    layout {
-      x = 0
-      y = 8
-      width = 3
-      height = 2
-    }
   }
 
   widget {
@@ -338,12 +278,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
         scale = "linear"
       }
       show_legend = true
-    }
-    layout {
-      x = 3
-      y = 8
-      width = 9
-      height = 4
     }
   }
 
@@ -374,12 +308,6 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
       autoscale = true
       precision = 2
       text_align = "center"
-    }
-    layout {
-      x = 12
-      y = 8
-      width = 9
-      height = 4
     }
   }
 
@@ -429,12 +357,6 @@ resource "datadog_dashboard" "jenkins_cicd_dashboard" {
       }
       show_legend = true
     }
-    layout {
-      x = 0
-      y = 0
-      width = 12
-      height = 4
-    }
   }
 
   widget {
@@ -467,12 +389,6 @@ resource "datadog_dashboard" "jenkins_cicd_dashboard" {
       }
       show_legend = true
     }
-    layout {
-      x = 12
-      y = 0
-      width = 9
-      height = 4
-    }
   }
 
   widget {
@@ -503,12 +419,6 @@ resource "datadog_dashboard" "jenkins_cicd_dashboard" {
       precision = 2
       text_align = "center"
     }
-    layout {
-      x = 0
-      y = 4
-      width = 6
-      height = 2
-    }
   }
 
   widget {
@@ -533,12 +443,6 @@ resource "datadog_dashboard" "jenkins_cicd_dashboard" {
       autoscale = true
       precision = 0
       text_align = "center"
-    }
-    layout {
-      x = 6
-      y = 4
-      width = 6
-      height = 2
     }
   }
 
@@ -584,7 +488,7 @@ resource "datadog_monitor" "healthcare_high_error_rate" {
   renotify_interval = 0
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "api", "error-rate", "critical", "terraform"]
   priority = 1
@@ -610,7 +514,7 @@ resource "datadog_monitor" "healthcare_high_response_time" {
   renotify_interval = 30
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "api", "performance", "warning", "terraform"]
   priority = 2
@@ -636,7 +540,7 @@ resource "datadog_monitor" "healthcare_database_connections" {
   renotify_interval = 60
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "database", "mongodb", "connections", "terraform"]
   priority = 2
@@ -662,7 +566,7 @@ resource "datadog_monitor" "healthcare_high_cpu" {
   renotify_interval = 60
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "infrastructure", "cpu", "performance", "terraform"]
   priority = 3
@@ -688,7 +592,7 @@ resource "datadog_monitor" "healthcare_high_memory" {
   renotify_interval = 60
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "infrastructure", "memory", "performance", "terraform"]
   priority = 3
@@ -743,7 +647,7 @@ resource "datadog_monitor" "healthcare_security_events" {
   renotify_interval = 30
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "security", "failed-logins", "threat-detection", "terraform"]
   priority = 2
@@ -770,7 +674,7 @@ resource "datadog_monitor" "healthcare_sla_breach" {
   renotify_interval = 120
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "sla", "uptime", "business-impact", "terraform"]
   priority = 2
@@ -796,7 +700,7 @@ resource "datadog_monitor" "healthcare_deployment_failure" {
   renotify_interval = 60
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "deployment", "ci-cd", "release", "terraform"]
   priority = 2
@@ -822,7 +726,7 @@ resource "datadog_monitor" "jenkins_pipeline_failure" {
   renotify_interval = 30
   require_full_window = true
   new_group_delay   = 300
-  new_host_delay    = 300
+  new_group_delay   = 300
 
   tags = ["healthcare", "jenkins", "ci-cd", "build-failure", "terraform"]
   priority = 2
