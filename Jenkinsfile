@@ -6257,7 +6257,7 @@ EOF
                                     echo "Release validation completed: $VALIDATION_PASSED/$VALIDATION_CHECKS checks passed ($VALIDATION_RATE%)"
                                     
                                     # Determine release readiness
-                                    if [ $VALIDATION_RATE -ge 80 ]; then
+                                    if [ $VALIDATION_RATE -ge 100 ]; then
                                         RELEASE_READY="ready"
                                         echo "[SUCCESS] Release is ready for production deployment"
                                     else

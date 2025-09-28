@@ -30,7 +30,7 @@ load-env.sh
 terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.backup
-terraform/*.tfplan
+# terraform/*.tfplan  # Commented out to allow tfplan for pipeline validation
 terraform/terraform.tfstate.d/
 terraform/.terraform.tfstate.lock.info
 *.tfstate
@@ -87,4 +87,4 @@ terraform/*.yaml
 terraform/monitoring.tf.full
 
 # Misplaced files
-terraform/test-integration.jsterraform/tfplan
+terraform/test-integration.js
