@@ -1,0 +1,236 @@
+{
+  "alerts": [
+    {
+      "name": "Healthcare App - High Error Rate",
+      "message": "Healthcare application error rate is above 5% for more than 5 minutes. This indicates potential issues with the application that require immediate attention. @slack-healthcare-alerts",
+      "query": "avg(last_5m):avg:healthcare.api.errors{*} / avg:healthcare.api.requests{*} * 100 > 5",
+      "type": "error alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 10,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 0,
+        "escalation_message": "Healthcare app error rate remains high. Escalating to on-call engineer.",
+        "thresholds": {
+          "critical": 5,
+          "warning": 2
+        }
+      },
+      "tags": ["healthcare", "api", "error-rate", "critical"],
+      "priority": "P1"
+    },
+    {
+      "name": "Healthcare App - High Response Time",
+      "message": "Healthcare application response time (95th percentile) is above 2 seconds for more than 10 minutes. This may impact user experience. @slack-healthcare-alerts",
+      "query": "avg(last_10m):avg:healthcare.api.response_time{*}.rollup(avg, 300) > 2000",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 20,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 30,
+        "thresholds": {
+          "critical": 5000,
+          "warning": 2000
+        }
+      },
+      "tags": ["healthcare", "api", "performance", "warning"],
+      "priority": "P2"
+    },
+    {
+      "name": "Healthcare App - Database Connection Issues",
+      "message": "MongoDB connection count is above 80% of maximum connections. Database may be under stress. @slack-healthcare-alerts",
+      "query": "avg(last_5m):avg:mongodb.connections.current{*} / avg:mongodb.connections.available{*} * 100 > 80",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 10,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 60,
+        "thresholds": {
+          "critical": 95,
+          "warning": 80
+        }
+      },
+      "tags": ["healthcare", "database", "mongodb", "connections"],
+      "priority": "P2"
+    },
+    {
+      "name": "Healthcare App - High CPU Usage",
+      "message": "Healthcare application CPU usage is above 80% for more than 15 minutes. System may be under stress. @slack-healthcare-alerts",
+      "query": "avg(last_15m):avg:system.cpu.user{*} > 80",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 20,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 60,
+        "thresholds": {
+          "critical": 90,
+          "warning": 80
+        }
+      },
+      "tags": ["healthcare", "infrastructure", "cpu", "performance"],
+      "priority": "P3"
+    },
+    {
+      "name": "Healthcare App - High Memory Usage",
+      "message": "Healthcare application memory usage is above 85% for more than 10 minutes. System may need attention. @slack-healthcare-alerts",
+      "query": "avg(last_10m):avg:system.mem.used{*} / avg:system.mem.total{*} * 100 > 85",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 15,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 60,
+        "thresholds": {
+          "critical": 95,
+          "warning": 85
+        }
+      },
+      "tags": ["healthcare", "infrastructure", "memory", "performance"],
+      "priority": "P3"
+    },
+    {
+      "name": "Healthcare App - Service Unavailable",
+      "message": "Healthcare application health check is failing. Service may be down. @slack-healthcare-critical",
+      "query": "avg(last_2m):avg:healthcare.app.health{*} < 1",
+      "type": "error alert",
+      "options": {
+        "notify_audit": true,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 2,
+        "require_full_window": false,
+        "new_group_delay": 300,
+        "notify_no_data": true,
+        "renotify_interval": 10,
+        "escalation_message": "Healthcare service is down. Immediate action required.",
+        "thresholds": {
+          "critical": 1,
+          "warning": 0.8
+        }
+      },
+      "tags": ["healthcare", "availability", "critical", "service-down"],
+      "priority": "P1"
+    },
+    {
+      "name": "Healthcare App - Security Events",
+      "message": "Unusual security activity detected. Multiple failed login attempts or suspicious behavior. @slack-healthcare-security",
+      "query": "sum(last_5m):sum:healthcare.security.failed_logins{*}.as_count() > 10",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": true,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 10,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 30,
+        "thresholds": {
+          "critical": 50,
+          "warning": 10
+        }
+      },
+      "tags": ["healthcare", "security", "failed-logins", "threat-detection"],
+      "priority": "P2"
+    },
+    {
+      "name": "Healthcare App - SLA Breach",
+      "message": "Healthcare application SLA is below 99.9% uptime. This may impact service level agreements. @slack-healthcare-alerts",
+      "query": "avg(last_1h):avg:healthcare.sla.uptime{*} < 99.9",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": true,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 30,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 120,
+        "thresholds": {
+          "critical": 99.0,
+          "warning": 99.9
+        }
+      },
+      "tags": ["healthcare", "sla", "uptime", "business-impact"],
+      "priority": "P2"
+    },
+    {
+      "name": "Healthcare App - Deployment Failure",
+      "message": "Healthcare application deployment has failed or is stuck. New version may not be deployed properly. @slack-healthcare-alerts",
+      "query": "avg(last_10m):avg:healthcare.deployment.status{*} < 1",
+      "type": "warning alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 15,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 60,
+        "thresholds": {
+          "critical": 0.5,
+          "warning": 1
+        }
+      },
+      "tags": ["healthcare", "deployment", "ci-cd", "release"],
+      "priority": "P2"
+    },
+    {
+      "name": "Healthcare App - Log Volume Spike",
+      "message": "Healthcare application log volume has increased significantly. This may indicate issues or unusual activity. @slack-healthcare-alerts",
+      "query": "avg(last_5m):sum:healthcare.logs.count{*}.as_count() > 10000",
+      "type": "info alert",
+      "options": {
+        "notify_audit": false,
+        "locked": false,
+        "timeout_h": 0,
+        "new_host_delay": 300,
+        "no_data_timeframe": 10,
+        "require_full_window": true,
+        "new_group_delay": 300,
+        "notify_no_data": false,
+        "renotify_interval": 120,
+        "thresholds": {
+          "critical": 50000,
+          "warning": 10000
+        }
+      },
+      "tags": ["healthcare", "logging", "volume", "anomaly"],
+      "priority": "P3"
+    }
+  ]
+}

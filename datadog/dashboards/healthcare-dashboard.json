@@ -1,0 +1,431 @@
+{
+  "title": "Healthcare Application - Comprehensive Monitoring",
+  "description": "Complete monitoring dashboard for healthcare application with business metrics, infrastructure monitoring, and performance tracking",
+  "layout_type": "ordered",
+  "widgets": [
+    {
+      "definition": {
+        "title": "Application Health Overview",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:healthcare.app.health{*}",
+            "aggregator": "avg",
+            "conditional_formats": [
+              {
+                "comparator": "<",
+                "value": 1,
+                "palette": "red_on_white"
+              },
+              {
+                "comparator": ">=",
+                "value": 1,
+                "palette": "green_on_white"
+              }
+            ]
+          }
+        ],
+        "autoscale": true,
+        "precision": 2,
+        "text_align": "center"
+      },
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "definition": {
+        "title": "Request Rate (per second)",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "rate(healthcare.api.requests{*}[1m])",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "Requests/sec",
+          "scale": "linear",
+          "min": "0"
+        },
+        "show_legend": false,
+        "legend": {
+          "show_legend": false
+        }
+      },
+      "layout": {
+        "x": 3,
+        "y": 0,
+        "width": 6,
+        "height": 2
+      }
+    },
+    {
+      "definition": {
+        "title": "Response Time (95th percentile)",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:healthcare.api.response_time{*}.rollup(avg, 60)",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "ms",
+          "scale": "linear",
+          "min": "0"
+        },
+        "show_legend": false
+      },
+      "layout": {
+        "x": 9,
+        "y": 0,
+        "width": 6,
+        "height": 2
+      }
+    },
+    {
+      "definition": {
+        "title": "Error Rate",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "rate(healthcare.api.errors{*}[1m]) / rate(healthcare.api.requests{*}[1m]) * 100",
+            "display_type": "line",
+            "style": {
+              "palette": "red",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "%",
+          "scale": "linear",
+          "min": "0",
+          "max": "100"
+        },
+        "show_legend": false
+      },
+      "layout": {
+        "x": 15,
+        "y": 0,
+        "width": 6,
+        "height": 2
+      }
+    },
+    {
+      "definition": {
+        "title": "Database Performance",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:mongodb.connections.current{*}",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          },
+          {
+            "q": "avg:mongodb.operations.rate{*}",
+            "display_type": "line",
+            "style": {
+              "palette": "green",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "Count",
+          "scale": "linear"
+        },
+        "show_legend": true,
+        "legend": {
+          "show_legend": true,
+          "legend_size": "0"
+        }
+      },
+      "layout": {
+        "x": 0,
+        "y": 2,
+        "width": 12,
+        "height": 4
+      }
+    },
+    {
+      "definition": {
+        "title": "Infrastructure Metrics",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:system.cpu.user{*}",
+            "display_type": "line",
+            "style": {
+              "palette": "dog_classic",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          },
+          {
+            "q": "avg:system.mem.used{*}",
+            "display_type": "line",
+            "style": {
+              "palette": "orange",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "%",
+          "scale": "linear",
+          "min": "0",
+          "max": "100"
+        },
+        "show_legend": true
+      },
+      "layout": {
+        "x": 12,
+        "y": 2,
+        "width": 9,
+        "height": 4
+      }
+    },
+    {
+      "definition": {
+        "title": "Business Metrics",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "sum:healthcare.patients.active{*}",
+            "aggregator": "sum",
+            "conditional_formats": [
+              {
+                "comparator": ">",
+                "value": 1000,
+                "palette": "green_on_white"
+              },
+              {
+                "comparator": "<=",
+                "value": 1000,
+                "palette": "yellow_on_white"
+              }
+            ]
+          }
+        ],
+        "autoscale": true,
+        "precision": 0,
+        "text_align": "center"
+      },
+      "layout": {
+        "x": 0,
+        "y": 6,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "definition": {
+        "title": "API Endpoint Performance",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "toplist",
+        "requests": [
+          {
+            "q": "top(avg:healthcare.api.response_time{*} by {endpoint}, 10, 'mean', 'desc')",
+            "style": {
+              "palette": "dog_classic_area"
+            }
+          }
+        ]
+      },
+      "layout": {
+        "x": 3,
+        "y": 6,
+        "width": 9,
+        "height": 4
+      }
+    },
+    {
+      "definition": {
+        "title": "Security Events",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:healthcare.security.failed_logins{*}.as_count()",
+            "display_type": "bars",
+            "style": {
+              "palette": "red",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "Events",
+          "scale": "linear"
+        },
+        "show_legend": false
+      },
+      "layout": {
+        "x": 12,
+        "y": 6,
+        "width": 9,
+        "height": 4
+      }
+    },
+    {
+      "definition": {
+        "title": "Deployment Status",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:healthcare.deployment.status{*}",
+            "aggregator": "avg",
+            "conditional_formats": [
+              {
+                "comparator": "=",
+                "value": 1,
+                "palette": "green_on_white"
+              },
+              {
+                "comparator": "=",
+                "value": 0,
+                "palette": "red_on_white"
+              }
+            ]
+          }
+        ],
+        "autoscale": true,
+        "precision": 0,
+        "text_align": "center"
+      },
+      "layout": {
+        "x": 0,
+        "y": 8,
+        "width": 3,
+        "height": 2
+      }
+    },
+    {
+      "definition": {
+        "title": "Log Volume by Service",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "sum:healthcare.logs.count{*} by {service}.as_count()",
+            "display_type": "area",
+            "style": {
+              "palette": "dog_classic_area",
+              "line_type": "solid",
+              "line_width": "normal"
+            }
+          }
+        ],
+        "yaxis": {
+          "label": "Logs/min",
+          "scale": "linear"
+        },
+        "show_legend": true
+      },
+      "layout": {
+        "x": 3,
+        "y": 8,
+        "width": 9,
+        "height": 4
+      }
+    },
+    {
+      "definition": {
+        "title": "SLA Compliance",
+        "title_size": "16",
+        "title_align": "left",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:healthcare.sla.uptime{*}",
+            "aggregator": "avg",
+            "conditional_formats": [
+              {
+                "comparator": ">=",
+                "value": 99.9,
+                "palette": "green_on_white"
+              },
+              {
+                "comparator": ">=",
+                "value": 99.0,
+                "palette": "yellow_on_white"
+              },
+              {
+                "comparator": "<",
+                "value": 99.0,
+                "palette": "red_on_white"
+              }
+            ]
+          }
+        ],
+        "autoscale": true,
+        "precision": 2,
+        "text_align": "center"
+      },
+      "layout": {
+        "x": 12,
+        "y": 8,
+        "width": 9,
+        "height": 4
+      }
+    }
+  ],
+  "template_variables": [
+    {
+      "name": "environment",
+      "default": "staging",
+      "available_values": ["staging", "production"],
+      "prefix": "env"
+    },
+    {
+      "name": "service",
+      "default": "*",
+      "available_values": ["frontend", "backend", "database"],
+      "prefix": "service"
+    }
+  ],
+  "notify_list": [],
+  "tags": ["healthcare", "monitoring", "api", "infrastructure"]
+}
