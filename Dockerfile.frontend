@@ -29,30 +29,8 @@ RUN echo '{"status":"ok","service":"frontend","timestamp":"'$(date -u +%Y-%m-%dT
 # Remove default nginx config
 RUN rm -f /etc/nginx/conf.d/default.conf
 
-# Create custom nginx config for React SPA with routing support
-RUN echo 'server { \
-    listen 80; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    \
-    # Handle React Router (SPA routing) \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    \
-    # Health check endpoint \
-    location /health { \
-        return 200 '"'"'{"status":"ok","service":"frontend"}'"'"'; \
-        add_header Content-Type application/json; \
-    } \
-    \
-    # Cache static assets \
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ { \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

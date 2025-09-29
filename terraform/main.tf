@@ -377,6 +377,27 @@ resource "kubernetes_deployment" "frontend" {
             name           = "http"
           }
 
+          # Environment variables for frontend configuration
+          env {
+            name  = "NODE_ENV"
+            value = "production"
+          }
+
+          env {
+            name  = "REACT_APP_API_BASE_URL"
+            value = ""  # Empty for relative URLs via nginx proxy
+          }
+
+          env {
+            name  = "REACT_APP_ENVIRONMENT"
+            value = var.environment
+          }
+
+          env {
+            name  = "REACT_APP_VERSION"
+            value = var.app_version
+          }
+
           # Note: Datadog RUM is not available for student accounts
           # Frontend monitoring will use basic logging instead
 

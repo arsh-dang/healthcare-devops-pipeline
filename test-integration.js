@@ -9,6 +9,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://frontend:80';
 const CI_API_BASE_URL = process.env.CI_API_BASE_URL || 'http://backend.healthcare-staging.svc.cluster.local:5001';
 const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://frontend.healthcare-staging.svc.cluster.local:80';
 
+// For nginx proxy testing (relative URLs)
+const NGINX_API_BASE_URL = process.env.NGINX_API_BASE_URL || 'http://frontend:80/api';
+
 // Test results
 let testResults = {
   passed: 0,
@@ -145,6 +148,24 @@ async function testFrontendAvailability() {
   }
 }
 
+async function testNginxProxyRouting() {
+  console.log('Testing nginx proxy routing for API calls...');
+  
+  try {
+    // Test direct API call through nginx proxy
+    const response = await axios.get(`${NGINX_API_BASE_URL}/health`, { timeout: 10000 });
+    
+    if (response.status === 200 && response.data.status === 'ok') {
+      console.log('✅ Nginx proxy routing working correctly');
+      console.log(`   API accessible via nginx proxy: ${NGINX_API_BASE_URL}/health`);
+    } else {
+      throw new Error(`Unexpected response: ${response.status} - ${JSON.stringify(response.data)}`);
+    }
+  } catch (error) {
+    throw new Error(`Nginx proxy routing failed: ${error.message}`);
+  }
+}
+
 async function testDatabaseConnection() {
   let apiUrl = API_BASE_URL;
   
@@ -194,6 +215,7 @@ async function runIntegrationTests() {
   await runTest('Database Connection Test', testDatabaseConnection);
   await runTest('Appointments API Test', testAppointmentsAPI);
   await runTest('Frontend Availability Test', testFrontendAvailability);
+  await runTest('Nginx Proxy Routing Test', testNginxProxyRouting);
   
   // Print summary
   console.log('\nIntegration Test Summary:');
