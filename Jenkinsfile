@@ -954,10 +954,10 @@ EOF
                         
                         // Send build duration metric
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \"series\": [{
                                             \"metric\": \"jenkins.build.duration\",
@@ -970,10 +970,10 @@ EOF
                         
                         // Send build completion event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \"title\": \"Build Stage Completed\",
                                         \"text\": \"Healthcare App build completed successfully in ${buildDuration}ms\",
@@ -987,10 +987,10 @@ EOF
                     } catch (Exception e) {
                         // Send build failure event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \"title\": \"Build Stage Failed\",
                                         \"text\": \"Healthcare App build failed: Build stage encountered an error\",
@@ -1503,7 +1503,7 @@ EOF
                         
                         // Send test duration and completion metrics
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
@@ -1511,7 +1511,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.test.duration",
-                "points": [[\$(date +%s), ${testDuration}]],
+        "points": [[\$(date +%s), ${testDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -1520,7 +1520,7 @@ EOF
                                 # Send test completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \"title\": \"Test Stage Completed\",
                                         \"text\": \"Healthcare App tests completed in ${testDuration}ms\",
@@ -2068,15 +2068,15 @@ EOF
                         
                         // Send code quality completion metrics
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "series": [{
     "metric": "jenkins.quality.duration",
-        "points": [[\$(date +%s), ${qualityDuration}]],
+    "points": [[\$(date +%s), ${qualityDuration}]],
     "tags": ["env:staging", "service:healthcare-app"]
   }]
 }
@@ -2085,7 +2085,7 @@ EOF
                                 # Send code quality completion event
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "title": "Code Quality Analysis Completed",
@@ -2436,15 +2436,15 @@ EOF
                         
                         // Send security scan completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "series": [{
     "metric": "jenkins.security.duration",
-        "points": [[\$(date +%s), ${securityDuration}]],
+    "points": [[\$(date +%s), ${securityDuration}]],
     "tags": ["env:staging", "service:healthcare-app"]
   }]
 }
@@ -2453,7 +2453,7 @@ EOF
                                 # Send security completion event
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "title": "Security Stage Completed",
@@ -2760,15 +2760,15 @@ EOF
                         
                         // Send load testing completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "series": [{
     "metric": "jenkins.loadtest.duration",
-        "points": [[\$(date +%s), ${loadTestDuration}]],
+    "points": [[\$(date +%s), ${loadTestDuration}]],
     "tags": ["env:staging", "service:healthcare-app"]
   }]
 }
@@ -2777,7 +2777,7 @@ EOF
                                 # Send load testing completion event
                                 cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
   "title": "Load Testing Completed",
@@ -3056,12 +3056,12 @@ EOF
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
         "metric": "jenkins.chaos.duration",
-                "points": [[\$(date +%s), ${chaosDuration}]],
+        "points": [[\$(date +%s), ${chaosDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3070,7 +3070,7 @@ EOF
                                 # Send chaos engineering completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "title": "Chaos Engineering Completed",
@@ -3329,12 +3329,12 @@ EOF
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
         "metric": "jenkins.docs.duration",
-                "points": [[\$(date +%s), ${docsDuration}]],
+        "points": [[\$(date +%s), ${docsDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3343,7 +3343,7 @@ EOF
                                 # Send documentation generation completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "title": "Documentation Generation Completed",
@@ -3613,12 +3613,12 @@ EOF
                             if [ -n "\$DATADOG_API_KEY" ]; then
                                 curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
         "metric": "jenkins.compliance.duration",
-                "points": [[\$(date +%s), ${complianceDuration}]],
+        "points": [[\$(date +%s), ${complianceDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -3627,7 +3627,7 @@ EOF
                                 # Send compliance automation completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @- << EOF
 {
     "title": "Compliance Automation Completed",
@@ -4046,7 +4046,7 @@ EOF
                         
                         // Send infrastructure completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
@@ -4054,7 +4054,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.infra.duration",
-                "points": [[\$(date +%s), ${infraDuration}]],
+        "points": [[\$(date +%s), ${infraDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -4503,7 +4503,7 @@ EOF
                                         sleep 5
                                         echo "Checking PVC status..."
                                         kubectl get pvc -n monitoring-staging || echo "No PVCs found in monitoring-staging namespace"
-                                    fi
+                                fi
                                 
                                 echo "Applying Terraform infrastructure..."
                                 # Apply with timeout to prevent hanging on PVC destruction
@@ -4764,7 +4764,7 @@ EOF
                         
                         // Send deployment completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
+                            if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
@@ -4772,7 +4772,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.deploy.duration",
-                "points": [[\$(date +%s), ${deployDuration}]],
+        "points": [[\$(date +%s), ${deployDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -5278,15 +5278,15 @@ EOF
                         
                         // Send canary deployment completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
     "series": [{
         "metric": "jenkins.canary.duration",
-                "points": [[\$(date +%s), ${canaryDuration}]],
+        "points": [[\$(date +%s), ${canaryDuration}]],
         "tags": ["env:staging", "service:healthcare-app"]
     }]
 }
@@ -5295,7 +5295,7 @@ EOF
                                 # Send canary completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Canary Deployment Completed\\",
                                         \\"text\\": \\"Healthcare App canary deployment completed successfully in ${canaryDuration}ms with traffic splitting, health monitoring, and automated rollback protection\\",
@@ -5532,15 +5532,15 @@ EOF
                                         # Fallback: try without component label
                                         if kubectl wait --for=condition=ready pod -l app=healthcare-app,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
                                             echo "✅ Found pods with app=healthcare-app,environment=staging labels"
-                                            POD_READY=true
+                                        POD_READY=true
                                         else
                                             echo "⚠️ Trying basic app label..."
                                             if kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=60s 2>/dev/null; then
                                                 echo "✅ Found pods with app=healthcare-app label"
-                                                POD_READY=true
-                                            else
+                                        POD_READY=true
+                                    else
                                                 echo "❌ No pods found with expected labels within timeout"
-                                                POD_READY=false
+                                        POD_READY=false
                                             fi
                                         fi
                                     fi
@@ -5800,8 +5800,8 @@ EOF
                                                             # Test backend container is responsive
                                                             if kubectl exec $pod -n healthcare-staging -c backend -- node -e "console.log('Backend OK')" >/dev/null 2>&1; then
                                                                 echo "Backend container in MongoDB pod $pod is healthy"
-                                                                MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
-                                                            else
+                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                    else
                                                                 echo "Backend container in MongoDB pod $pod is not responsive"
                                                                 MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                             fi
@@ -5827,7 +5827,7 @@ EOF
                                                         # Check MongoDB database connectivity
                                                         if kubectl exec $pod -n healthcare-staging -c mongodb -- mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
                                                             echo "MongoDB database in pod $pod is healthy"
-                                                            MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
+                                                        MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                         else
                                                             echo "MongoDB database in pod $pod is not responding"
                                                             MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
@@ -5969,15 +5969,15 @@ EOF
                         
                         // Send blue-green deployment completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
     "series": [{
         "metric": "jenkins.bluegreen.duration",
-                "points": [[\$(date +%s), ${blueGreenDuration}]],
+        "points": [[\$(date +%s), ${blueGreenDuration}]],
         "tags": ["env:production", "service:healthcare-app"]
     }]
 }
@@ -5986,7 +5986,7 @@ EOF
                                 # Send blue-green completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Completed\\",
                                         \\"text\\": \\"Healthcare App blue-green deployment completed successfully in ${blueGreenDuration}ms using Terraform IaC with zero-downtime traffic switching, health monitoring, and automated rollback protection\\",
@@ -6001,8 +6001,8 @@ EOF
                         // Send blue-green deployment failure event and initiate rollback
                         sh '''
                                     if [ -n "\$DATADOG_API_KEY" ]; then
-                                        curl -X POST "https://api.datadoghq.com/api/v1/events" \\
-                                            -H "Content-Type: application/json" \\
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                    -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Failed\\",
@@ -6578,7 +6578,7 @@ EOF
 {
     "series": [{
         "metric": "jenkins.release.duration",
-                "points": [[\$(date +%s), ${releaseDuration}]],
+        "points": [[\$(date +%s), ${releaseDuration}]],
         "tags": ["env:production", "service:healthcare-app", "version:\$RELEASE_VERSION"]
     }]
 }
@@ -6587,7 +6587,7 @@ EOF
                                 # Send release completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Production Release Completed\\",
                                         \\"text\\": \\"Healthcare App production release \$RELEASE_VERSION completed successfully in ${releaseDuration}ms with version management, artifact promotion, comprehensive release notes, and validation checks\\",
@@ -7323,15 +7323,15 @@ EOF
                         
                         // Send monitoring setup completion metrics and event
                                 sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
-                                            -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d @-
 {
     "series": [{
         "metric": "jenkins.monitoring.duration",
-                "points": [[\$(date +%s), ${monitoringDuration}]],
+        "points": [[\$(date +%s), ${monitoringDuration}]],
         "tags": ["env:production", "service:healthcare-app"]
     }]
 }
@@ -7340,7 +7340,7 @@ EOF
                                 # Send monitoring setup completion event
                                 curl -X POST "https://api.datadoghq.com/api/v1/events" \\
                                     -H "Content-Type: application/json" \\
-                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Monitoring Setup Completed\\",
                                         \\"text\\": \\"Healthcare App monitoring setup completed successfully in ${monitoringDuration}ms with comprehensive dashboards, alerting rules, log monitoring, and synthetic tests\\",
