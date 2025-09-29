@@ -5995,21 +5995,62 @@ EOF
                                         VERSION_CORE=$(echo $LATEST_TAG | sed 's/v//')
                                         IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_CORE"
                                         
-                                        # Increment version based on commit messages
+                                        # Function to find next available version
+                                        find_next_version() {
+                                            local base_version=$1
+                                            local version_type=$2  # major, minor, patch
+                                            local current_version=$base_version
+                                            local counter=0
+                                            
+                                            # Parse current version
+                                            local clean_version=$(echo $current_version | sed 's/v//')
+                                            IFS='.' read -r v_major v_minor v_patch <<< "$clean_version"
+                                            
+                                            # Keep incrementing until we find an available version
+                                            while git tag -l | grep -q "^$current_version$"; do
+                                                counter=$((counter + 1))
+                                                case $version_type in
+                                                    "major")
+                                                        v_major=$((v_major + 1))
+                                                        current_version="v${v_major}.0.0"
+                                                        ;;
+                                                    "minor")
+                                                        v_minor=$((v_minor + 1))
+                                                        current_version="v${v_major}.${v_minor}.0"
+                                                        ;;
+                                                    "patch")
+                                                        v_patch=$((v_patch + 1))
+                                                        current_version="v${v_major}.${v_minor}.${v_patch}"
+                                                        ;;
+                                                esac
+                                                
+                                                # Safety check to prevent infinite loops
+                                                if [ $counter -gt 100 ]; then
+                                                    echo "Warning: Too many version conflicts, using timestamp-based version"
+                                                    current_version="v${v_major}.${v_minor}.${v_patch}-$(date +%s)"
+                                                    break
+                                                fi
+                                            done
+                                            
+                                            echo $current_version
+                                        }
+                                        
+                                        # Determine initial version bump based on commit messages
                                         if git log --oneline -1 | grep -q "BREAKING CHANGE\\|feat!"; then
                                             NEW_MAJOR=$((MAJOR + 1))
                                             NEW_VERSION="v${NEW_MAJOR}.0.0"
+                                            RELEASE_VERSION=$(find_next_version $NEW_VERSION "major")
                                         elif git log --oneline -10 | grep -q "^feat:"; then
                                             NEW_MINOR=$((MINOR + 1))
                                             NEW_VERSION="v${MAJOR}.${NEW_MINOR}.0"
+                                            RELEASE_VERSION=$(find_next_version $NEW_VERSION "minor")
                                         else
                                             NEW_PATCH=$((PATCH + 1))
                                             NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+                                            RELEASE_VERSION=$(find_next_version $NEW_VERSION "patch")
                                         fi
                                         
-                                        # Add build number to make version unique
-                                        RELEASE_VERSION="${NEW_VERSION}-build${BUILD_NUMBER}"
-                                        echo "Generated version: $RELEASE_VERSION"
+                                        echo "Generated available version: $RELEASE_VERSION"
                                     else
                                         # Fallback version generation
                                         RELEASE_VERSION="v1.${BUILD_NUMBER}.0"
@@ -6022,13 +6063,9 @@ EOF
                                     
                                     # Tag the release
                                     if git rev-parse --git-dir >/dev/null 2>&1; then
-                                        # Check if tag already exists
-                                        if git tag -l | grep -q "^$RELEASE_VERSION$"; then
-                                            echo "Git tag $RELEASE_VERSION already exists, skipping tag creation"
-                                        else
-                                            git tag -a $RELEASE_VERSION -m "Release $RELEASE_VERSION - Build #${BUILD_NUMBER}"
-                                            echo "Git tag created: $RELEASE_VERSION"
-                                        fi
+                                        # Since we already found an available version, create the tag directly
+                                        git tag -a $RELEASE_VERSION -m "Release $RELEASE_VERSION - Build #${BUILD_NUMBER}"
+                                        echo "Git tag created: $RELEASE_VERSION"
                                     fi
                                     
                                     # Send version management metrics
