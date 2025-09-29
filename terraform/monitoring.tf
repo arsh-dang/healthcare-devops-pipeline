@@ -1142,28 +1142,7 @@ resource "kubernetes_service" "prometheus" {
 }
 
 # External Prometheus service for port forwarding
-resource "kubernetes_service" "prometheus_external" {
-  depends_on = [kubernetes_namespace.monitoring]
-
-  metadata {
-    name      = "prometheus-external"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "prometheus", service-type = "external" })
-  }
-
-  spec {
-    selector = merge(local.common_labels, { component = "prometheus" })
-
-    port {
-      port        = 9090
-      target_port = "prometheus"
-      protocol    = "TCP"
-      name        = "http"
-    }
-
-    type = "ClusterIP"
-  }
-}
+# Prometheus external service is managed by nginx-proxy-manager module
 
 # Grafana ConfigMap
 resource "kubernetes_config_map" "grafana_config" {
@@ -1502,28 +1481,7 @@ resource "kubernetes_service" "grafana" {
 }
 
 # External Grafana service for port forwarding
-resource "kubernetes_service" "grafana_external" {
-  depends_on = [kubernetes_namespace.monitoring]
-
-  metadata {
-    name      = "grafana-external"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "grafana", service-type = "external" })
-  }
-
-  spec {
-    selector = merge(local.common_labels, { component = "grafana" })
-
-    port {
-      port        = 3000
-      target_port = "grafana"
-      protocol    = "TCP"
-      name        = "http"
-    }
-
-    type = "ClusterIP"
-  }
-}
+# Grafana external service is managed by nginx-proxy-manager module
 
 # Node Exporter DaemonSet for node metrics
 resource "kubernetes_daemonset" "node_exporter" {
@@ -3128,28 +3086,7 @@ resource "kubernetes_service" "jaeger" {
 }
 
 # External Jaeger service for port forwarding
-resource "kubernetes_service" "jaeger_external" {
-  count = var.enable_distributed_tracing ? 1 : 0
-
-  metadata {
-    name      = "jaeger-external"
-    namespace = kubernetes_namespace.monitoring.metadata[0].name
-    labels    = merge(local.common_labels, { component = "jaeger", service-type = "external" })
-  }
-
-  spec {
-    selector = merge(local.common_labels, { component = "jaeger" })
-
-    port {
-      port        = 16686
-      target_port = "query"
-      protocol    = "TCP"
-      name        = "http"
-    }
-
-    type = "ClusterIP"
-  }
-}
+# Jaeger external service is managed by nginx-proxy-manager module
 
 # =============================================================================
 # ENHANCED PROMETHEUS RULES FOR NEW MONITORING COMPONENTS

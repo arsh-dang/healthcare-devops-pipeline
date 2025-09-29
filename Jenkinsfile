@@ -7767,19 +7767,41 @@ EOF
             } // End of withCredentials block
         } // End of first try block
     } catch (Exception e) {
-        echo "ERROR: Failed to load datadog-api-key credential: credential loading failed"
-        echo "CRITICAL: Datadog monitoring is required for this pipeline"
+        echo "ERROR: Pipeline execution failed"
+        echo "Exception Type: ${e.getClass().getSimpleName()}"
+        echo "Exception Message: ${e.getMessage()}"
+        echo "Stack Trace: ${e.getStackTrace().take(5).join('\n')}"
         
         // Set build result to failure
         currentBuild.result = 'FAILURE'
         
-        // Send failure notification
+        // Determine error type and create appropriate message
+        def errorType = "Pipeline Execution Error"
+        def errorDetails = e.getMessage() ?: "Unknown error occurred"
+        def actionRequired = "Please check the pipeline logs for detailed error information"
+        
+        // Check if it's a Datadog credential specific error
+        if (e.getMessage() && e.getMessage().toLowerCase().contains('credential')) {
+            errorType = "Credential Loading Error"
+            actionRequired = "Please ensure all required Jenkins credentials are properly configured"
+        } else if (e.getMessage() && e.getMessage().toLowerCase().contains('terraform')) {
+            errorType = "Infrastructure Deployment Error"
+            actionRequired = "Please check Terraform configuration and cluster connectivity"
+        } else if (e.getMessage() && e.getMessage().toLowerCase().contains('docker')) {
+            errorType = "Docker Build Error"
+            actionRequired = "Please check Docker configuration and image build process"
+        } else if (e.getMessage() && e.getMessage().toLowerCase().contains('kubectl')) {
+            errorType = "Kubernetes Deployment Error"
+            actionRequired = "Please check Kubernetes cluster status and configuration"
+        }
+        
+        // Send failure notification with specific error details
         sendSlackNotification("""🚨 Pipeline Failed - ${params.BUILD_TYPE} build for ${params.ENVIRONMENT}
 
-**CRITICAL ERROR:** Datadog API key could not be loaded
-**Error:** Credential loading failed
+**ERROR TYPE:** ${errorType}
+**Error Message:** ${errorDetails}
 
-**Impact:** Pipeline execution stopped - Datadog monitoring is required
+**Impact:** Pipeline execution stopped
 
 **Build Information:**
 • Build: #${BUILD_NUMBER}
@@ -7787,27 +7809,29 @@ EOF
 • Build Type: ${params.BUILD_TYPE}
 • Duration: ${currentBuild.durationString}
 
-**Action Required:** Please ensure the 'datadog-api-key' credential is properly configured in Jenkins.""", 'danger')
+**Action Required:** ${actionRequired}""", 'danger')
         
         // Send email notification if configured
         if (params.SEND_EMAIL && params.EMAIL_RECIPIENTS) {
             sendEmailNotification(
-                "Pipeline Failed - Datadog Credential Missing - Healthcare App",
-                """<h2>Pipeline Failed - Critical Credential Missing</h2>
+                "Pipeline Failed - ${errorType} - Healthcare App",
+                """<h2>Pipeline Failed - ${errorType}</h2>
                 <p><strong>Build:</strong> #${BUILD_NUMBER}</p>
                 <p><strong>Environment:</strong> ${params.ENVIRONMENT}</p>
                 <p><strong>Build Type:</strong> ${params.BUILD_TYPE}</p>
-                <p><strong>Error:</strong> Failed to load datadog-api-key credential</p>
-                <p><strong>Details:</strong> ${e.getMessage()}</p>
+                <p><strong>Error Type:</strong> ${errorType}</p>
+                <p><strong>Error Message:</strong> ${errorDetails}</p>
                 <p><strong>Duration:</strong> ${currentBuild.durationString}</p>
                 <h3>Action Required:</h3>
-                <p>Please ensure the 'datadog-api-key' credential is properly configured in Jenkins before retrying the pipeline.</p>""",
+                <p>${actionRequired}</p>
+                <h3>Stack Trace:</h3>
+                <pre>${e.getStackTrace().take(10).join('\n')}</pre>""",
                 'CRITICAL'
             )
         }
         
-        // Throw the exception to fail the pipeline
-        error("Pipeline failed: Unable to load required datadog-api-key credential. Error: credential loading failed")
+        // Throw the exception to fail the pipeline with actual error message
+        error("Pipeline failed: ${errorType} - ${errorDetails}")
     } // End of catch block
 } // End of timestamps block
 } // End of node block
