@@ -320,3 +320,10 @@ variable "enable_nginx_proxy_manager" {
   type        = bool
   default     = false
 }
+
+# Service Access Variables
+variable "enable_service_access" {
+  description = "Enable automated service access setup with port forwarding"
+  type        = bool
+  default     = true
+}
