@@ -6007,8 +6007,9 @@ EOF
                                             NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
                                         fi
                                         
-                                        echo "Generated version: $NEW_VERSION"
-                                        RELEASE_VERSION=$NEW_VERSION
+                                        # Add build number to make version unique
+                                        RELEASE_VERSION="${NEW_VERSION}-build${BUILD_NUMBER}"
+                                        echo "Generated version: $RELEASE_VERSION"
                                     else
                                         # Fallback version generation
                                         RELEASE_VERSION="v1.${BUILD_NUMBER}.0"
@@ -6021,8 +6022,13 @@ EOF
                                     
                                     # Tag the release
                                     if git rev-parse --git-dir >/dev/null 2>&1; then
-                                        git tag -a $RELEASE_VERSION -m "Release $RELEASE_VERSION - Build #${BUILD_NUMBER}"
-                                        echo "Git tag created: $RELEASE_VERSION"
+                                        # Check if tag already exists
+                                        if git tag -l | grep -q "^$RELEASE_VERSION$"; then
+                                            echo "Git tag $RELEASE_VERSION already exists, skipping tag creation"
+                                        else
+                                            git tag -a $RELEASE_VERSION -m "Release $RELEASE_VERSION - Build #${BUILD_NUMBER}"
+                                            echo "Git tag created: $RELEASE_VERSION"
+                                        fi
                                     fi
                                     
                                     # Send version management metrics
