@@ -334,8 +334,8 @@ resource "kubernetes_stateful_set" "mongodb" {
   }
 
   timeouts {
-    create = "180s" # 3 minute timeout for stateful set creation
-    update = "180s" # 3 minute timeout for stateful set updates
+    create = "120s" # 2 minute timeout for stateful set creation
+    update = "120s" # 2 minute timeout for stateful set updates
   }
 }
 

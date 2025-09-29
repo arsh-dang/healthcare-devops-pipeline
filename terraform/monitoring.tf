@@ -76,7 +76,7 @@ resource "kubernetes_deployment" "alertmanager" {
 
   spec {
     replicas = 1
-    progress_deadline_seconds = 300  # 5 minutes timeout
+    progress_deadline_seconds = 120  # 2 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "alertmanager" })
@@ -288,7 +288,7 @@ resource "kubernetes_deployment" "mongodb_exporter" {
 
   spec {
     replicas = 1
-    progress_deadline_seconds = 300  # 5 minutes timeout
+    progress_deadline_seconds = 120  # 2 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "mongodb-exporter" })
@@ -901,8 +901,8 @@ resource "kubernetes_deployment" "prometheus" {
   wait_for_rollout = false
 
   timeouts {
-    create = "180s" # 3 minute timeout for Prometheus deployment
-    update = "180s" # 3 minute timeout for Prometheus updates
+    create = "120s" # 2 minute timeout for Prometheus deployment
+    update = "120s" # 2 minute timeout for Prometheus updates
   }
 
   metadata {
@@ -1274,8 +1274,8 @@ resource "kubernetes_deployment" "grafana" {
   wait_for_rollout = false
 
   timeouts {
-    create = "180s" # 3 minute timeout for Grafana deployment
-    update = "180s" # 3 minute timeout for Grafana updates
+    create = "120s" # 2 minute timeout for Grafana deployment
+    update = "120s" # 2 minute timeout for Grafana updates
   }
 
   metadata {
@@ -2293,6 +2293,7 @@ resource "kubernetes_cluster_role_binding" "fluent_bit" {
 # Elasticsearch StatefulSet for log storage
 resource "kubernetes_stateful_set" "elasticsearch" {
   count = var.enable_log_aggregation ? 1 : 0
+  wait_for_rollout = false
 
   depends_on = [kubernetes_namespace.monitoring]
 
@@ -2422,8 +2423,8 @@ resource "kubernetes_stateful_set" "elasticsearch" {
   }
 
   timeouts {
-    create = "300s"
-    update = "300s"
+    create = "120s"
+    update = "120s"
   }
 }
 
