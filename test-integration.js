@@ -5,12 +5,12 @@ const axios = require('axios');
 const API_BASE_URL = process.env.API_BASE_URL || 'http://backend:5001';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://frontend:80';
 
-// For Jenkins/CI environment, try host machine IP if localhost fails
-const CI_API_BASE_URL = process.env.CI_API_BASE_URL || 'http://backend.healthcare-staging.svc.cluster.local:5001';
-const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://frontend.healthcare-staging.svc.cluster.local:80';
+// For Jenkins/CI environment, use localhost with port forwarding
+const CI_API_BASE_URL = process.env.CI_API_BASE_URL || 'http://localhost:8083';
+const CI_FRONTEND_URL = process.env.CI_FRONTEND_URL || 'http://localhost:8082';
 
 // For nginx proxy testing (relative URLs)
-const NGINX_API_BASE_URL = process.env.NGINX_API_BASE_URL || 'http://frontend:80/api';
+const NGINX_API_BASE_URL = process.env.NGINX_API_BASE_URL || 'http://localhost:8082/api';
 
 // Test results
 let testResults = {

@@ -1115,14 +1115,8 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                            -d "{
-                                                \"series\": [{
-                                                    \"metric\": \"jenkins.test.integration.start\",
-                                                            \"points\": [[\$(date +%s), 1]],
-                                                    \"tags\": [\"env:staging\", \"service:healthcare-app\", \"test_type:integration\"]
-                                                }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                            -d '{"series":[{"metric":"jenkins.test.integration.start","points":['\$(date +%s)',1],"tags":["env:staging","service:healthcare-app","test_type:integration"]}]}' || echo "Failed to send Datadog metric"
                                     fi
                                     
                                     if command -v npm >/dev/null 2>&1; then
@@ -1163,14 +1157,8 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                                 if [ -n "\$DATADOG_API_KEY" ]; then
                                             curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                                 -H "Content-Type: application/json" \\
-                                                        -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                                -d "{
-                                                    \"series\": [{
-                                                        \"metric\": \"jenkins.test.integration.result\",
-                                                                \"points\": [[\$(date +%s), \$([ \"$INT_TEST_STATUS\" = \"success\" ] && echo 1 || echo 0)]],
-                                                        \"tags\": [\"env:staging\", \"service:healthcare-app\", \"test_type:integration\"]
-                                                    }]
-                                                }" || echo "Failed to send Datadog metric"
+                                                -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                -d '{"series":[{"metric":"jenkins.test.integration.result","points":['\$(date +%s)',\$([ "$INT_TEST_STATUS" = "success" ] && echo 1 || echo 0)],"tags":["env:staging","service:healthcare-app","test_type:integration"]}]}' || echo "Failed to send Datadog metric"
                                         fi
                                     else
                                         echo "npm not available - skipping integration tests for now"
