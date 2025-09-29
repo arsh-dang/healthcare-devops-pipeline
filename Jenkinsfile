@@ -4465,13 +4465,13 @@ EOF
                                     # Use intelligent PVC management to prevent hanging issues
                                     if [ -f "./smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in current directory"
-                                        ./smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                        ./smart-pvc-handler.sh monitoring-staging staging true
                                     elif [ -f "./terraform/smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in terraform subdirectory"
-                                        ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                        ./terraform/smart-pvc-handler.sh monitoring-staging staging true
                                     elif [ -f "terraform/smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in terraform directory"
-                                        terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                        terraform/smart-pvc-handler.sh monitoring-staging staging true
                                     else
                                         echo "Smart PVC handler not found, using aggressive fallback cleanup..."
                                         echo "Pre-deleting monitoring pods to release PVCs..."
@@ -5410,13 +5410,13 @@ EOF
                                     # Use intelligent PVC management to prevent hanging issues
                                     if [ -f "./smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in current directory for blue-green"
-                                        ./smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                        ./smart-pvc-handler.sh monitoring-staging staging true
                                     elif [ -f "./terraform/smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in terraform subdirectory for blue-green"
-                                        ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                        ./terraform/smart-pvc-handler.sh monitoring-staging staging true
                                     elif [ -f "terraform/smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in terraform directory for blue-green"
-                                        terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                        terraform/smart-pvc-handler.sh monitoring-staging staging true
                                     else
                                         echo "Smart PVC handler not found, using aggressive fallback cleanup for blue-green deployment..."
                                         echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
