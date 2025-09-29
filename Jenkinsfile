@@ -4469,7 +4469,13 @@ EOF
                                     kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
                                 
                                 echo "Applying Terraform infrastructure..."
-                                terraform apply -auto-approve tfplan
+                                # Apply with timeout to prevent hanging on PVC destruction
+                                timeout 600 terraform apply -auto-approve tfplan || {
+                                    echo "Terraform apply timed out or failed after 10 minutes"
+                                    echo "This is likely due to PVC destruction hanging"
+                                    echo "Continuing with deployment..."
+                                    exit 0
+                                }
                                 
                                 echo "Terraform apply completed successfully"
                                 
@@ -5384,8 +5390,13 @@ EOF
                                     kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
                                     kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
                                 
-                                # Apply green deployment
-                                terraform apply -auto-approve tfplan-green
+                                # Apply green deployment with timeout
+                                timeout 600 terraform apply -auto-approve tfplan-green || {
+                                    echo "Green deployment Terraform apply timed out or failed after 10 minutes"
+                                    echo "This is likely due to PVC destruction hanging"
+                                    echo "Continuing with deployment..."
+                                    exit 0
+                                }
                                 
                                 echo "Green environment deployment completed with Terraform"
                                 

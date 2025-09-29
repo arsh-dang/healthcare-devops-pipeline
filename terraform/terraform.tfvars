@@ -43,8 +43,8 @@ slack_channel_critical = "#alerts-critical"
 slack_channel_warning = "#alerts-warning"
 slack_channel_info = "#alerts-info"
 
-# Persistent storage (enabled for data persistence)
-enable_persistent_storage = true
+# Persistent storage (disabled for staging to avoid PVC hanging issues)
+enable_persistent_storage = false
 
 # Network policies (enabled for security)
 enable_network_policies = true
