@@ -5485,37 +5485,54 @@ EOF
                                     # Wait for green pods to be ready (use correct labels from Terraform)
                                     echo "Waiting for green environment pods to be ready..."
                                     
-                                    # Try multiple label combinations that might be used
+                                    # Use correct labels from Terraform configuration
                                     POD_READY=false
                                     
-                                    # Try with staging environment label
-                                    if kubectl wait --for=condition=ready pod -l environment=staging -n healthcare-staging --timeout=180s 2>/dev/null; then
-                                        echo "Found pods with environment=staging label"
-                                        POD_READY=true
-                                    elif kubectl wait --for=condition=ready pod -l app=healthcare-app,environment=staging -n healthcare-staging --timeout=180s 2>/dev/null; then
-                                        echo "Found pods with app=healthcare-app,environment=staging labels"
-                                        POD_READY=true
-                                    elif kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=180s 2>/dev/null; then
-                                        echo "Found pods with app=healthcare-app label"
-                                        POD_READY=true
-                                    elif kubectl wait --for=condition=ready pod -l environment=staging -n healthcare-staging --timeout=180s 2>/dev/null; then
-                                        echo "Found pods in healthcare-staging namespace"
+                                    # Try with correct Terraform labels
+                                    echo "Checking for frontend pods with Terraform labels..."
+                                    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend,environment=staging -n healthcare-staging --timeout=120s 2>/dev/null; then
+                                        echo "✅ Found frontend pods with correct Terraform labels"
                                         POD_READY=true
                                     else
-                                        echo "No pods found with expected labels within timeout"
-                                        POD_READY=false
+                                        echo "⚠️ Frontend pods not found with Terraform labels, trying fallback..."
+                                        # Fallback: try without component label
+                                        if kubectl wait --for=condition=ready pod -l app=healthcare-app,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
+                                            echo "✅ Found pods with app=healthcare-app,environment=staging labels"
+                                            POD_READY=true
+                                        else
+                                            echo "⚠️ Trying basic app label..."
+                                            if kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=60s 2>/dev/null; then
+                                                echo "✅ Found pods with app=healthcare-app label"
+                                                POD_READY=true
+                                            else
+                                                echo "❌ No pods found with expected labels within timeout"
+                                                POD_READY=false
+                                            fi
+                                        fi
+                                    fi
+                                    
+                                    # Also check MongoDB pods specifically
+                                    echo "Checking for MongoDB pods..."
+                                    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=mongodb,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
+                                        echo "✅ MongoDB pods are ready"
+                                    else
+                                        echo "⚠️ MongoDB pods not found with Terraform labels, checking any MongoDB pods..."
+                                        kubectl get pods -n healthcare-staging -l component=mongodb 2>/dev/null || echo "No MongoDB pods found"
                                     fi
                                     
                                     if [ "$POD_READY" = false ]; then
                                         echo "Green pods not ready within timeout - checking pod status..."
-                                        kubectl get pods -A --no-headers 2>/dev/null | head -10 || echo "Unable to get pod status"
+                                        echo "Current pods in healthcare-staging namespace:"
+                                        kubectl get pods -n healthcare-staging --no-headers 2>/dev/null || echo "Unable to get pod status"
+                                        echo "Pod labels for troubleshooting:"
+                                        kubectl get pods -n healthcare-staging -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.labels}{"\n"}{end}' 2>/dev/null || echo "Unable to get pod labels"
                                         echo "Continuing with health checks despite pod readiness timeout..."
                                     fi
                                     
-                                    # Check green service endpoints with corrected namespace
+                                    # Check green service endpoints with correct Terraform labels
                                     echo "Checking green service endpoints..."
-                                    kubectl get services -l environment=staging -n healthcare-staging || echo "No services found with staging label"
-                                    kubectl get services -l app=healthcare-app -n healthcare-staging || echo "No services found with healthcare-app label"
+                                    kubectl get services -l app=healthcare-app,environment=staging -n healthcare-staging || echo "No services found with healthcare-app,staging labels"
+                                    kubectl get services -n healthcare-staging || echo "No services found in healthcare-staging namespace"
                                     
                                     # Test green ingress (use correct ingress name from Terraform)
                                     echo "Testing green ingress..."
