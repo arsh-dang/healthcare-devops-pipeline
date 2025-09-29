@@ -4457,6 +4457,10 @@ EOF
 EOF
                                 fi
                                 
+                                echo "Pre-deleting monitoring pods to release PVCs..."
+                                # Force delete monitoring pods to release PVCs before Terraform destroy
+                                kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                
                                 echo "Applying Terraform infrastructure..."
                                 terraform apply -auto-approve tfplan
                                 
@@ -5362,6 +5366,10 @@ EOF
                                     -var="enable_synthetic_monitoring=false" \
                                     -var="enable_distributed_tracing=true" \
                                     -out=tfplan-green
+                                
+                                echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
+                                # Force delete monitoring pods to release PVCs before Terraform destroy
+                                kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
                                 
                                 # Apply green deployment
                                 terraform apply -auto-approve tfplan-green
