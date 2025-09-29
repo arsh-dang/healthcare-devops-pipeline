@@ -332,14 +332,19 @@ resource "kubernetes_stateful_set" "mongodb" {
   }
 
   timeouts {
-    create = "300s" # 5 minute timeout for stateful set creation
-    update = "300s" # 5 minute timeout for stateful set updates
+    create = "180s" # 3 minute timeout for stateful set creation
+    update = "180s" # 3 minute timeout for stateful set updates
   }
 }
 
 # Frontend Deployment
 resource "kubernetes_deployment" "frontend" {
   wait_for_rollout = false
+
+  timeouts {
+    create = "120s" # 2 minute timeout for frontend deployment
+    update = "120s" # 2 minute timeout for frontend updates
+  }
 
   metadata {
     name      = "frontend"

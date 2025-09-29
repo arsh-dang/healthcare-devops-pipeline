@@ -61,6 +61,12 @@ resource "kubernetes_config_map" "alertmanager_config" {
 # Alertmanager Deployment
 resource "kubernetes_deployment" "alertmanager" {
   depends_on = [kubernetes_namespace.monitoring]
+  wait_for_rollout = false
+
+  timeouts {
+    create = "120s" # 2 minute timeout for Alertmanager deployment
+    update = "120s" # 2 minute timeout for Alertmanager updates
+  }
 
   metadata {
     name      = "alertmanager"
@@ -70,7 +76,7 @@ resource "kubernetes_deployment" "alertmanager" {
 
   spec {
     replicas = 1
-    progress_deadline_seconds = 900  # 15 minutes timeout
+    progress_deadline_seconds = 300  # 5 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "alertmanager" })
@@ -282,7 +288,7 @@ resource "kubernetes_deployment" "mongodb_exporter" {
 
   spec {
     replicas = 1
-    progress_deadline_seconds = 900  # 15 minutes timeout
+    progress_deadline_seconds = 300  # 5 minutes timeout
 
     selector {
       match_labels = merge(local.common_labels, { component = "mongodb-exporter" })
@@ -892,6 +898,12 @@ resource "kubernetes_config_map" "prometheus_rules" {
 # Prometheus Deployment
 resource "kubernetes_deployment" "prometheus" {
   depends_on = [kubernetes_namespace.monitoring]
+  wait_for_rollout = false
+
+  timeouts {
+    create = "180s" # 3 minute timeout for Prometheus deployment
+    update = "180s" # 3 minute timeout for Prometheus updates
+  }
 
   metadata {
     name      = "prometheus"
@@ -1102,7 +1114,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus_storage" {
   }
 
   timeouts {
-    create = "120s" # Reduced timeout for staging PVC binding
+    create = "60s" # Optimized timeout for staging PVC binding
   }
 }
 
@@ -1259,6 +1271,12 @@ resource "kubernetes_config_map" "grafana_config" {
 # Grafana Deployment
 resource "kubernetes_deployment" "grafana" {
   depends_on = [kubernetes_namespace.monitoring]
+  wait_for_rollout = false
+
+  timeouts {
+    create = "180s" # 3 minute timeout for Grafana deployment
+    update = "180s" # 3 minute timeout for Grafana updates
+  }
 
   metadata {
     name      = "grafana"
@@ -1432,7 +1450,7 @@ resource "kubernetes_persistent_volume_claim" "grafana_storage" {
   }
 
   timeouts {
-    create = "120s" # Reduced timeout for staging PVC binding
+    create = "60s" # Optimized timeout for staging PVC binding
   }
 }
 
