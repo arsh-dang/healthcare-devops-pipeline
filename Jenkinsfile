@@ -4161,7 +4161,7 @@ EOF
                                         -var="slack_channel_critical=#alerts-critical" \
                                         -var="slack_channel_warning=#alerts-warning" \
                                         -var="slack_channel_info=#alerts-info" \
-                                        -var="enable_persistent_storage=false" \
+                                        -var="enable_persistent_storage=true" \
                                         -var="enable_network_policies=true" \
                                         -var="enable_data_transfer_controls=true" \
                                         -var="enable_ingress_monitoring=false" \
@@ -5394,7 +5394,7 @@ EOF
                                     -var="slack_channel_critical=#alerts-critical" \
                                     -var="slack_channel_warning=#alerts-warning" \
                                     -var="slack_channel_info=#alerts-info" \
-                                    -var="enable_persistent_storage=false" \
+                                    -var="enable_persistent_storage=true" \
                                     -var="enable_network_policies=true" \
                                     -var="enable_data_transfer_controls=true" \
                                     -var="enable_ingress_monitoring=false" \
