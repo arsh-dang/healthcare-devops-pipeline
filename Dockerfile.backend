@@ -2,15 +2,30 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Create a simple package.json
-RUN echo '{"name":"healthcare-app-backend","version":"1.0.0","main":"index.js","scripts":{"start":"node index.js"}}' > package.json
+# Copy package files
+COPY package*.json ./
+COPY pnpm-lock.yaml* ./
 
-# Create a simple Express.js application with endpoints for integration tests
-RUN echo 'const express = require("express"); const app = express(); app.use(express.json()); app.get("/health", (req, res) => res.json({status: "ok"})); app.get("/api/health", (req, res) => res.json({status: "ok"})); app.get("/api/appointments", (req, res) => res.json([])); app.post("/api/appointments", (req, res) => res.status(201).json({_id: "test-id", ...req.body})); app.delete("/api/appointments/:id", (req, res) => res.status(200).json({message: "deleted"})); app.listen(5001, () => console.log("Backend running on port 5001"));' > index.js
+# Install dependencies
+RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm install; fi
 
-# Install Express and axios
-RUN npm install express axios
+# Copy server source code
+COPY server/ ./server/
+COPY .env* ./
+
+# Create a simple package.json for the backend service
+RUN echo '{"name":"healthcare-app-backend","version":"1.0.0","main":"server/server.js","scripts":{"start":"node server/server.js"}}' > package.json
+
+# Install production dependencies only
+RUN if [ -f pnpm-lock.yaml ]; then pnpm install --production; else npm install --production; fi
+
+# Create environment file if it doesn't exist
+RUN if [ ! -f .env ]; then echo 'NODE_ENV=production\nPORT=5001\nMONGODB_HOST=mongodb\nMONGODB_PORT=27017\nMONGODB_DATABASE=healthcare-app' > .env; fi
 
 EXPOSE 5001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 CMD ["npm", "start"]
