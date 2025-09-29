@@ -105,19 +105,33 @@ setup_services() {
     echo "🌐 Setting up main application services..."
     
     # Frontend - use port 8082 (avoiding Jenkins on 8080)
-    if check_port 8082; then
-        setup_port_forward "frontend" 8082 80 $NAMESPACE "Healthcare App Frontend"
+    echo "⏳ Waiting for frontend pods to be ready..."
+    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend,environment=staging -n $NAMESPACE --timeout=120s 2>/dev/null; then
+        echo "✅ Frontend pods are ready"
+        if check_port 8082; then
+            setup_port_forward "frontend" 8082 80 $NAMESPACE "Healthcare App Frontend"
+        else
+            echo "⚠️  Using alternative port for frontend..."
+            setup_port_forward "frontend" 8084 80 $NAMESPACE "Healthcare App Frontend"
+        fi
     else
-        echo "⚠️  Using alternative port for frontend..."
-        setup_port_forward "frontend" 8084 80 $NAMESPACE "Healthcare App Frontend"
+        echo "⚠️  Frontend pods not ready, skipping frontend port forward"
+        echo "   You can manually set up frontend access once pods are ready"
     fi
     
     # Backend - use port 8083
-    if check_port 8083; then
-        setup_port_forward "backend" 8083 5001 $NAMESPACE "Healthcare App Backend API"
+    echo "⏳ Waiting for backend pods to be ready..."
+    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=backend,environment=staging -n $NAMESPACE --timeout=120s 2>/dev/null; then
+        echo "✅ Backend pods are ready"
+        if check_port 8083; then
+            setup_port_forward "backend" 8083 5001 $NAMESPACE "Healthcare App Backend API"
+        else
+            echo "⚠️  Using alternative port for backend..."
+            setup_port_forward "backend" 8085 5001 $NAMESPACE "Healthcare App Backend API"
+        fi
     else
-        echo "⚠️  Using alternative port for backend..."
-        setup_port_forward "backend" 8085 5001 $NAMESPACE "Healthcare App Backend API"
+        echo "⚠️  Backend pods not ready, skipping backend port forward"
+        echo "   You can manually set up backend access once pods are ready"
     fi
     
     # Setup monitoring services
@@ -126,22 +140,40 @@ setup_services() {
     
     # Grafana
     if kubectl get service grafana-external -n $MONITORING_NAMESPACE >/dev/null 2>&1; then
-        if check_port 3000; then
-            setup_port_forward "grafana-external" 3000 3000 $MONITORING_NAMESPACE "Grafana Dashboard"
+        echo "⏳ Waiting for Grafana pods to be ready..."
+        if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=grafana,environment=staging -n $MONITORING_NAMESPACE --timeout=60s 2>/dev/null; then
+            echo "✅ Grafana pods are ready"
+            if check_port 3000; then
+                setup_port_forward "grafana-external" 3000 3000 $MONITORING_NAMESPACE "Grafana Dashboard"
+            fi
+        else
+            echo "⚠️  Grafana pods not ready, skipping port forward"
         fi
     fi
     
     # Prometheus
     if kubectl get service prometheus-external -n $MONITORING_NAMESPACE >/dev/null 2>&1; then
-        if check_port 9090; then
-            setup_port_forward "prometheus-external" 9090 9090 $MONITORING_NAMESPACE "Prometheus Metrics"
+        echo "⏳ Waiting for Prometheus pods to be ready..."
+        if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=prometheus,environment=staging -n $MONITORING_NAMESPACE --timeout=60s 2>/dev/null; then
+            echo "✅ Prometheus pods are ready"
+            if check_port 9090; then
+                setup_port_forward "prometheus-external" 9090 9090 $MONITORING_NAMESPACE "Prometheus Metrics"
+            fi
+        else
+            echo "⚠️  Prometheus pods not ready, skipping port forward"
         fi
     fi
     
     # Jaeger
     if kubectl get service jaeger-external -n $MONITORING_NAMESPACE >/dev/null 2>&1; then
-        if check_port 16686; then
-            setup_port_forward "jaeger-external" 16686 16686 $MONITORING_NAMESPACE "Jaeger Tracing"
+        echo "⏳ Waiting for Jaeger pods to be ready..."
+        if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=jaeger,environment=staging -n $MONITORING_NAMESPACE --timeout=60s 2>/dev/null; then
+            echo "✅ Jaeger pods are ready"
+            if check_port 16686; then
+                setup_port_forward "jaeger-external" 16686 16686 $MONITORING_NAMESPACE "Jaeger Tracing"
+            fi
+        else
+            echo "⚠️  Jaeger pods not ready, skipping port forward"
         fi
     fi
     
