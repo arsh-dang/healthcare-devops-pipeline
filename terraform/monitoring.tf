@@ -198,6 +198,14 @@ resource "kubernetes_persistent_volume_claim" "alertmanager_storage" {
   timeouts {
     create = "120s"
   }
+
+  lifecycle {
+    create_before_destroy = false
+    ignore_changes = [
+      metadata[0].annotations["pv.kubernetes.io/bind-completed"],
+      metadata[0].annotations["pv.kubernetes.io/bound-by-controller"]
+    ]
+  }
 }
 
 # Alertmanager Service
@@ -2427,6 +2435,14 @@ resource "kubernetes_persistent_volume_claim" "elasticsearch_storage" {
 
   timeouts {
     create = "120s"
+  }
+
+  lifecycle {
+    create_before_destroy = false
+    ignore_changes = [
+      metadata[0].annotations["pv.kubernetes.io/bind-completed"],
+      metadata[0].annotations["pv.kubernetes.io/bound-by-controller"]
+    ]
   }
 }
 

@@ -4458,15 +4458,9 @@ EOF
 EOF
                                 fi
                                 
-                                    echo "Pre-deleting monitoring pods to release PVCs..."
-                                    # Force delete monitoring pods to release PVCs before Terraform destroy
-                                    kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
-                                    
-                                    echo "Removing PVC finalizers to allow deletion..."
-                                    # Remove finalizers from PVCs to allow deletion
-                                    kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
-                                    kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
-                                    kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
+                                    echo "Running smart PVC handler..."
+                                    # Use intelligent PVC management to prevent hanging issues
+                                    ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                 
                                 echo "Applying Terraform infrastructure..."
                                 # Apply with timeout to prevent hanging on PVC destruction
@@ -5380,15 +5374,9 @@ EOF
                                     -var="enable_distributed_tracing=true" \
                                     -out=tfplan-green
                                 
-                                    echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
-                                    # Force delete monitoring pods to release PVCs before Terraform destroy
-                                    kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
-                                    
-                                    echo "Removing PVC finalizers to allow deletion..."
-                                    # Remove finalizers from PVCs to allow deletion
-                                    kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
-                                    kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
-                                    kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
+                                    echo "Running smart PVC handler for blue-green deployment..."
+                                    # Use intelligent PVC management to prevent hanging issues
+                                    ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                 
                                 # Apply green deployment with timeout
                                 timeout 600 terraform apply -auto-approve tfplan-green || {
