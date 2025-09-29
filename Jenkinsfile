@@ -4545,7 +4545,7 @@ EOF
                                     echo "Fix 4: Creating separate ingress resources..."
 
                                     # Delete existing combined ingress if it exists
-                                    kubectl delete ingress healthcare-app-ingress -n $NAMESPACE --ignore-not-found=true
+                                    kubectl delete ingress frontend-ingress -n $NAMESPACE --ignore-not-found=true
 
                                     # Create frontend ingress
                                     cat > frontend-ingress.yaml << 'EOF'
@@ -4669,18 +4669,18 @@ EOF
                                     kubectl cluster-info || echo "Cluster info not available"
                                     
                                     echo "Checking pod status..."
-                                    kubectl get pods -n healthcare-app || echo "Pods not found"
+                                    kubectl get pods -n healthcare-staging || echo "Pods not found"
                                     
                                     echo "Checking service status..."
-                                    kubectl get services -n healthcare-app || echo "Services not found"
+                                    kubectl get services -n healthcare-staging || echo "Services not found"
                                     
                                     echo "Checking ingress status..."
-                                    kubectl get ingress -n healthcare-app || echo "Ingress not found"
+                                    kubectl get ingress -n healthcare-staging || echo "Ingress not found"
                                     
                                     # Wait for pods to be ready
                                     echo "Waiting for pods to be ready..."
-                                    kubectl wait --for=condition=ready pod -l app=healthcare-app-frontend -n healthcare-app --timeout=300s || echo "Frontend pods not ready"
-                                    kubectl wait --for=condition=ready pod -l app=healthcare-app-backend -n healthcare-app --timeout=300s || echo "Backend pods not ready"
+                                    kubectl wait --for=condition=ready pod -l app=healthcare-app-frontend -n healthcare-staging --timeout=300s || echo "Frontend pods not ready"
+                                    kubectl wait --for=condition=ready pod -l app=healthcare-app-backend -n healthcare-staging --timeout=300s || echo "Backend pods not ready"
                                     
                                     VERIFICATION_STATUS="success"
                                 else
@@ -5332,7 +5332,7 @@ EOF
                                 # Initialize and plan green deployment
                                 terraform init -upgrade
                                 terraform plan \
-                                    -var="environment=production-green" \
+                                    -var="environment=staging" \
                                     -var="app_version=${BUILD_NUMBER}" \
                                     -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
                                     -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
@@ -5419,10 +5419,10 @@ EOF
                                     kubectl get namespaces --no-headers -o custom-columns=":metadata.name" 2>/dev/null || echo "Unable to list namespaces"
                                     
                                     echo "Checking for pods in healthcare-app namespace:"
-                                    kubectl get pods -n healthcare-app --no-headers 2>/dev/null || echo "No pods found in healthcare-app namespace"
+                                    kubectl get pods -n healthcare-staging --no-headers 2>/dev/null || echo "No pods found in healthcare-app namespace"
                                     
-                                    echo "Checking for pods in healthcare-production-green namespace:"
-                                    kubectl get pods -n healthcare-production-green --no-headers 2>/dev/null || echo "No pods found in healthcare-production-green namespace"
+                                    echo "Checking for pods in healthcare-staging namespace:"
+                                    kubectl get pods -n healthcare-staging --no-headers 2>/dev/null || echo "No pods found in healthcare-staging namespace"
                                     
                                     # Wait for green pods to be ready (use correct labels from Terraform)
                                     echo "Waiting for green environment pods to be ready..."
@@ -5430,18 +5430,18 @@ EOF
                                     # Try multiple label combinations that might be used
                                     POD_READY=false
                                     
-                                    # Try with production-green environment label
-                                    if kubectl wait --for=condition=ready pod -l environment=production-green -n healthcare-app --timeout=180s 2>/dev/null; then
-                                        echo "Found pods with environment=production-green label"
+                                    # Try with staging environment label
+                                    if kubectl wait --for=condition=ready pod -l environment=staging -n healthcare-staging --timeout=180s 2>/dev/null; then
+                                        echo "Found pods with environment=staging label"
                                         POD_READY=true
-                                    elif kubectl wait --for=condition=ready pod -l app=healthcare-app,environment=production-green -n healthcare-app --timeout=180s 2>/dev/null; then
-                                        echo "Found pods with app=healthcare-app,environment=production-green labels"
+                                    elif kubectl wait --for=condition=ready pod -l app=healthcare-app,environment=staging -n healthcare-staging --timeout=180s 2>/dev/null; then
+                                        echo "Found pods with app=healthcare-app,environment=staging labels"
                                         POD_READY=true
-                                    elif kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-app --timeout=180s 2>/dev/null; then
+                                    elif kubectl wait --for=condition=ready pod -l app=healthcare-app -n healthcare-staging --timeout=180s 2>/dev/null; then
                                         echo "Found pods with app=healthcare-app label"
                                         POD_READY=true
-                                    elif kubectl wait --for=condition=ready pod -l environment=production-green -n healthcare-production-green --timeout=180s 2>/dev/null; then
-                                        echo "Found pods in healthcare-production-green namespace"
+                                    elif kubectl wait --for=condition=ready pod -l environment=staging -n healthcare-staging --timeout=180s 2>/dev/null; then
+                                        echo "Found pods in healthcare-staging namespace"
                                         POD_READY=true
                                     else
                                         echo "No pods found with expected labels within timeout"
@@ -5456,8 +5456,8 @@ EOF
                                     
                                     # Check green service endpoints with corrected namespace
                                     echo "Checking green service endpoints..."
-                                    kubectl get services -l environment=production-green -n healthcare-app || echo "No services found with production-green label"
-                                    kubectl get services -l app=healthcare-app -n healthcare-app || echo "No services found with healthcare-app label"
+                                    kubectl get services -l environment=staging -n healthcare-staging || echo "No services found with staging label"
+                                    kubectl get services -l app=healthcare-app -n healthcare-staging || echo "No services found with healthcare-app label"
                                     
                                     # Test green ingress (use correct ingress name from Terraform)
                                     echo "Testing green ingress..."
@@ -5465,12 +5465,12 @@ EOF
                                     # Try multiple ingress names and namespaces
                                     GREEN_INGRESS_IP=""
                                     
-                                    # Try healthcare-app-ingress in healthcare-app namespace
-                                    if GREEN_INGRESS_IP=$(kubectl get ingress healthcare-app-ingress -n healthcare-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null); then
+                                    # Try frontend-ingress in healthcare-app namespace
+                                    if GREEN_INGRESS_IP=$(kubectl get ingress frontend-ingress -n healthcare-staging -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null); then
                                         echo "Found ingress in healthcare-app namespace: $GREEN_INGRESS_IP"
-                                    elif GREEN_INGRESS_IP=$(kubectl get ingress healthcare-app-ingress -n healthcare-production-green -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null); then
-                                        echo "Found ingress in healthcare-production-green namespace: $GREEN_INGRESS_IP"
-                                    elif GREEN_INGRESS_IP=$(kubectl get ingress -n healthcare-app -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null); then
+                                    elif GREEN_INGRESS_IP=$(kubectl get ingress frontend-ingress -n healthcare-staging -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null); then
+                                        echo "Found ingress in healthcare-staging namespace: $GREEN_INGRESS_IP"
+                                    elif GREEN_INGRESS_IP=$(kubectl get ingress -n healthcare-staging -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null); then
                                         echo "Found first ingress in healthcare-app namespace: $GREEN_INGRESS_IP"
                                     else
                                         echo "No ingress found with loadBalancer IP - checking ingress status..."
@@ -5500,13 +5500,13 @@ EOF
                                     # If ingress check failed, try direct pod health checks
                                     if [ "$GREEN_HEALTH_STATUS" = "checking_pods" ]; then
                                         echo "Checking frontend pods directly for health..."
-                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$FRONTEND_PODS" ]; then
                                             for pod in $FRONTEND_PODS; do
-                                                POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
                                                     # Check frontend health endpoint directly from the frontend pod using correct port
-                                                    if kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:80/health >/dev/null 2>&1; then
+                                                    if kubectl exec $pod -n healthcare-staging -- curl -s http://localhost:80/health >/dev/null 2>&1; then
                                                         echo "Green environment frontend health check passed via pod $pod"
                                                         GREEN_HEALTH_STATUS="healthy"
                                                         break
@@ -5575,8 +5575,8 @@ EOF
                                     
                                     # In production, you would update the ingress resource or service selector
                                     # For demonstration, we'll simulate the traffic switch by updating service selectors
-                                    kubectl patch ingress frontend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Traffic switch simulation completed"
-                                    kubectl patch ingress backend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "backend"}]' || echo "Traffic switch simulation completed"
+                                    kubectl patch ingress frontend-ingress -n healthcare-staging --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Traffic switch simulation completed"
+                                    kubectl patch ingress backend-ingress -n healthcare-staging --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "backend"}]' || echo "Traffic switch simulation completed"
                                     
                                     echo "Traffic successfully switched to green environment"
                                     TRAFFIC_SWITCH_STATUS="success"
@@ -5636,13 +5636,13 @@ EOF
                                     
                                     if command -v kubectl >/dev/null 2>&1; then
                                         # Check frontend pods directly for health
-                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$FRONTEND_PODS" ]; then
                                             for pod in $FRONTEND_PODS; do
-                                                POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                 if [ "$POD_READY" = "True" ]; then
                                                     # Check frontend health endpoint directly from the frontend pod using correct port
-                                                    kubectl exec $pod -n healthcare-production-green -- curl -s http://localhost:80/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
+                                                    kubectl exec $pod -n healthcare-staging -- curl -s http://localhost:80/health >/dev/null 2>&1 && MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1)) || MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 else
                                                     echo "Frontend pod $pod is not ready"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
@@ -5657,12 +5657,12 @@ EOF
                                         echo "Performing enhanced pod-based health checks..."
                                         
                                         # Check frontend pods
-                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                        FRONTEND_PODS=$(kubectl get pods -l component=frontend,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                         if [ -n "$FRONTEND_PODS" ]; then
                                             for pod in $FRONTEND_PODS; do
-                                                POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
-                                                        POD_STATUS=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
-                                                        POD_REASON=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].reason}' 2>/dev/null || echo "Unknown")
+                                                POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                        POD_STATUS=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+                                                        POD_REASON=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].reason}' 2>/dev/null || echo "Unknown")
                                                         
                                                 if [ "$POD_READY" = "True" ]; then
                                                     echo "Frontend pod $pod is ready"
@@ -5671,7 +5671,7 @@ EOF
                                                             echo "Frontend pod $pod is not ready (Status: $POD_STATUS, Reason: $POD_REASON)"
                                                             # Get pod events for debugging
                                                             echo "Pod events:"
-                                                            kubectl get events --field-selector involvedObject.name=$pod -n healthcare-production-green --sort-by='.lastTimestamp' 2>/dev/null | tail -3 || echo "No events found"
+                                                            kubectl get events --field-selector involvedObject.name=$pod -n healthcare-staging --sort-by='.lastTimestamp' 2>/dev/null | tail -3 || echo "No events found"
                                                     MONITOR_CHECKS_FAILED=$((MONITOR_CHECKS_FAILED + 1))
                                                 fi
                                             done
@@ -5681,15 +5681,15 @@ EOF
                                         fi
                                             
                                             # Check backend containers (running as sidecars in MongoDB StatefulSet)
-                                            MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$MONGODB_PODS" ]; then
                                                 for pod in $MONGODB_PODS; do
-                                                    POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                    POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                     if [ "$POD_READY" = "True" ]; then
                                                         # Check if backend container is running in the MongoDB pod
-                                                        if kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.spec.containers[*].name}' | grep -q backend; then
+                                                        if kubectl get pod $pod -n healthcare-staging -o jsonpath='{.spec.containers[*].name}' | grep -q backend; then
                                                             # Test backend container is responsive
-                                                            if kubectl exec $pod -n healthcare-production-green -c backend -- node -e "console.log('Backend OK')" >/dev/null 2>&1; then
+                                                            if kubectl exec $pod -n healthcare-staging -c backend -- node -e "console.log('Backend OK')" >/dev/null 2>&1; then
                                                                 echo "Backend container in MongoDB pod $pod is healthy"
                                                                 MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                             else
@@ -5713,10 +5713,10 @@ EOF
                                             # Check MongoDB database connectivity (separate from backend container check)
                                             if [ -n "$MONGODB_PODS" ]; then
                                                 for pod in $MONGODB_PODS; do
-                                                    POD_READY=$(kubectl get pod $pod -n healthcare-production-green -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
+                                                    POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                     if [ "$POD_READY" = "True" ]; then
                                                         # Check MongoDB database connectivity
-                                                        if kubectl exec $pod -n healthcare-production-green -c mongodb -- mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
+                                                        if kubectl exec $pod -n healthcare-staging -c mongodb -- mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
                                                             echo "MongoDB database in pod $pod is healthy"
                                                             MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                         else
@@ -5734,10 +5734,10 @@ EOF
                                             fi
                                             
                                             # Check service endpoints
-                                            GREEN_SERVICES=$(kubectl get services -l environment=production-green -n healthcare-production-green -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            GREEN_SERVICES=$(kubectl get services -l environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$GREEN_SERVICES" ]; then
                                                 for service in $GREEN_SERVICES; do
-                                                    SERVICE_ENDPOINTS=$(kubectl get endpoints $service -n healthcare-production-green -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w)
+                                                    SERVICE_ENDPOINTS=$(kubectl get endpoints $service -n healthcare-staging -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w)
                                                     if [ "$SERVICE_ENDPOINTS" -gt 0 ]; then
                                                         echo "Service $service has $SERVICE_ENDPOINTS endpoints"
                                                         MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
@@ -5752,7 +5752,7 @@ EOF
                                             fi
                                             
                                             # Check ingress health
-                                            INGRESS_COUNT=$(kubectl get ingress -l environment=production-green -n healthcare-production-green --no-headers 2>/dev/null | wc -l)
+                                            INGRESS_COUNT=$(kubectl get ingress -l environment=staging -n healthcare-staging --no-headers 2>/dev/null | wc -l)
                                             if [ "$INGRESS_COUNT" -gt 0 ]; then
                                                 echo "Found $INGRESS_COUNT ingress resources"
                                                 MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
@@ -5762,10 +5762,10 @@ EOF
                                             fi
                                             
                                             # Check application-level connectivity (frontend to backend)
-                                            FRONTEND_POD=$(kubectl get pods -l component=frontend,environment=production-green -n healthcare-production-green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+                                            FRONTEND_POD=$(kubectl get pods -l component=frontend,environment=staging -n healthcare-staging -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$FRONTEND_POD" ]; then
                                                 # Test if frontend can reach backend service (using netcat or similar)
-                                                if kubectl exec $FRONTEND_POD -n healthcare-production-green -- nc -z backend 5001 2>/dev/null || kubectl exec $FRONTEND_POD -n healthcare-production-green -- timeout 5 bash -c "echo > /dev/tcp/backend/5001" 2>/dev/null; then
+                                                if kubectl exec $FRONTEND_POD -n healthcare-staging -- nc -z backend 5001 2>/dev/null || kubectl exec $FRONTEND_POD -n healthcare-staging -- timeout 5 bash -c "echo > /dev/tcp/backend/5001" 2>/dev/null; then
                                                     echo "Frontend can reach backend service"
                                                     MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                 else
@@ -5912,11 +5912,11 @@ EOF
                             
                             if command -v kubectl >/dev/null 2>&1; then
                                 # Switch traffic back to blue environment
-                                kubectl patch ingress frontend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Rollback traffic switch simulation completed"
-                                kubectl patch ingress backend-ingress -n healthcare-production-green --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "backend"}]' || echo "Rollback traffic switch simulation completed"
+                                kubectl patch ingress frontend-ingress -n healthcare-staging --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "frontend"}]' || echo "Rollback traffic switch simulation completed"
+                                kubectl patch ingress backend-ingress -n healthcare-staging --type='json' -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "backend"}]' || echo "Rollback traffic switch simulation completed"
                                 
                                 # Scale down green environment
-                                kubectl scale deployment -l environment=production-green --replicas=0 -n healthcare-production-green || echo "Green environment scaled down"
+                                kubectl scale deployment -l environment=staging --replicas=0 -n healthcare-staging || echo "Green environment scaled down"
                                 
                                 echo "Automatic rollback completed"
                             else
