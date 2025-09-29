@@ -4463,20 +4463,28 @@ EOF
                                     if [ -f "./terraform/smart-pvc-handler.sh" ]; then
                                         ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                     else
-                                        echo "Smart PVC handler not found, using fallback cleanup..."
+                                        echo "Smart PVC handler not found, using aggressive fallback cleanup..."
                                         echo "Pre-deleting monitoring pods to release PVCs..."
                                         kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
-                                        sleep 5
+                                        sleep 10
                                         echo "Removing PVC finalizers to allow deletion..."
                                         kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
                                         kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
                                         kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
+                                        sleep 5
+                                        echo "Force deleting PVCs if they still exist..."
+                                        kubectl delete pvc alertmanager-storage -n monitoring-staging --force --grace-period=0 2>/dev/null || echo "Alertmanager PVC already deleted"
+                                        kubectl delete pvc grafana-storage -n monitoring-staging --force --grace-period=0 2>/dev/null || echo "Grafana PVC already deleted"
+                                        kubectl delete pvc prometheus-storage -n monitoring-staging --force --grace-period=0 2>/dev/null || echo "Prometheus PVC already deleted"
+                                        sleep 5
+                                        echo "Checking PVC status..."
+                                        kubectl get pvc -n monitoring-staging || echo "No PVCs found in monitoring-staging namespace"
                                     fi
                                 
                                 echo "Applying Terraform infrastructure..."
                                 # Apply with timeout to prevent hanging on PVC destruction
-                                timeout 600 terraform apply -auto-approve tfplan || {
-                                    echo "Terraform apply timed out or failed after 10 minutes"
+                                timeout 300 terraform apply -auto-approve tfplan || {
+                                    echo "Terraform apply timed out or failed after 5 minutes"
                                     echo "This is likely due to PVC destruction hanging"
                                     echo "Continuing with deployment..."
                                     exit 0
@@ -5390,19 +5398,27 @@ EOF
                                     if [ -f "./terraform/smart-pvc-handler.sh" ]; then
                                         ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                     else
-                                        echo "Smart PVC handler not found, using fallback cleanup..."
+                                        echo "Smart PVC handler not found, using aggressive fallback cleanup for blue-green deployment..."
                                         echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
                                         kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
-                                        sleep 5
+                                        sleep 10
                                         echo "Removing PVC finalizers to allow deletion..."
                                         kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
                                         kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
                                         kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
+                                        sleep 5
+                                        echo "Force deleting PVCs if they still exist..."
+                                        kubectl delete pvc alertmanager-storage -n monitoring-staging --force --grace-period=0 2>/dev/null || echo "Alertmanager PVC already deleted"
+                                        kubectl delete pvc grafana-storage -n monitoring-staging --force --grace-period=0 2>/dev/null || echo "Grafana PVC already deleted"
+                                        kubectl delete pvc prometheus-storage -n monitoring-staging --force --grace-period=0 2>/dev/null || echo "Prometheus PVC already deleted"
+                                        sleep 5
+                                        echo "Checking PVC status..."
+                                        kubectl get pvc -n monitoring-staging || echo "No PVCs found in monitoring-staging namespace"
                                     fi
                                 
                                 # Apply green deployment with timeout
-                                timeout 600 terraform apply -auto-approve tfplan-green || {
-                                    echo "Green deployment Terraform apply timed out or failed after 10 minutes"
+                                timeout 300 terraform apply -auto-approve tfplan-green || {
+                                    echo "Green deployment Terraform apply timed out or failed after 5 minutes"
                                     echo "This is likely due to PVC destruction hanging"
                                     echo "Continuing with deployment..."
                                     exit 0

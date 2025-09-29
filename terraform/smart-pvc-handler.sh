@@ -52,7 +52,7 @@ safe_delete_pvc() {
     kubectl delete pods -n "$NAMESPACE" --field-selector=spec.volumes[*].persistentVolumeClaim.claimName="$pvc_name" --force --grace-period=0 2>/dev/null || true
     
     # Wait a moment for pods to terminate
-    sleep 5
+    sleep 10
     
     # Remove finalizers
     echo "   Removing finalizers from PVC $pvc_name..."
@@ -62,16 +62,19 @@ safe_delete_pvc() {
     echo "   Deleting PVC $pvc_name..."
     kubectl delete pvc "$pvc_name" -n "$NAMESPACE" --force --grace-period=0 2>/dev/null || true
     
-    # Wait for deletion
+    # Wait for deletion with shorter timeout
     local attempts=0
-    while kubectl get pvc "$pvc_name" -n "$NAMESPACE" >/dev/null 2>&1 && [ $attempts -lt 30 ]; do
-        echo "   Waiting for PVC $pvc_name to be deleted... (attempt $((attempts+1))/30)"
+    while kubectl get pvc "$pvc_name" -n "$NAMESPACE" >/dev/null 2>&1 && [ $attempts -lt 15 ]; do
+        echo "   Waiting for PVC $pvc_name to be deleted... (attempt $((attempts+1))/15)"
         sleep 2
         attempts=$((attempts+1))
     done
     
     if kubectl get pvc "$pvc_name" -n "$NAMESPACE" >/dev/null 2>&1; then
-        echo "   ⚠️ PVC $pvc_name still exists after deletion attempts"
+        echo "   ⚠️ PVC $pvc_name still exists after deletion attempts - forcing removal"
+        # Last resort: patch with empty finalizers again and force delete
+        kubectl patch pvc "$pvc_name" -n "$NAMESPACE" --type=merge -p '{"metadata":{"finalizers":[]}}' 2>/dev/null || true
+        kubectl delete pvc "$pvc_name" -n "$NAMESPACE" --force --grace-period=0 2>/dev/null || true
         return 1
     else
         echo "   ✅ PVC $pvc_name successfully deleted"
