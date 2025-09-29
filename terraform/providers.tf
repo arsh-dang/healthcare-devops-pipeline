@@ -39,9 +39,10 @@ provider "random" {
   # No configuration needed
 }
 
-# Datadog Provider
+# Datadog Provider (conditional)
 provider "datadog" {
-  api_key = var.datadog_api_key
-  app_key = var.datadog_app_key
+  api_key = var.enable_datadog ? var.datadog_api_key : ""
+  app_key = var.enable_datadog ? var.datadog_app_key : ""
   api_url = "https://api.datadoghq.com/"
+  validate = var.enable_datadog
 }
