@@ -993,7 +993,7 @@ EOF
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \"title\": \"Build Stage Failed\",
-                                        \"text\": \"Healthcare App build failed: ${e.getMessage()}\",
+                                        \"text\": \"Healthcare App build failed: Build stage encountered an error\",
                                         \"priority\": \"normal\",
                                         \"tags\": [\"env:staging\", \"service:healthcare-app\", \"stage:build\", \"status:failure\"],
                                         \"alert_type\": \"error\"
@@ -1526,7 +1526,7 @@ EOF
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \"title\": \"Test Stage Failed\",
-                                        \"text\": \"Healthcare App tests failed: ${e.getMessage()}\",
+                                        \"text\": \"Healthcare App tests failed: Test stage encountered an error\",
                                         \"priority\": \"high\",
                                         \"tags\": [\"env:staging\", \"service:healthcare-app\", \"stage:test\", \"status:failure\"],
                                         \"alert_type\": \"error\"
@@ -4071,7 +4071,7 @@ EOF
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Infrastructure as Code Failed\\",
-                                        \\"text\\": \\"Healthcare App infrastructure deployment failed: ${e.getMessage()}\\",
+                                        \\"text\\": \\"Healthcare App infrastructure deployment failed: Infrastructure deployment encountered an error\\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -4460,7 +4460,18 @@ EOF
                                 
                                     echo "Running smart PVC handler..."
                                     # Use intelligent PVC management to prevent hanging issues
-                                    ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    if [ -f "./terraform/smart-pvc-handler.sh" ]; then
+                                        ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    else
+                                        echo "Smart PVC handler not found, using fallback cleanup..."
+                                        echo "Pre-deleting monitoring pods to release PVCs..."
+                                        kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                        sleep 5
+                                        echo "Removing PVC finalizers to allow deletion..."
+                                        kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
+                                        kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
+                                        kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
+                                    fi
                                 
                                 echo "Applying Terraform infrastructure..."
                                 # Apply with timeout to prevent hanging on PVC destruction
@@ -4760,7 +4771,7 @@ EOF
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Staging Deployment Failed\\",
-                                        \"text\": \"Healthcare App staging deployment failed: ${e.getMessage()} - Terraform IaC deployment encountered an error\",
+                                        \"text\": \"Healthcare App staging deployment failed: Staging deployment encountered an error - Terraform IaC deployment encountered an error\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:deploy\\", \\"status:failure\\", \\"deployment_type:terraform\\"],
                                         \\"alert_type\\": \\"error\\"
@@ -5376,7 +5387,18 @@ EOF
                                 
                                     echo "Running smart PVC handler for blue-green deployment..."
                                     # Use intelligent PVC management to prevent hanging issues
-                                    ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    if [ -f "./terraform/smart-pvc-handler.sh" ]; then
+                                        ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    else
+                                        echo "Smart PVC handler not found, using fallback cleanup..."
+                                        echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
+                                        kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                        sleep 5
+                                        echo "Removing PVC finalizers to allow deletion..."
+                                        kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
+                                        kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
+                                        kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
+                                    fi
                                 
                                 # Apply green deployment with timeout
                                 timeout 600 terraform apply -auto-approve tfplan-green || {
@@ -7271,7 +7293,7 @@ EOF
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Monitoring Setup Failed\\",
-                                        \"text\": \"Healthcare App monitoring setup failed: ${e.getMessage()} - dashboard creation, alerting configuration, or synthetic tests encountered an error\",
+                                        \\"text\\": \\"Healthcare App monitoring setup failed: Pipeline monitoring setup error - dashboard creation, alerting configuration, or synthetic tests encountered an error\\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
