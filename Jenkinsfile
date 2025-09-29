@@ -4459,9 +4459,16 @@ EOF
                                 fi
                                 
                                     echo "Running smart PVC handler..."
+                                    echo "Current working directory: $(pwd)"
+                                    echo "Listing terraform directory contents:"
+                                    ls -la terraform/ || echo "terraform directory not found"
                                     # Use intelligent PVC management to prevent hanging issues
                                     if [ -f "./terraform/smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script"
                                         ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    elif [ -f "terraform/smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script in terraform directory"
+                                        terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                     else
                                         echo "Smart PVC handler not found, using aggressive fallback cleanup..."
                                         echo "Pre-deleting monitoring pods to release PVCs..."
@@ -5396,7 +5403,11 @@ EOF
                                     echo "Running smart PVC handler for blue-green deployment..."
                                     # Use intelligent PVC management to prevent hanging issues
                                     if [ -f "./terraform/smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script for blue-green"
                                         ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    elif [ -f "terraform/smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script in terraform directory for blue-green"
+                                        terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                     else
                                         echo "Smart PVC handler not found, using aggressive fallback cleanup for blue-green deployment..."
                                         echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
