@@ -105,6 +105,8 @@ locals {
 
 resource "kubernetes_stateful_set" "mongodb" {
   # MongoDB StatefulSet with backend sidecar
+  wait_for_rollout = false
+  
   metadata {
     name      = var.environment == "production" ? "mongodb" : "mongodb-staging"
     namespace = kubernetes_namespace.healthcare.metadata[0].name

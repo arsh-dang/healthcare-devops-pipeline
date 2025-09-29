@@ -4483,8 +4483,8 @@ EOF
                                 
                                 echo "Applying Terraform infrastructure..."
                                 # Apply with timeout to prevent hanging on PVC destruction
-                                timeout 300 terraform apply -auto-approve tfplan || {
-                                    echo "Terraform apply timed out or failed after 5 minutes"
+                                timeout 180 terraform apply -auto-approve tfplan || {
+                                    echo "Terraform apply timed out or failed after 3 minutes"
                                     echo "This is likely due to PVC destruction hanging"
                                     echo "Continuing with deployment..."
                                     exit 0
