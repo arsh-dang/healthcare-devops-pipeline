@@ -4460,11 +4460,14 @@ EOF
                                 
                                     echo "Running smart PVC handler..."
                                     echo "Current working directory: $(pwd)"
-                                    echo "Listing terraform directory contents:"
-                                    ls -la terraform/ || echo "terraform directory not found"
+                                    echo "Listing current directory contents:"
+                                    ls -la . || echo "current directory not accessible"
                                     # Use intelligent PVC management to prevent hanging issues
-                                    if [ -f "./terraform/smart-pvc-handler.sh" ]; then
-                                        echo "Found smart PVC handler script"
+                                    if [ -f "./smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script in current directory"
+                                        ./smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    elif [ -f "./terraform/smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script in terraform subdirectory"
                                         ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                     elif [ -f "terraform/smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in terraform directory"
@@ -5401,9 +5404,15 @@ EOF
                                     -out=tfplan-green
                                 
                                     echo "Running smart PVC handler for blue-green deployment..."
+                                    echo "Current working directory: $(pwd)"
+                                    echo "Listing current directory contents:"
+                                    ls -la . || echo "current directory not accessible"
                                     # Use intelligent PVC management to prevent hanging issues
-                                    if [ -f "./terraform/smart-pvc-handler.sh" ]; then
-                                        echo "Found smart PVC handler script for blue-green"
+                                    if [ -f "./smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script in current directory for blue-green"
+                                        ./smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
+                                    elif [ -f "./terraform/smart-pvc-handler.sh" ]; then
+                                        echo "Found smart PVC handler script in terraform subdirectory for blue-green"
                                         ./terraform/smart-pvc-handler.sh monitoring-staging staging \${ENABLE_PERSISTENT_STORAGE:-false}
                                     elif [ -f "terraform/smart-pvc-handler.sh" ]; then
                                         echo "Found smart PVC handler script in terraform directory for blue-green"
