@@ -37,6 +37,7 @@
     "test": "react-scripts test",
     "test:ci": "CI=true react-scripts test --coverage --watchAll=false --testResultsProcessor=jest-junit",
     "test:integration": "node test-integration.js",
+    "test:connectivity": "node test-connectivity.js",
     "test:e2e": "cd server && npm run test:e2e",
     "test:performance": "cd server && npm run test:performance",
     "eject": "react-scripts eject",
