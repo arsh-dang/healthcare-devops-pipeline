@@ -365,10 +365,11 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                         // Try to send error event to Datadog if possible
                         try {
                             withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
-                                sh '''
-                                    cd $WORKSPACE/datadog/scripts
-                                    ./jenkins-datadog-integration.sh error "Datadog setup failed: ${e.getMessage()}" "Datadog Setup" || echo "Failed to send error event to Datadog"
-                                '''
+                                def errorMessage = e.getMessage()
+                                sh """
+                                    cd \$WORKSPACE/datadog/scripts
+                                    ./jenkins-datadog-integration.sh error "Datadog setup failed: ${errorMessage}" "Datadog Setup" || echo "Failed to send error event to Datadog"
+                                """
                             }
                         } catch (Exception errorEventException) {
                             echo "Could not send error event to Datadog: ${errorEventException.getMessage()}"
@@ -4457,9 +4458,15 @@ EOF
 EOF
                                 fi
                                 
-                                echo "Pre-deleting monitoring pods to release PVCs..."
-                                # Force delete monitoring pods to release PVCs before Terraform destroy
-                                kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                    echo "Pre-deleting monitoring pods to release PVCs..."
+                                    # Force delete monitoring pods to release PVCs before Terraform destroy
+                                    kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                    
+                                    echo "Removing PVC finalizers to allow deletion..."
+                                    # Remove finalizers from PVCs to allow deletion
+                                    kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
+                                    kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
+                                    kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
                                 
                                 echo "Applying Terraform infrastructure..."
                                 terraform apply -auto-approve tfplan
@@ -5367,9 +5374,15 @@ EOF
                                     -var="enable_distributed_tracing=true" \
                                     -out=tfplan-green
                                 
-                                echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
-                                # Force delete monitoring pods to release PVCs before Terraform destroy
-                                kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                    echo "Pre-deleting monitoring pods to release PVCs for blue-green deployment..."
+                                    # Force delete monitoring pods to release PVCs before Terraform destroy
+                                    kubectl delete pod --force --grace-period=0 -n monitoring-staging --all 2>/dev/null || echo "No monitoring pods to delete"
+                                    
+                                    echo "Removing PVC finalizers to allow deletion..."
+                                    # Remove finalizers from PVCs to allow deletion
+                                    kubectl patch pvc alertmanager-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Alertmanager PVC not found or already deleted"
+                                    kubectl patch pvc grafana-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Grafana PVC not found or already deleted"
+                                    kubectl patch pvc prometheus-storage -n monitoring-staging -p '{"metadata":{"finalizers":null}}' 2>/dev/null || echo "Prometheus PVC not found or already deleted"
                                 
                                 # Apply green deployment
                                 terraform apply -auto-approve tfplan-green
