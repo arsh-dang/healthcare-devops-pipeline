@@ -1238,7 +1238,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         if [ -f "postman/healthcare-api.postman_collection.json" ]; then
                                             echo "Running Newman API tests..."
                                             newman run postman/healthcare-api.postman_collection.json \\
-                                                --environment-var "baseUrl=http://localhost:8082" \\
+                                                --env-var "baseUrl=http://localhost:8082" \\
                                                 --reporters cli,json \\
                                                 --reporter-json-export newman-results.json \\
                                                 --timeout-request 10000
