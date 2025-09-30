@@ -285,8 +285,8 @@ run_health_checks() {
         chmod +x scripts/health-check.sh
 
         # Set environment variables for health checks
-        export APP_URL="${APP_URL:-http://localhost:30285}"
-        export API_URL="${API_URL:-http://localhost:30285/api}"
+        export APP_URL="${APP_URL:-http://localhost:8082}"
+        export API_URL="${API_URL:-http://localhost:8083}"
 
         if ./scripts/health-check.sh; then
             print_info "Health checks passed"
@@ -299,7 +299,7 @@ run_health_checks() {
         print_warn "Health check script not found - using basic checks"
 
         # Basic health check
-        if curl -s --max-time 5 http://localhost:30285 >/dev/null 2>&1; then
+        if curl -s --max-time 5 http://localhost:8082 >/dev/null 2>&1; then
             print_info "Frontend health check passed"
             return 0
         else
