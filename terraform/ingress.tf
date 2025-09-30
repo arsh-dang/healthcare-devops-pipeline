@@ -220,6 +220,52 @@ resource "kubernetes_ingress_v1" "monitoring" {
             }
           }
         }
+
+        # Prometheus Metrics
+        path {
+          path      = "/staging/prometheus"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "prometheus"
+              port {
+                number = 9090
+              }
+            }
+          }
+        }
+
+        # Jaeger Tracing
+        path {
+          path      = "/staging/jaeger"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "jaeger"
+              port {
+                number = 16686
+              }
+            }
+          }
+        }
+
+        # Alertmanager
+        path {
+          path      = "/staging/alertmanager"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "alertmanager"
+              port {
+                number = 9093
+              }
+            }
+          }
+        }
+
 #         dynamic "path" {
 #           for_each = var.environment == "staging" ? [1] : []
 #           content {
