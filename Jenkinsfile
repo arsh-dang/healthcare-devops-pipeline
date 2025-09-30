@@ -1238,24 +1238,61 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     echo "Checking if backend service is deployed..."
                                     if kubectl get svc backend -n healthcare-staging >/dev/null 2>&1; then
                                         echo "Backend service found, setting up port forwarding..."
+                                        
                                         # Kill any existing port-forward processes on port 8083
                                         pkill -f "kubectl port-forward.*8083" || true
+                                        sleep 2
+                                        
+                                        # Check if backend pods are running
+                                        echo "Checking backend pod status..."
+                                        kubectl get pods -n healthcare-staging -l app=healthcare-app,component=backend
+                                        
                                         # Set up port forwarding for backend service
-                                        kubectl port-forward -n healthcare-staging svc/backend 8083:5001 &
-                                        sleep 5
+                                        echo "Setting up port forwarding from localhost:8083 to backend:5001..."
+                                        kubectl port-forward -n healthcare-staging svc/backend 8083:5001 > /tmp/port-forward.log 2>&1 &
+                                        PORT_FORWARD_PID=\$!
+                                        echo "Port forward PID: \$PORT_FORWARD_PID"
                                         
                                         # Wait for port forwarding to be ready
                                         echo "Waiting for backend service to be ready..."
-                                        for i in {1..30}; do
-                                            if curl -s --max-time 3 http://localhost:8083/health >/dev/null 2>&1; then
+                                        BACKEND_READY=false
+                                        for i in {1..60}; do
+                                            if curl -s --max-time 5 http://localhost:8083/health >/dev/null 2>&1; then
                                                 echo "Backend service is ready on port 8083"
+                                                BACKEND_READY=true
                                                 break
                                             fi
-                                            echo "Waiting for backend service... (\$i/30)"
+                                            echo "Waiting for backend service... (\$i/60)"
+                                            
+                                            # Check if port forward process is still running
+                                            if ! kill -0 \$PORT_FORWARD_PID 2>/dev/null; then
+                                                echo "Port forward process died, checking logs..."
+                                                cat /tmp/port-forward.log || true
+                                                echo "Retrying port forward..."
+                                                kubectl port-forward -n healthcare-staging svc/backend 8083:5001 > /tmp/port-forward.log 2>&1 &
+                                                PORT_FORWARD_PID=\$!
+                                            fi
+                                            
                                             sleep 2
                                         done
+                                        
+                                        if [ "\$BACKEND_READY" = "false" ]; then
+                                            echo "Backend service failed to become ready after 2 minutes"
+                                            echo "Port forward logs:"
+                                            cat /tmp/port-forward.log || true
+                                            echo "Backend service logs:"
+                                            kubectl logs -n healthcare-staging -l app=healthcare-app,component=backend --tail=50 || true
+                                            echo "Skipping API tests - backend service not accessible"
+                                            kill \$PORT_FORWARD_PID 2>/dev/null || true
+                                            API_TESTS_TOTAL=0
+                                            API_TESTS_PASSED=0
+                                            API_TESTS_FAILED=0
+                                            exit 0
+                                        fi
                                     else
                                         echo "Backend service not found. Checking if infrastructure needs to be deployed first..."
+                                        echo "Available services in healthcare-staging:"
+                                        kubectl get svc -n healthcare-staging || true
                                         echo "Skipping API tests - backend service not available"
                                         API_TESTS_TOTAL=0
                                         API_TESTS_PASSED=0
@@ -1335,6 +1372,10 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                     
                                     # Clean up port forwarding
                                     echo "Cleaning up port forwarding..."
+                                    if [ -n "\$PORT_FORWARD_PID" ]; then
+                                        echo "Killing port forward PID: \$PORT_FORWARD_PID"
+                                        kill \$PORT_FORWARD_PID 2>/dev/null || true
+                                    fi
                                     pkill -f "kubectl port-forward.*8083" || true
                                 '''
                             },

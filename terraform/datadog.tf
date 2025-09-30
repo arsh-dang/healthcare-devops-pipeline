@@ -804,12 +804,12 @@ resource "datadog_synthetics_test" "healthcare_frontend_availability" {
 
 output "datadog_dashboard_url" {
   description = "URL of the healthcare application dashboard"
-  value       = var.enable_datadog ? datadog_dashboard.healthcare_app_dashboard[0].url : null
+  value       = var.enable_datadog && var.datadog_api_key != "" ? datadog_dashboard.healthcare_app_dashboard[0].url : null
 }
 
 output "datadog_jenkins_dashboard_url" {
   description = "URL of the Jenkins CI/CD dashboard"
-  value       = var.enable_datadog ? datadog_dashboard.jenkins_cicd_dashboard[0].url : null
+  value       = var.enable_datadog && var.datadog_api_key != "" ? datadog_dashboard.jenkins_cicd_dashboard[0].url : null
 }
 
 output "datadog_monitors_count" {
