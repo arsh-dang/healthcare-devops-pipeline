@@ -14,6 +14,22 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Dependency check tools
+dependency-check/
+
+# Server-side code (not needed for frontend build)
+server/
+
+# Large binary files and archives
+*.jar
+*.war
+*.ear
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
 # Build outputs
 build/
 dist/
