@@ -4016,6 +4016,96 @@ EOF
                                     fi
                                 '''
                             },
+                            'Infrastructure Application': {
+                                echo 'Applying Terraform configuration'
+                                sh '''
+                                            # Change to terraform directory
+                                            cd terraform
+                                    
+                                    # Send application start metric
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.application.start",
+                "points": [[\$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
+    }]
+}
+EOF
+                                    fi
+                                    
+                                    echo "Applying Terraform configuration..."
+                                    
+                                    if command -v terraform >/dev/null 2>&1; then
+                                        # Initialize Terraform
+                                        terraform init -upgrade
+                                        
+                                        # Apply Terraform configuration with proper image variables
+                                        terraform apply -auto-approve \
+                                            -var="environment=staging" \
+                                            -var="app_version=${BUILD_NUMBER}" \
+                                            -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                            -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
+                                            -var="mongodb_root_password=healthcare-staging-2024" \
+                                            -var="enable_monitoring=true" \
+                                            -var="enable_datadog=false" \
+                                            -var="replica_count={\"frontend\":1,\"backend\":1}" \
+                                            -var="smtp_server=smtp.gmail.com" \
+                                            -var="smtp_port=587" \
+                                            -var="smtp_username=admin@healthcare.local" \
+                                            -var="smtp_password=mock-password" \
+                                            -var="smtp_from_email=alerts@healthcare-staging.local" \
+                                            -var="alert_email_critical=admin@healthcare.local" \
+                                            -var="alert_email_warning=team@healthcare.local" \
+                                            -var="alert_email_info=info@healthcare.local" \
+                                            -var="slack_webhook_critical=" \
+                                            -var="slack_webhook_warning=" \
+                                            -var="slack_webhook_info=" \
+                                            -var="slack_channel_critical=#alerts-critical" \
+                                            -var="slack_channel_warning=#alerts-warning" \
+                                            -var="slack_channel_info=#alerts-info" \
+                                            -var="enable_persistent_storage=true" \
+                                            -var="enable_network_policies=true" \
+                                            -var="enable_data_transfer_controls=true" \
+                                            -var="enable_ingress_monitoring=false" \
+                                            -var="enable_log_aggregation=false" \
+                                            -var="enable_synthetic_monitoring=false" \
+                                            -var="enable_distributed_tracing=true"
+                                        
+                                        if [ $? -eq 0 ]; then
+                                            APPLICATION_STATUS="success"
+                                            echo "Terraform application completed successfully"
+                                        else
+                                            APPLICATION_STATUS="failure"
+                                            echo "Terraform application failed"
+                                            exit 1
+                                        fi
+                                        
+                                        # Send application metrics
+                                                if [ -n "\$DATADOG_API_KEY" ]; then
+                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                                -H "Content-Type: application/json" \
+                                                        -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                                -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.application.result",
+                "points": [[\$(date +%s), $([ "$APPLICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
+    }]
+}
+EOF
+                                        fi
+                                    else
+                                        echo "Terraform not available - skipping application"
+                                        echo "Infrastructure application would run here with proper Terraform setup"
+                                    fi
+                                '''
+                            },
                             'Security Compliance Check': {
                                 echo 'Checking infrastructure security compliance'
                                 sh '''
