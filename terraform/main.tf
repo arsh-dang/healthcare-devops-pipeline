@@ -228,6 +228,11 @@ resource "kubernetes_stateful_set" "mongodb" {
           }
 
           env {
+            name  = "HOST"
+            value = "0.0.0.0"
+          }
+
+          env {
             name  = "MONGODB_HOST"
             value = "localhost"
           }
@@ -800,6 +805,21 @@ resource "kubernetes_network_policy" "backend_security" {
         namespace_selector {
           match_labels = {
             "kubernetes.io/metadata.name" = "ingress-nginx"
+          }
+        }
+      }
+      ports {
+        port     = "5001"
+        protocol = "TCP"
+      }
+    }
+
+    # Allow traffic from monitoring namespace for Prometheus scraping
+    ingress {
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = "monitoring-${var.environment}"
           }
         }
       }

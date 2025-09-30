@@ -28,6 +28,7 @@ resource "kubernetes_ingress_v1" "frontend" {
   }
 
   spec {
+    ingress_class_name = "nginx"
     dynamic "tls" {
       for_each = var.environment == "production" ? [1] : []
       content {
@@ -109,6 +110,7 @@ resource "kubernetes_ingress_v1" "backend" {
   }
 
   spec {
+    ingress_class_name = "nginx"
     dynamic "tls" {
       for_each = var.environment == "production" ? [1] : []
       content {
@@ -178,32 +180,46 @@ resource "kubernetes_ingress_v1" "backend" {
 }
 
 # Monitoring Ingress for Grafana and Prometheus access
-# resource "kubernetes_ingress_v1" "monitoring" {
-#   metadata {
-#     name      = "monitoring-ingress"
-#     namespace = kubernetes_namespace.monitoring[0].metadata[0].name
-#     labels    = merge(local.common_labels, { component = "monitoring" })
-#     annotations = {
-#       "kubernetes.io/ingress.class"                = "nginx"
-#       "nginx.ingress.kubernetes.io/rewrite-target" = "/"
-#       "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
-#       "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
-#     }
-#   }
+resource "kubernetes_ingress_v1" "monitoring" {
+  metadata {
+    name      = "monitoring-ingress"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "monitoring" })
+    annotations = {
+      "nginx.ingress.kubernetes.io/rewrite-target" = "/"
+      "nginx.ingress.kubernetes.io/auth-type"      = var.environment == "production" ? "basic" : ""
+      "nginx.ingress.kubernetes.io/auth-secret"    = var.environment == "production" ? "monitoring-auth" : ""
+    }
+  }
 
-#   spec {
-#     dynamic "tls" {
-#       for_each = var.environment == "production" ? [1] : []
-#       content {
-#         hosts       = ["monitoring.company.com"]
-#         secret_name = "monitoring-tls"
-#       }
-#     }
+  spec {
+    ingress_class_name = "nginx"
 
-#     rule {
-#       host = var.environment == "production" ? "monitoring.company.com" : "localhost"
+    dynamic "tls" {
+      for_each = var.environment == "production" ? [1] : []
+      content {
+        hosts       = ["monitoring.company.com"]
+        secret_name = "monitoring-tls"
+      }
+    }
 
-#       http {
+    rule {
+      host = var.environment == "production" ? "monitoring.company.com" : "localhost"
+
+      http {
+        path {
+          path      = "/staging/grafana"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "grafana"
+              port {
+                number = 3000
+              }
+            }
+          }
+        }
 #         dynamic "path" {
 #           for_each = var.environment == "staging" ? [1] : []
 #           content {
@@ -428,10 +444,10 @@ resource "kubernetes_ingress_v1" "backend" {
 #             }
 #           }
 #         }
-#       }
-#     }
-#   }
-# }
+      }
+    }
+  }
+}
 
 # Basic auth secret for production monitoring
 # resource "kubernetes_secret" "monitoring_auth" {
