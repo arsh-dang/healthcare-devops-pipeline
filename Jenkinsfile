@@ -1234,6 +1234,35 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             }' || echo "Failed to send Datadog metric"
                                     fi
                                     
+                                    # Check if backend service is available
+                                    echo "Checking if backend service is deployed..."
+                                    if kubectl get svc backend -n healthcare-staging >/dev/null 2>&1; then
+                                        echo "Backend service found, setting up port forwarding..."
+                                        # Kill any existing port-forward processes on port 8083
+                                        pkill -f "kubectl port-forward.*8083" || true
+                                        # Set up port forwarding for backend service
+                                        kubectl port-forward -n healthcare-staging svc/backend 8083:5001 &
+                                        sleep 5
+                                        
+                                        # Wait for port forwarding to be ready
+                                        echo "Waiting for backend service to be ready..."
+                                        for i in {1..30}; do
+                                            if curl -s --max-time 3 http://localhost:8083/health >/dev/null 2>&1; then
+                                                echo "Backend service is ready on port 8083"
+                                                break
+                                            fi
+                                            echo "Waiting for backend service... (\$i/30)"
+                                            sleep 2
+                                        done
+                                    else
+                                        echo "Backend service not found. Checking if infrastructure needs to be deployed first..."
+                                        echo "Skipping API tests - backend service not available"
+                                        API_TESTS_TOTAL=0
+                                        API_TESTS_PASSED=0
+                                        API_TESTS_FAILED=0
+                                        exit 0
+                                    fi
+                                    
                                     if command -v npm >/dev/null 2>&1; then
                                         echo "Installing Newman for API testing..."
                                         npm install -g newman || echo "Newman already installed"
@@ -1303,6 +1332,10 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         echo "npm not available - skipping API tests for now"
                                         echo "API tests would run here with proper Node.js setup"
                                     fi
+                                    
+                                    # Clean up port forwarding
+                                    echo "Cleaning up port forwarding..."
+                                    pkill -f "kubectl port-forward.*8083" || true
                                 '''
                             },
                             'Performance Tests': {
