@@ -15,7 +15,11 @@ mongodb_root_password = "healthcare-staging-2024"
 
 # Monitoring
 enable_monitoring = true
-enable_datadog = false  # Disable Datadog for staging to avoid costs
+enable_datadog = true  # Enable Datadog for comprehensive monitoring
+
+# Datadog Configuration (API key should be set via Jenkins credentials)
+datadog_api_key = ""  # Will be set via Jenkins pipeline
+datadog_app_key = ""  # Optional, for enhanced features
 
 # Resource scaling for staging
 replica_count = {
@@ -23,17 +27,17 @@ replica_count = {
   backend  = 1
 }
 
-# SMTP Email Configuration (using mock values for staging)
+# SMTP Email Configuration (credentials via Jenkins/environment)
 smtp_server = "smtp.gmail.com"
 smtp_port = 587
-smtp_username = "admin@healthcare.local"
-smtp_password = "mock-password"
-smtp_from_email = "alerts@healthcare-staging.local"
+smtp_username = ""  # Will be set via Jenkins credentials (SMTP_USER)
+smtp_password = ""  # Will be set via Jenkins credentials (SMTP_PASS)
+smtp_from_email = ""  # Will use smtp_username value
 
 # Alert Email Recipients
-alert_email_critical = "admin@healthcare.local"
-alert_email_warning = "team@healthcare.local"
-alert_email_info = "info@healthcare.local"
+alert_email_critical = "arshdang2@gmail.com"
+alert_email_warning = "arshdang2@gmail.com"
+alert_email_info = "arshdang2@gmail.com"
 
 # Slack Configuration (disabled for staging)
 slack_webhook_critical = ""

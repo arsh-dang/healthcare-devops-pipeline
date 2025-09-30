@@ -29,10 +29,10 @@ resource "kubernetes_config_map" "alertmanager_config" {
   data = {
     "alertmanager.yml" = yamlencode({
       global = {
-        smtp_smarthost = "smtp.gmail.com:587"
-        smtp_from      = "alerts@healthcare.company.com"
-        smtp_auth_username = "alerts@healthcare.company.com"
-        smtp_auth_password = "your-smtp-password"
+        smtp_smarthost = "${var.smtp_server}:${var.smtp_port}"
+        smtp_from      = var.smtp_from_email
+        smtp_auth_username = var.smtp_username
+        smtp_auth_password = var.smtp_password
       }
 
       route = {
@@ -48,7 +48,7 @@ resource "kubernetes_config_map" "alertmanager_config" {
           name = "email"
           email_configs = [
             {
-              to           = "platform-team@healthcare.company.com"
+              to           = var.alert_email_critical
               send_resolved = true
             }
           ]

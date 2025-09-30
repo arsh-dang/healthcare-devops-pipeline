@@ -179,7 +179,10 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         try {
             withCredentials([
                 string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY'),
-                string(credentialsId: 'sonarqube-token', variable: 'SONARQUBE_TOKEN')
+                string(credentialsId: 'sonarqube-token', variable: 'SONARQUBE_TOKEN'),
+                usernamePassword(credentialsId: 'smtp-credentials',
+                               usernameVariable: 'SMTP_USER',
+                               passwordVariable: 'SMTP_PASS')
             ]) {
                 env.DATADOG_API_KEY = DATADOG_API_KEY
                 env.SONARQUBE_TOKEN = SONARQUBE_TOKEN
@@ -4054,8 +4057,8 @@ EOF
                                                         sleep $lock_wait_time
                                                     fi
                                                     
-                                                    # Attempt terraform apply
-                                                    if terraform apply -auto-approve -no-color; then
+                                                    # Attempt terraform apply with credentials
+                                                    if TF_VAR_smtp_username="$SMTP_USER" TF_VAR_smtp_password="$SMTP_PASS" TF_VAR_smtp_from_email="$SMTP_USER" TF_VAR_datadog_api_key="$DATADOG_API_KEY" terraform apply -auto-approve -no-color; then
                                                         echo "Terraform apply succeeded on attempt $attempt"
                                                         return 0
                                                     else
@@ -4063,7 +4066,7 @@ EOF
                                                         echo "Terraform apply failed on attempt $attempt with exit code $exit_code"
                                                         
                                                         # Check if it's a lock-related error
-                                                        if terraform apply -auto-approve -no-color 2>&1 | grep -q "state lock"; then
+                                                        if TF_VAR_smtp_username="$SMTP_USER" TF_VAR_smtp_password="$SMTP_PASS" TF_VAR_smtp_from_email="$SMTP_USER" TF_VAR_datadog_api_key="$DATADOG_API_KEY" terraform apply -auto-approve -no-color 2>&1 | grep -q "state lock"; then
                                                             echo "Detected state lock error, will retry..."
                                                             if [ $attempt -eq $max_attempts ]; then
                                                                 echo "Max retry attempts reached for state lock error"
@@ -4582,7 +4585,7 @@ EOF
                                 
                                 echo "Applying Terraform infrastructure..."
                                 # Apply with timeout to prevent hanging on PVC destruction
-                                timeout 180 terraform apply -auto-approve tfplan || {
+                                timeout 180 TF_VAR_smtp_username="$SMTP_USER" TF_VAR_smtp_password="$SMTP_PASS" TF_VAR_smtp_from_email="$SMTP_USER" TF_VAR_datadog_api_key="$DATADOG_API_KEY" terraform apply -auto-approve tfplan || {
                                     echo "Terraform apply timed out or failed after 3 minutes"
                                     echo "This is likely due to PVC destruction hanging"
                                     echo "Continuing with deployment..."
@@ -5526,7 +5529,7 @@ EOF
                                     fi
                                 
                                 # Apply green deployment with timeout
-                                timeout 300 terraform apply -auto-approve tfplan-green || {
+                                timeout 300 TF_VAR_smtp_username="$SMTP_USER" TF_VAR_smtp_password="$SMTP_PASS" TF_VAR_smtp_from_email="$SMTP_USER" TF_VAR_datadog_api_key="$DATADOG_API_KEY" terraform apply -auto-approve tfplan-green || {
                                     echo "Green deployment Terraform apply timed out or failed after 5 minutes"
                                     echo "This is likely due to PVC destruction hanging"
                                     echo "Continuing with deployment..."
