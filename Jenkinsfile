@@ -257,6 +257,13 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 echo 'Checking out source code...'
                 checkout scm
                 
+                // Ensure we have the latest changes
+                echo 'Pulling latest changes from repository...'
+                sh '''
+                    git pull origin main || echo "Git pull failed, continuing with current code"
+                    git log --oneline -3
+                '''
+                
                 // Get commit information
                 env.GIT_COMMIT_MSG = sh(
                     script: 'git log -1 --pretty=%B',
@@ -393,6 +400,17 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                 sh '''
                                             cd \$(pwd)
                                             echo "Current directory: \$(pwd)"
+                                            
+                                    # Verify nginx.conf has the correct monitoring service URLs
+                                    echo "Verifying nginx.conf configuration..."
+                                    if grep -q "grafana-external.monitoring-staging.svc.cluster.local" nginx.conf; then
+                                        echo "✅ nginx.conf has correct monitoring service URLs"
+                                    else
+                                        echo "❌ nginx.conf missing correct monitoring service URLs"
+                                        echo "Current nginx.conf content:"
+                                        cat nginx.conf
+                                        exit 1
+                                    fi
                                     
                                     # Send build start metric to Datadog
                                             if [ -n "\$DATADOG_API_KEY" ]; then
