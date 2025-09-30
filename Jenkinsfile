@@ -1388,8 +1388,8 @@ EOF
                                                 
                                                 # Parse axe results
                                                 if [ -f "axe-results.json" ]; then
-                                                    VIOLATIONS=\$(cat axe-results.json | grep -o '"violations":\[[^]]*\]' | grep -o '"id"' | wc -l)
-                                                    PASSES=\$(cat axe-results.json | grep -o '"passes":\[[^]]*\]' | grep -o '"id"' | wc -l)
+                                                    VIOLATIONS=\$(cat axe-results.json | grep -o '"violations":\\[[^]]*\\]' | grep -o '"id"' | wc -l)
+                                                    PASSES=\$(cat axe-results.json | grep -o '"passes":\\[[^]]*\\]' | grep -o '"id"' | wc -l)
                                                     echo "Accessibility scan completed: $PASSES passed, $VIOLATIONS violations"
                                                 else
                                                     echo "Accessibility scan completed with issues"
