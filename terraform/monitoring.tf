@@ -40,16 +40,25 @@ resource "kubernetes_config_map" "alertmanager_config" {
         group_wait     = "10s"
         group_interval = "10s"
         repeat_interval = "1h"
-        receiver       = "email"
+        receiver       = var.alert_email_critical != "" ? "email" : "default"
       }
 
-      receivers = [
+      receivers = var.alert_email_critical != "" ? [
         {
           name = "email"
           email_configs = [
             {
               to           = var.alert_email_critical
               send_resolved = true
+            }
+          ]
+        }
+      ] : [
+        {
+          name = "default"
+          webhook_configs = [
+            {
+              url = "http://localhost:9093"
             }
           ]
         }
@@ -583,7 +592,7 @@ resource "kubernetes_config_map" "prometheus_config" {
           ]
         },
         {
-          job_name = "jaeger"
+          job_name = "jaeger-metrics"
           kubernetes_sd_configs = [
             {
               role = "endpoints"
