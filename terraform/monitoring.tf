@@ -488,6 +488,30 @@ resource "kubernetes_config_map" "prometheus_config" {
             }
           ]
         },
+        {
+          job_name = "jaeger"
+          kubernetes_sd_configs = [
+            {
+              role = "endpoints"
+              namespaces = {
+                names = ["monitoring-${var.environment}"]
+              }
+            }
+          ]
+          relabel_configs = [
+            {
+              source_labels = ["__meta_kubernetes_service_name"]
+              action        = "keep"
+              regex         = "jaeger"
+            },
+            {
+              source_labels = ["__meta_kubernetes_endpoint_port_name"]
+              action        = "keep"
+              regex         = "query"
+            }
+          ]
+          metrics_path = "/metrics"
+        },
         # Enhanced monitoring scrape configs
         {
           job_name = "nginx-ingress-controller"
@@ -1158,7 +1182,7 @@ resource "kubernetes_config_map" "grafana_config" {
     "grafana.ini" = <<-EOT
       [server]
       http_port = 3000
-      root_url = http://localhost:30285/staging/grafana/
+      root_url = http://localhost:3000/
 
       [database]
       type = sqlite3

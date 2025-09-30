@@ -514,6 +514,11 @@ resource "kubernetes_service" "backend" {
     name      = "backend"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.backend_labels
+    annotations = {
+      "prometheus.io/scrape" = "true"
+      "prometheus.io/port"   = "5001"
+      "prometheus.io/path"   = "/metrics"
+    }
   }
 
   spec {
@@ -534,6 +539,11 @@ resource "kubernetes_service" "frontend" {
     name      = "frontend"
     namespace = kubernetes_namespace.healthcare.metadata[0].name
     labels    = local.frontend_labels
+    annotations = {
+      "prometheus.io/scrape" = "true"
+      "prometheus.io/port"   = "80"
+      "prometheus.io/path"   = "/metrics"
+    }
   }
 
   spec {
