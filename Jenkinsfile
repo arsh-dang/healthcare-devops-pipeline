@@ -1232,13 +1232,13 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         echo "Running API tests..."
                                         
                                         # Set up environment variables for Newman
-                                        export NEWMAN_ENVIRONMENT="baseUrl=http://localhost:8082"
+                                        export NEWMAN_ENVIRONMENT="baseUrl=http://localhost:8083"
                                         
                                         # Run Newman tests with the Postman collection
                                         if [ -f "postman/healthcare-api.postman_collection.json" ]; then
                                             echo "Running Newman API tests..."
                                             newman run postman/healthcare-api.postman_collection.json \\
-                                                --env-var "baseUrl=http://localhost:8082" \\
+                                                --env-var "baseUrl=http://localhost:8083" \\
                                                 --reporters cli,json \\
                                                 --reporter-json-export newman-results.json \\
                                                 --timeout-request 10000
