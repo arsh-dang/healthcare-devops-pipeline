@@ -1415,17 +1415,17 @@ EOF
                                             # cd to workspace (already in workspace)
                                     
                                     # Send security test start metric
-                                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                            -d "{
-                                                \"series\": [{
-                                                    \"metric\": \"jenkins.test.security.start\",
-                                                            \"points\": [[\$(date +%s), 1]],
-                                                    \"tags\": [\"env:staging\", \"service:healthcare-app\", \"test_type:security\"]
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                            -d '{
+                                                "series": [{
+                                                    "metric": "jenkins.test.security.start",
+                                                    "points": [['\$(date +%s)', 1]],
+                                                    "tags": ["env:staging", "service:healthcare-app", "test_type:security"]
                                                 }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            }' || echo "Failed to send Datadog metric"
                                     fi
                                     
                                     echo "Running security-focused tests..."
@@ -1471,24 +1471,31 @@ EOF
                                     fi
                                     
                                     # Send security test metrics
-                                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
+                                        # Determine test result value
+                                        if [ "\$SECURITY_TEST_STATUS" = "success" ]; then
+                                            SECURITY_RESULT=1
+                                        else
+                                            SECURITY_RESULT=0
+                                        fi
+                                        
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                            -d "{
-                                                \"series\": [
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                            -d '{
+                                                "series": [
                                                     {
-                                                        \"metric\": \"jenkins.test.security.result\",
-                                                                \"points\": [[\$(date +%s), \$([ \"$SECURITY_TEST_STATUS\" = \"success\" ] && echo 1 || echo 0)]],
-                                                        \"tags\": [\"env:staging\", \"service:healthcare-app\", \"test_type:security\"]
+                                                        "metric": "jenkins.test.security.result",
+                                                        "points": [['\$(date +%s)', '$SECURITY_RESULT']],
+                                                        "tags": ["env:staging", "service:healthcare-app", "test_type:security"]
                                                     },
                                                     {
-                                                        \"metric\": \"jenkins.test.security.issues\",
-                                                                \"points\": [[\$(date +%s), ${SEC_ISSUES:-0}]],
-                                                        \"tags\": [\"env:staging\", \"service:healthcare-app\", \"test_type:security\"]
+                                                        "metric": "jenkins.test.security.issues",
+                                                        "points": [['\$(date +%s)', '${SEC_ISSUES:-0}']],
+                                                        "tags": ["env:staging", "service:healthcare-app", "test_type:security"]
                                                     }
                                                 ]
-                                            }" || echo "Failed to send Datadog metrics"
+                                            }' || echo "Failed to send Datadog metrics"
                                     fi
                                 '''
                             },
