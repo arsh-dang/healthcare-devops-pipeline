@@ -1208,9 +1208,9 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                                 API_TESTS_FAILED=\$(cat newman-results.json | grep -o '"failed":[0-9]*' | cut -d: -f2)
                                             else
                                                 # Fallback if Newman results parsing fails
-                                                API_TESTS_TOTAL=5
-                                                API_TESTS_PASSED=4
-                                                API_TESTS_FAILED=1
+                                        API_TESTS_TOTAL=5
+                                        API_TESTS_PASSED=4
+                                        API_TESTS_FAILED=1
                                             fi
                                         else
                                             echo "Postman collection not found, using mock results"
@@ -1311,32 +1311,52 @@ EOF
                                             # cd to workspace (already in workspace)
                                     
                                     # Send accessibility test start metric
-                                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                            -H "Content-Type: application/json" \
-                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
-                                            -d @-
-{
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
+                                        curl -X POST "https://api.datadoghq.com/api/v1/series" \\
+                                            -H "Content-Type: application/json" \\
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                            -d '{
     "series": [{
         "metric": "jenkins.test.accessibility.start",
-                "points": [[\$(date +%s), 1]],
+                                                    "points": [['\$(date +%s)', 1]],
         "tags": ["env:staging", "service:healthcare-app", "test_type:accessibility"]
     }]
-}
-EOF
+                                            }' || echo "Failed to send Datadog metric"
                                     fi
                                     
                                     echo "Running accessibility tests..."
                                     
                                     if command -v npm >/dev/null 2>&1; then
+                                        # Install accessibility testing tools
+                                        echo "Installing accessibility testing tools..."
+                                        npm install -g @axe-core/cli lighthouse || echo "Accessibility tools already installed"
+                                        
                                         # Try to run accessibility tests
                                         if npm run test:a11y 2>/dev/null; then
                                             echo "Accessibility tests completed successfully"
                                         elif npm run test:accessibility 2>/dev/null; then
                                             echo "Accessibility tests completed successfully"
                                         else
-                                            echo "No accessibility test script found"
-                                            echo "Accessibility tests would run here with tools like axe-core or lighthouse"
+                                            echo "Running accessibility tests with axe-core..."
+                                            
+                                            # Run axe-core accessibility tests
+                                            if command -v axe >/dev/null 2>&1; then
+                                                echo "Running axe-core accessibility scan..."
+                                                axe http://localhost:8082 --reporter=json --output=axe-results.json || echo "Axe scan completed with issues"
+                                                
+                                                # Parse axe results
+                                                if [ -f "axe-results.json" ]; then
+                                                    VIOLATIONS=\$(cat axe-results.json | grep -o '"violations":\[[^]]*\]' | grep -o '"id"' | wc -l)
+                                                    PASSES=\$(cat axe-results.json | grep -o '"passes":\[[^]]*\]' | grep -o '"id"' | wc -l)
+                                                    echo "Accessibility scan completed: $PASSES passed, $VIOLATIONS violations"
+                                                else
+                                                    echo "Accessibility scan completed with issues"
+                                                fi
+                                            else
+                                                echo "axe-core not available, running basic accessibility check"
+                                                # Basic accessibility check with curl
+                                                curl -s http://localhost:8082 | grep -i "alt=\|aria-\|role=" && echo "Basic accessibility elements found" || echo "Limited accessibility elements found"
+                                            fi
                                         fi
                                     else
                                         echo "npm not found - skipping accessibility tests for now"
@@ -1344,17 +1364,17 @@ EOF
                                     fi
                                     
                                     # Send accessibility test success metric
-                                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
-                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                            -d "{
-                                                \"series\": [{
-                                                    \"metric\": \"jenkins.test.accessibility.success\",
-                                                            \"points\": [[\$(date +%s), 1]],
-                                                    \"tags\": [\"env:staging\", \"service:healthcare-app\", \"test_type:accessibility\"]
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                            -d '{
+                                                "series": [{
+                                                    "metric": "jenkins.test.accessibility.success",
+                                                    "points": [['\$(date +%s)', 1]],
+                                                    "tags": ["env:staging", "service:healthcare-app", "test_type:accessibility"]
                                                 }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            }' || echo "Failed to send Datadog metric"
                                     fi
                                 '''
                             },
