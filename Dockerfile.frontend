@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY pnpm-lock.yaml* ./
 
 # Install pnpm if available, otherwise use npm
-RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm install; fi
+RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm install --legacy-peer-deps; fi
 
 # Copy source code
 COPY . .
