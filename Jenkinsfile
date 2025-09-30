@@ -792,6 +792,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                                 # Build with network resilience flags and explicit no-pull
                                                 docker build --network=host --no-cache=true --pull=false \
                                                     --dns=8.8.8.8 --dns=1.1.1.1 --dns=8.8.4.4 \
+                                                    --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
                                                     -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
                                                 if [ $? -eq 0 ]; then
                                                     echo "Frontend build completed successfully"
@@ -816,6 +817,7 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                                 echo "Base image node:20-alpine confirmed available, proceeding with build..."
                                                 # Build with network resilience flags and explicit no-pull
                                                 docker build --network=host --no-cache=true --pull=false --dns=8.8.8.8 --dns=1.1.1.1 --dns=8.8.4.4 \
+                                                    --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
                                                     -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
                                                 if [ $? -eq 0 ]; then
                                                     echo "Backend build completed successfully"

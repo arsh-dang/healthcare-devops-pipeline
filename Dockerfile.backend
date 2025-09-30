@@ -1,13 +1,19 @@
 FROM node:20-alpine
 
+# Accept build arguments
+ARG NODE_OPTIONS="--max-old-space-size=4096"
+
 WORKDIR /app
+
+# Set Node.js options for memory management
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 # Copy package files
 COPY package*.json ./
 COPY pnpm-lock.yaml* ./
 
 # Install dependencies
-RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm install; fi
+RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm install --legacy-peer-deps; fi
 
 # Copy server source code
 COPY server/ ./server/
