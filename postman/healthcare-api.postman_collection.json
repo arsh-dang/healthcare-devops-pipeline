@@ -77,7 +77,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"patientName\": \"Test Patient\",\n  \"doctorName\": \"Dr. Test\",\n  \"appointmentDate\": \"2025-09-07T10:00:00.000Z\",\n  \"description\": \"Test appointment\"\n}"
+          "raw": "{\n  \"title\": \"Test Appointment\",\n  \"description\": \"Test appointment for API testing\",\n  \"dateTime\": \"2025-09-07T10:00:00.000Z\",\n  \"clinic\": \"Test Clinic\",\n  \"clinicName\": \"Test Medical Center\",\n  \"image\": \"https://example.com/clinic.jpg\",\n  \"address\": \"123 Test Street, Test City\",\n  \"doctor\": \"Dr. Test\",\n  \"doctorSpecialty\": \"General Practice\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/appointments",
@@ -97,7 +97,8 @@
               "pm.test('Response has appointment data', function () {",
               "    var jsonData = pm.response.json();",
               "    pm.expect(jsonData).to.have.property('_id');",
-              "    pm.expect(jsonData).to.have.property('patientName');",
+              "    pm.expect(jsonData).to.have.property('title');",
+              "    pm.expect(jsonData).to.have.property('doctor');",
               "});"
             ],
             "type": "text/javascript"
