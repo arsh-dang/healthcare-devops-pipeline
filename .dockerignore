@@ -1,0 +1,102 @@
+# Terraform files and directories
+terraform/
+*.tf
+*.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+build/
+dist/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Scripts and CI/CD
+scripts/
+Jenkinsfile
+.github/
+.gitlab-ci.yml
+
+# Docker files (except the ones we need)
+Dockerfile.*
+docker-compose*.yml
+
+# Logs
+logs/
+*.log
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Archive files
+*.tar
+*.tar.gz
+*.zip
+*.rar
+
+# Large binary files
+*.bin
+*.exe
+*.dmg
+*.pkg
+
+# Kubernetes manifests
+*.yaml
+*.yml
+!package.json
+!package-lock.json
+!pnpm-lock.yaml
+
+# Monitoring and chaos engineering
+chaos-reports/
+monitoring/
+postman/
+
+# Other project files
+sonar-project.properties
