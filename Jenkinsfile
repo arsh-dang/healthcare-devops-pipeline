@@ -1397,7 +1397,7 @@ EOF
                                             else
                                                 echo "axe-core not available, running basic accessibility check"
                                                 # Basic accessibility check with curl
-                                                curl -s http://localhost:8082 | grep -i "alt=\|aria-\|role=" && echo "Basic accessibility elements found" || echo "Limited accessibility elements found"
+                                                curl -s http://localhost:8082 | grep -i "alt=\\|aria-\\|role=" && echo "Basic accessibility elements found" || echo "Limited accessibility elements found"
                                             fi
                                         fi
                                     else
