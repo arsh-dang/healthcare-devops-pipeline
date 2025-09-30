@@ -351,6 +351,8 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                 # Set environment variables for the deployment script
                                 export ENVIRONMENT="${ENVIRONMENT:-staging}"
                                 export DATADOG_API_KEY="${DATADOG_API_KEY}"
+                                echo "DEBUG: DATADOG_API_KEY length: ${#DATADOG_API_KEY}"
+                                echo "DEBUG: DATADOG_API_KEY first 10 chars: ${DATADOG_API_KEY:0:10}"
                                 
                                 # Run deployment with proper error handling
                                 echo "Running Terraform plan..."
