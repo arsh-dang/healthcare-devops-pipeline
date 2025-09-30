@@ -15,7 +15,7 @@ mongodb_root_password = "healthcare-staging-2024"
 
 # Monitoring
 enable_monitoring = true
-enable_datadog = false  # Temporarily disabled due to API key validation issues
+enable_datadog = true  # Re-enabled with proper API key from Jenkins credentials
 
 # Datadog Configuration (API key should be set via Jenkins credentials)
 datadog_api_key = ""  # Will be set via Jenkins pipeline

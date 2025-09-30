@@ -353,6 +353,13 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                 export DATADOG_API_KEY="${DATADOG_API_KEY}"
                                 echo "DEBUG: DATADOG_API_KEY length: ${#DATADOG_API_KEY}"
                                 echo "DEBUG: DATADOG_API_KEY first 10 chars: ${DATADOG_API_KEY:0:10}"
+                                echo "DEBUG: DATADOG_API_KEY last 10 chars: ${DATADOG_API_KEY: -10}"
+                                echo "DEBUG: Testing Datadog API key validity..."
+                                if [ -n "$DATADOG_API_KEY" ]; then
+                                    curl -s -H "DD-API-KEY: $DATADOG_API_KEY" "https://api.datadoghq.com/api/v1/validate" | jq . || echo "API key validation failed"
+                                else
+                                    echo "ERROR: DATADOG_API_KEY is empty or not set"
+                                fi
                                 
                                 # Run deployment with proper error handling
                                 echo "Running Terraform plan..."
