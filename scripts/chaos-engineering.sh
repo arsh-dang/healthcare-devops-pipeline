@@ -87,7 +87,12 @@ create_namespace() {
 # Function to check if deployments exist
 check_deployments() {
     local ns="$1"
-    if kubectl get deployments -n "$ns" 2>/dev/null | grep -q "healthcare"; then
+    # Check for frontend deployment
+    if kubectl get deployment frontend -n "$ns" 2>/dev/null | grep -q "frontend"; then
+        return 0
+    fi
+    # Check for backend (in StatefulSet)
+    if kubectl get statefulset mongodb-staging -n "$ns" 2>/dev/null | grep -q "mongodb-staging"; then
         return 0
     fi
     return 1
@@ -125,13 +130,13 @@ run_pod_failure_simulation() {
     # Real Kubernetes pod failure simulation
     print_info "Found Kubernetes cluster and deployments - running real chaos test"
 
-    # Get original replica count
-    ORIGINAL_REPLICAS=$(kubectl get deployment -n "$NAMESPACE" -l app=healthcare-app-frontend -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
-    print_info "Original replica count: $ORIGINAL_REPLICAS"
+    # Get original replica count for frontend deployment
+    ORIGINAL_REPLICAS=$(kubectl get deployment frontend -n "$NAMESPACE" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
+    print_info "Original frontend replica count: $ORIGINAL_REPLICAS"
 
     # Scale down to simulate pod failure
-    print_info "Scaling down deployment to simulate pod failure..."
-    kubectl scale deployment healthcare-app-frontend --replicas=0 -n "$NAMESPACE" || {
+    print_info "Scaling down frontend deployment to simulate pod failure..."
+    kubectl scale deployment frontend --replicas=0 -n "$NAMESPACE" || {
         print_error "Failed to scale down deployment"
         return 1
     }
@@ -143,16 +148,16 @@ run_pod_failure_simulation() {
     sleep 5
 
     # Restore deployment
-    print_info "Restoring deployment to original replica count..."
-    kubectl scale deployment healthcare-app-frontend --replicas="$ORIGINAL_REPLICAS" -n "$NAMESPACE" || {
+    print_info "Restoring frontend deployment to original replica count..."
+    kubectl scale deployment frontend --replicas="$ORIGINAL_REPLICAS" -n "$NAMESPACE" || {
         print_error "Failed to restore deployment"
         return 1
     }
 
     # Wait for pods to be ready
-    print_info "Waiting for pods to be ready..."
-    kubectl wait --for=condition=ready pod -l app=healthcare-app-frontend -n "$NAMESPACE" --timeout=300s || {
-        print_error "Pods failed to become ready"
+    print_info "Waiting for frontend pods to be ready..."
+    kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend -n "$NAMESPACE" --timeout=300s || {
+        print_error "Frontend pods failed to become ready"
         return 1
     }
 
