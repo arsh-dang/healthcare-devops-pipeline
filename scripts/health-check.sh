@@ -198,14 +198,15 @@ else
     check_http_endpoint "$API_URL/health" "API health endpoint" 200
 fi
 
-# 3. API appointments endpoint check
+# 3. API appointments endpoint check (optional - may not be implemented)
 if [ "$IS_CI" = true ]; then
     echo "CI environment detected - simulating API appointments check..."
     TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     print_success "API appointments endpoint check passed (simulated)"
     CHECKS_PASSED=$((CHECKS_PASSED + 1))
 else
-    check_http_endpoint "$API_URL/appointments" "API appointments endpoint" 200
+    # Check appointments endpoint with correct API path
+    check_http_endpoint "$API_URL/api/appointments" "API appointments endpoint" 200
 fi
 
 # 4. Database connectivity check (via API health endpoint)

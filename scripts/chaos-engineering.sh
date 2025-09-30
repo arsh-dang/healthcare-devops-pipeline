@@ -154,6 +154,10 @@ run_pod_failure_simulation() {
         return 1
     }
 
+    # Wait a moment for pods to start
+    print_info "Waiting for pods to start..."
+    sleep 10
+
     # Wait for pods to be ready
     print_info "Waiting for frontend pods to be ready..."
     kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend -n "$NAMESPACE" --timeout=300s || {
