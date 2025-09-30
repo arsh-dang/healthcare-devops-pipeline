@@ -7,7 +7,7 @@ app_version = "latest"
 
 # Docker images (will be built by Jenkins pipeline)
 # Note: BUILD_NUMBER is passed as a Terraform variable via -var parameter
-frontend_image = "healthcare-app-frontend:451"
+frontend_image = "healthcare-app-frontend:fixed4"
 backend_image = "healthcare-app-backend:latest"
 
 # MongoDB Configuration

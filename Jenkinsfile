@@ -594,13 +594,13 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                         curl -X POST "https://api.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                            -d "{
-                                                \"series\": [{
-                                                    \"metric\": \"jenkins.build.docker.start\",
-                                                            \"points\": [[\$(date +%s), 1]],
-                                                    \"tags\": [\"env:staging\", \"service:healthcare-app\", \"component:docker\"]
+                                            -d '{
+                                                "series": [{
+                                                    "metric": "jenkins.build.docker.start",
+                                                    "points": [['\$(date +%s)', 1]],
+                                                    "tags": ["env:staging", "service:healthcare-app", "component:docker"]
                                                 }]
-                                            }" || echo "Failed to send Datadog metric"
+                                            }' || echo "Failed to send Datadog metric"
                                     fi
                                     
                                     # Check if docker is available
