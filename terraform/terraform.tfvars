@@ -34,10 +34,10 @@ smtp_username = ""  # Will be set via Jenkins credentials (SMTP_USER)
 smtp_password = ""  # Will be set via Jenkins credentials (SMTP_PASS)
 smtp_from_email = ""  # Will use smtp_username value
 
-# Alert Email Recipients
-alert_email_critical = "arshdang2@gmail.com"
-alert_email_warning = "arshdang2@gmail.com"
-alert_email_info = "arshdang2@gmail.com"
+# Alert Email Recipients (will be set via Jenkins credentials)
+alert_email_critical = ""  # Will be set via Jenkins smtp-recipient credential
+alert_email_warning = ""   # Will be set via Jenkins smtp-recipient credential
+alert_email_info = ""      # Will be set via Jenkins smtp-recipient credential
 
 # Slack Configuration (disabled for staging)
 slack_webhook_critical = ""

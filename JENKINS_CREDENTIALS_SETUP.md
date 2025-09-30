@@ -7,8 +7,13 @@ To ensure the healthcare application pipeline works correctly, you need to confi
 ### 1. **SMTP Email Credentials** (`smtp-credentials`)
 - **Type**: Username/Password
 - **ID**: `smtp-credentials`
-- **Username**: `arshdang2@gmail.com` (or your Gmail address)
+- **Username**: Your Gmail address
 - **Password**: Your Gmail App Password (not your regular password)
+
+### 2. **SMTP Email Recipient** (`smtp-recipient`)
+- **Type**: Secret Text
+- **ID**: `smtp-recipient`
+- **Value**: Email address to receive notifications (e.g., `arshdang2@gmail.com`)
 
 **Gmail App Password Setup:**
 1. Go to Google Account settings
@@ -16,12 +21,12 @@ To ensure the healthcare application pipeline works correctly, you need to confi
 3. Generate an App Password for "Mail"
 4. Use this App Password in Jenkins (not your regular Gmail password)
 
-### 2. **Datadog API Key** (`datadog-api-key`)
+### 3. **Datadog API Key** (`datadog-api-key`)
 - **Type**: Secret Text
 - **ID**: `datadog-api-key`
 - **Value**: Your Datadog API key
 
-### 3. **SonarQube Token** (`sonarqube-token`)
+### 4. **SonarQube Token** (`sonarqube-token`)
 - **Type**: Secret Text
 - **ID**: `sonarqube-token`
 - **Value**: Your SonarQube authentication token
@@ -36,10 +41,17 @@ To ensure the healthcare application pipeline works correctly, you need to confi
 ### For SMTP Credentials:
 - **Kind**: Username with password
 - **Scope**: Global
-- **Username**: `arshdang2@gmail.com`
+- **Username**: Your Gmail address
 - **Password**: Your Gmail App Password
 - **ID**: `smtp-credentials`
 - **Description**: SMTP credentials for email notifications
+
+### For SMTP Recipient:
+- **Kind**: Secret text
+- **Scope**: Global
+- **Secret**: Email address to receive notifications (e.g., `arshdang2@gmail.com`)
+- **ID**: `smtp-recipient`
+- **Description**: Email address for alert notifications
 
 ### For Datadog API Key:
 - **Kind**: Secret text
@@ -67,17 +79,20 @@ To ensure the healthcare application pipeline works correctly, you need to confi
 The Jenkins pipeline will automatically:
 1. Load credentials using `withCredentials()`
 2. Pass them to Terraform as environment variables:
-   - `TF_VAR_smtp_username` → SMTP username
-   - `TF_VAR_smtp_password` → SMTP password  
-   - `TF_VAR_smtp_from_email` → Email sender
+   - `TF_VAR_smtp_username` → SMTP username from `smtp-credentials`
+   - `TF_VAR_smtp_password` → SMTP password from `smtp-credentials`
+   - `TF_VAR_smtp_from_email` → Email sender from `smtp-credentials`
+   - `TF_VAR_alert_email_critical` → Critical alerts recipient from `smtp-recipient`
+   - `TF_VAR_alert_email_warning` → Warning alerts recipient from `smtp-recipient`
+   - `TF_VAR_alert_email_info` → Info alerts recipient from `smtp-recipient`
    - `TF_VAR_datadog_api_key` → Datadog API key
 
 ## Email Notifications
 
-Once configured, the pipeline will send email notifications to:
-- **Critical Alerts**: `arshdang2@gmail.com`
-- **Warning Alerts**: `arshdang2@gmail.com`
-- **Info Alerts**: `arshdang2@gmail.com`
+Once configured, the pipeline will send email notifications to the address specified in your `smtp-recipient` credential:
+- **Critical Alerts**: Email from `smtp-recipient` credential
+- **Warning Alerts**: Email from `smtp-recipient` credential  
+- **Info Alerts**: Email from `smtp-recipient` credential
 
 ## Datadog Integration
 
