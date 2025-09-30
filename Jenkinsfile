@@ -2632,8 +2632,8 @@ EOF
                                     
                                     # Set environment variables for CI/CD environment
                                     export LOAD_TEST_MODE="mock"
-                                    export TARGET_APP_URL="http://localhost:30285"
-                                    export TARGET_API_URL="http://localhost:30285/api"
+                                    export TARGET_APP_URL="http://localhost:8082"
+                                    export TARGET_API_URL="http://localhost:8083/api"
                                     export LOAD_TEST_DURATION="30"
                                     export LOAD_TEST_USERS="5"
                                     
@@ -5008,8 +5008,8 @@ EOF
                                         chmod +x scripts/health-check.sh
                                         
                                         # Set environment variables for health checks
-                                        export APP_URL="http://localhost:30285"
-                                        export API_URL="http://localhost:30285/api"
+                                        export APP_URL="http://localhost:8082"
+                                        export API_URL="http://localhost:8083"
                                         
                                         # Run health checks for 2 minutes (12 checks, 10 seconds apart)
                                         MONITOR_DURATION=120
@@ -5020,7 +5020,7 @@ EOF
                                             echo "Running health check iteration $i..."
                                             
                                             # Check if applications are running first
-                                            if curl -s --max-time 3 http://localhost:30285 >/dev/null 2>&1 && curl -s --max-time 3 http://localhost:30285/api/health >/dev/null 2>&1; then
+                                            if curl -s --max-time 3 http://localhost:8082 >/dev/null 2>&1 && curl -s --max-time 3 http://localhost:8083/health >/dev/null 2>&1; then
                                                 # Applications are running, use real health check
                                                 if ./scripts/health-check.sh >/dev/null 2>&1; then
                                                     HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
@@ -5073,7 +5073,7 @@ EOF
                                         
                                         for i in $(seq 1 12); do
                                             # Basic connectivity check
-                                            if curl -s --max-time 3 http://localhost:30285 >/dev/null 2>&1; then
+                                            if curl -s --max-time 3 http://localhost:8082 >/dev/null 2>&1; then
                                                 HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
                                                 echo "Health check $i: PASSED (frontend accessible)"
                                             elif [ $i -le 6 ]; then

@@ -125,7 +125,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://localhost:30285/api/v1
+  - url: http://localhost:8083/api/v1
     description: Development server
   - url: https://api.healthcare-app.com/api/v1
     description: Production server
@@ -1370,7 +1370,7 @@ curl https://api.healthcare-app.com/health
 # Port forward Grafana
 kubectl port-forward svc/grafana 3000:3000
 
-# Access at: http://localhost:30285
+# Access at: http://localhost:3000
 # Default credentials: admin/admin
 \`\`\`
 
@@ -1379,7 +1379,7 @@ kubectl port-forward svc/grafana 3000:3000
 # Port forward Prometheus
 kubectl port-forward svc/prometheus 9090:9090
 
-# Access at: http://localhost:30285/prometheus
+# Access at: http://localhost:3000/prometheus
 \`\`\`
 
 ### Datadog Integration
@@ -1436,13 +1436,13 @@ kubectl get virtualservice, destinationrule, gateway
 #### Application Health
 \`\`\`bash
 # Frontend health
-curl http://localhost:30285
+curl http://localhost:8082
 
 # Backend health
-curl http://localhost:30285/api/health
+curl http://localhost:8082/api/health
 
 # Database health
-curl http://localhost:30285/api/health/database
+curl http://localhost:8082/api/health/database
 \`\`\`
 
 #### Infrastructure Health
@@ -1649,19 +1649,19 @@ kubectl get pods -l environment=canary
 #### Grafana Dashboards
 \`\`\`bash
 kubectl port-forward svc/grafana 3000:3000
-# Access: http://localhost:30285
+# Access: http://localhost:3000
 \`\`\`
 
 #### Prometheus Metrics
 \`\`\`bash
 kubectl port-forward svc/prometheus 9090:9090
-# Access: http://localhost:30285/prometheus
+# Access: http://localhost:3000/prometheus
 \`\`\`
 
 #### Jaeger Tracing
 \`\`\`bash
 kubectl port-forward svc/jaeger 16686:16686
-# Access: http://localhost:30285/jaeger
+# Access: http://localhost:3000/jaeger
 \`\`\`
 
 ### Key Metrics
