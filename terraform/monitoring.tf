@@ -52,10 +52,12 @@ resource "kubernetes_config_map" "alertmanager_config" {
               send_resolved = true
             }
           ]
+          webhook_configs = []
         }
       ] : [
         {
           name = "default"
+          email_configs = []
           webhook_configs = [
             {
               url = "http://localhost:9093"
