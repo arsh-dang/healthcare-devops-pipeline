@@ -177,10 +177,16 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         // Enable timestamps for all output
         timestamps {
         try {
-            withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+            withCredentials([
+                string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY'),
+                string(credentialsId: 'sonarqube-token', variable: 'SONARQUBE_TOKEN')
+            ]) {
                 env.DATADOG_API_KEY = DATADOG_API_KEY
+                env.SONARQUBE_TOKEN = SONARQUBE_TOKEN
                 echo "SUCCESS: Datadog API key loaded!"
+                echo "SUCCESS: SonarQube token loaded!"
                 echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
+                echo "SonarQube token length: ${env.SONARQUBE_TOKEN ? env.SONARQUBE_TOKEN.length() : 0}"
                 echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
                 
                 script {
@@ -1901,10 +1907,9 @@ EOF
                                     if command -v sonar-scanner >/dev/null 2>&1; then
                                         echo "SonarQube scanner found, running analysis..."
                                         
-                                        # Set SonarQube properties
-                                        export SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonarcloud.io}"
-                                        export SONAR_TOKEN="${SONAR_TOKEN}"
-                                        export SONAR_ORGANIZATION="${SONAR_ORGANIZATION:-your-org}"
+                                        # Set SonarQube properties for local instance
+                                        export SONAR_HOST_URL="http://localhost:9001"
+                                        export SONAR_TOKEN="\$SONARQUBE_TOKEN"
                                         export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-healthcare-app}"
                                         export SONAR_PROJECT_NAME="${SONAR_PROJECT_NAME:-Healthcare App}"
                                         export SONAR_SOURCES="${SONAR_SOURCES:-src,server}"
@@ -1915,7 +1920,7 @@ EOF
                                             -Dsonar.projectName="$SONAR_PROJECT_NAME" \\
                                             -Dsonar.sources=$SONAR_SOURCES \\
                                             -Dsonar.host.url=$SONAR_HOST_URL \\
-                                            -Dsonar.login="${SONAR_TOKEN:-}" \\
+                                            -Dsonar.login="\$SONAR_TOKEN" \\
                                             -Dsonar.javascript.node.maxspace=4096 \\
                                             -Dsonar.typescript.node.maxspace=4096; then
                                             
