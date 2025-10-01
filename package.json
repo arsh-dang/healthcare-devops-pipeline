@@ -17,6 +17,7 @@
     "luxon": "^3.7.2",
     "moment": "^2.30.1",
     "mongoose": "^8.18.1",
+    "nodemailer": "^7.0.6",
     "prom-client": "^14.2.0",
     "prop-types": "^15.8.1",
     "react": "^19.1.1",

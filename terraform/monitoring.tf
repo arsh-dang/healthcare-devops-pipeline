@@ -1,5 +1,5 @@
 # Monitoring Infrastructure with Terraform
-# This file manages Prometheus, Grafana, Alertmanager, MongoDB Exporter, and monitoring resources
+# This file manages Prometheus, Grafana, Alertmanager, MongoDB Exporter, SonarQube, and monitoring resources
 
 # Monitoring namespace
 resource "kubernetes_namespace" "monitoring" {
@@ -3402,5 +3402,229 @@ output "enhanced_monitoring_features" {
     log_aggregation        = var.enable_log_aggregation
     synthetic_monitoring   = var.enable_synthetic_monitoring
     distributed_tracing    = var.enable_distributed_tracing
+  }
+}
+
+# SonarQube Configuration with HostPath for persistence
+resource "kubernetes_deployment" "sonarqube" {
+  depends_on = [kubernetes_namespace.monitoring]
+
+  metadata {
+    name      = "sonarqube"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "sonarqube" })
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "sonarqube"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "sonarqube"
+        }
+      }
+
+      spec {
+        security_context {
+          run_as_user = 1000
+          run_as_group = 1000
+          fs_group = 1000
+        }
+        
+        init_container {
+          name = "init-sonarqube"
+          image = "busybox:1.35"
+          
+          command = ["sh", "-c"]
+          args = [
+            "mkdir -p /opt/sonarqube/data/es7 && chown -R 1000:1000 /opt/sonarqube/data && chmod -R 755 /opt/sonarqube/data"
+          ]
+          
+          volume_mount {
+            name = "sonarqube-data"
+            mount_path = "/opt/sonarqube/data"
+          }
+          
+          security_context {
+            run_as_user = 0
+            run_as_group = 0
+          }
+        }
+        
+        container {
+          name  = "sonarqube"
+          image = "sonarqube:9.9-community"
+          
+          security_context {
+            run_as_user = 1000
+            run_as_group = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem = false
+            capabilities {
+              drop = ["ALL"]
+            }
+          }
+          
+          port {
+            container_port = 9000
+            name          = "http"
+          }
+
+          env {
+            name  = "SONAR_ES_BOOTSTRAP_CHECKS_DISABLE"
+            value = "true"
+          }
+
+          env {
+            name  = "SONAR_JDBC_URL"
+            value = "jdbc:h2:tcp://localhost:9092/sonar"
+          }
+
+          env {
+            name  = "SONAR_JDBC_USERNAME"
+            value = "sonar"
+          }
+
+          env {
+            name  = "SONAR_JDBC_PASSWORD"
+            value = "sonar"
+          }
+
+          env {
+            name  = "SONAR_EMBEDDEDDATABASE_PORT"
+            value = "9092"
+          }
+
+          env {
+            name  = "SONAR_WEB_JAVAADDITIONALOPTS"
+            value = "-Djava.security.egd=file:/dev/./urandom"
+          }
+
+          resources {
+            requests = {
+              memory = "1Gi"
+              cpu    = "500m"
+            }
+            limits = {
+              memory = "2Gi"
+              cpu    = "1000m"
+            }
+          }
+
+          volume_mount {
+            name       = "sonarqube-data"
+            mount_path = "/opt/sonarqube/data"
+          }
+
+          volume_mount {
+            name       = "sonarqube-logs"
+            mount_path = "/opt/sonarqube/logs"
+          }
+
+          volume_mount {
+            name       = "sonarqube-extensions"
+            mount_path = "/opt/sonarqube/extensions"
+          }
+
+          liveness_probe {
+            http_get {
+              path = "/api/system/status"
+              port = 9000
+            }
+            initial_delay_seconds = 60
+            period_seconds        = 30
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+
+          readiness_probe {
+            http_get {
+              path = "/api/system/status"
+              port = 9000
+            }
+            initial_delay_seconds = 30
+            period_seconds        = 10
+            timeout_seconds       = 5
+            failure_threshold     = 3
+          }
+        }
+
+        volume {
+          name = "sonarqube-data"
+          host_path {
+            path = "/var/lib/sonarqube-data"
+            type = "DirectoryOrCreate"
+          }
+        }
+
+        volume {
+          name = "sonarqube-logs"
+          empty_dir {}
+        }
+
+        volume {
+          name = "sonarqube-extensions"
+          empty_dir {}
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "sonarqube" {
+  depends_on = [kubernetes_deployment.sonarqube]
+
+  metadata {
+    name      = "sonarqube"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "sonarqube" })
+  }
+
+  spec {
+    selector = {
+      app = "sonarqube"
+    }
+
+    port {
+      name        = "http"
+      port        = 9000
+      target_port = 9000
+      protocol    = "TCP"
+    }
+
+    type = "ClusterIP"
+  }
+}
+
+resource "kubernetes_service" "sonarqube_external" {
+  depends_on = [kubernetes_deployment.sonarqube]
+
+  metadata {
+    name      = "sonarqube-external"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels    = merge(local.common_labels, { component = "sonarqube" })
+  }
+
+  spec {
+    selector = {
+      app = "sonarqube"
+    }
+
+    port {
+      name        = "http"
+      port        = 9000
+      target_port = 9000
+      protocol    = "TCP"
+      node_port   = 32717
+    }
+
+    type = "NodePort"
   }
 }
