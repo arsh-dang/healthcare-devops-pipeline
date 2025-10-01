@@ -4195,7 +4195,7 @@ EOF
                                     terraform apply -auto-approve \
                                         -var="environment=staging" \
                                         -var="app_version=${BUILD_NUMBER}" \
-                                        -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                        -var="frontend_image=healthcare-app-frontend:fixed4" \
                                         -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
                                         -var="mongodb_root_password=healthcare-staging-2024" \
                                         -var="enable_monitoring=true" \
@@ -4337,7 +4337,7 @@ EOF
                                     terraform plan \
                                         -var="environment=staging" \
                                         -var="app_version=${BUILD_NUMBER}" \
-                                        -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                        -var="frontend_image=healthcare-app-frontend:fixed4" \
                                         -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
                                         -var="mongodb_root_password=healthcare-staging-2024" \
                                         -var="enable_monitoring=true" \
@@ -5574,7 +5574,7 @@ EOF
                                 terraform plan \
                                     -var="environment=staging" \
                                     -var="app_version=${BUILD_NUMBER}" \
-                                    -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                    -var="frontend_image=healthcare-app-frontend:fixed4" \
                                     -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
                                     -var="mongodb_root_password=healthcare-staging-2024" \
                                     -var="enable_monitoring=true" \

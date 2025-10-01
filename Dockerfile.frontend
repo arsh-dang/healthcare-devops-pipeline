@@ -20,12 +20,16 @@ RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm
 # Copy source code
 COPY . .
 
-# Build the React application with ajv fix
+# Build the React application with aggressive ajv fix
 RUN if [ -f pnpm-lock.yaml ]; then \
-        pnpm install --force && \
+        echo "Using pnpm with force and no-frozen-lockfile..." && \
+        pnpm install --force --no-frozen-lockfile && \
+        echo "Running pnpm build..." && \
         pnpm run build; \
     else \
+        echo "Using npm with legacy peer deps..." && \
         npm install --legacy-peer-deps && \
+        echo "Running npm build..." && \
         npm run build; \
     fi
 
