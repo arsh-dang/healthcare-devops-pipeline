@@ -4328,7 +4328,7 @@ EOF
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Infrastructure Application Failed\\",
-                                        \\"text\\": \\"Healthcare App infrastructure application failed: ${e.getMessage()}\\",
+                                        \\"text\\": \\"Healthcare App infrastructure application failed: Terraform deployment error\\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"status:failure\\"],
                                         \\"alert_type\\": \\"error\\"
