@@ -7720,6 +7720,45 @@ EOF
                         sh '''
                             echo "Running frontend-backend connectivity validation..."
                             
+                            # Set up port forwarding for connectivity testing
+                            echo "Setting up port forwarding for connectivity testing..."
+                            
+                            # Kill any existing port-forward processes
+                            pkill -f "kubectl port-forward.*8082" || true
+                            pkill -f "kubectl port-forward.*8083" || true
+                            sleep 2
+                            
+                            # Set up port forwarding for frontend
+                            echo "Setting up port forwarding from localhost:8082 to frontend:80..."
+                            kubectl port-forward -n healthcare-staging service/frontend 8082:80 > /tmp/frontend-port-forward.log 2>&1 &
+                            FRONTEND_PORT_FORWARD_PID=$!
+                            echo "Frontend port forward PID: $FRONTEND_PORT_FORWARD_PID"
+                            
+                            # Set up port forwarding for backend
+                            echo "Setting up port forwarding from localhost:8083 to backend:5001..."
+                            kubectl port-forward -n healthcare-staging service/backend 8083:5001 > /tmp/backend-port-forward.log 2>&1 &
+                            BACKEND_PORT_FORWARD_PID=$!
+                            echo "Backend port forward PID: $BACKEND_PORT_FORWARD_PID"
+                            
+                            # Wait for port forwarding to be ready
+                            echo "Waiting for port forwarding to be ready..."
+                            sleep 10
+                            
+                            # Test port forwarding
+                            if ! kill -0 $FRONTEND_PORT_FORWARD_PID 2>/dev/null; then
+                                echo "Frontend port forward failed, checking logs..."
+                                cat /tmp/frontend-port-forward.log || true
+                                exit 1
+                            fi
+                            
+                            if ! kill -0 $BACKEND_PORT_FORWARD_PID 2>/dev/null; then
+                                echo "Backend port forward failed, checking logs..."
+                                cat /tmp/backend-port-forward.log || true
+                                exit 1
+                            fi
+                            
+                            echo "Port forwarding setup completed successfully"
+                            
                             # Test backend health via direct port forwarding
                             echo "Testing backend health via direct port forwarding..."
                             if curl -f -s http://localhost:8083/health | grep -q "ok"; then
@@ -7748,6 +7787,14 @@ EOF
                             fi
                             
                             echo "✅ Frontend-backend connectivity validation completed successfully"
+                            
+                            # Clean up port forwarding processes
+                            echo "Cleaning up port forwarding processes..."
+                            kill $FRONTEND_PORT_FORWARD_PID 2>/dev/null || true
+                            kill $BACKEND_PORT_FORWARD_PID 2>/dev/null || true
+                            pkill -f "kubectl port-forward.*8082" || true
+                            pkill -f "kubectl port-forward.*8083" || true
+                            echo "Port forwarding cleanup completed"
                         '''
                         
                         def connectivityDuration = System.currentTimeMillis() - connectivityStartTime
@@ -7792,6 +7839,14 @@ EOF
                         echo "✅ Frontend-backend connectivity validation completed successfully"
                         
                     } catch (Exception e) {
+                        // Clean up port forwarding processes on failure
+                        sh '''
+                            echo "Cleaning up port forwarding processes after failure..."
+                            pkill -f "kubectl port-forward.*8082" || true
+                            pkill -f "kubectl port-forward.*8083" || true
+                            echo "Port forwarding cleanup completed"
+                        '''
+                        
                         // Send connectivity validation failure event
                         sh '''
                                     if [ -n "\$DATADOG_API_KEY" ]; then
