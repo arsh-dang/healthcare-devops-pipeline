@@ -20,8 +20,14 @@ RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm
 # Copy source code
 COPY . .
 
-# Build the React application
-RUN if [ -f pnpm-lock.yaml ]; then pnpm run build; else npm run build; fi
+# Build the React application with ajv fix
+RUN if [ -f pnpm-lock.yaml ]; then \
+        pnpm install --force && \
+        pnpm run build; \
+    else \
+        npm install --legacy-peer-deps && \
+        npm run build; \
+    fi
 
 # Production stage with nginx
 FROM nginx:1.25.3-alpine
