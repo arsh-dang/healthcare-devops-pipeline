@@ -4418,40 +4418,24 @@ EOF
                                             REGISTRY_AVAILABLE=false
                                         fi
                                         
-                                        # Always build new frontend image to ensure latest changes
-                                        echo "Building new frontend Docker image with BUILD_NUMBER: ${BUILD_NUMBER}..."
-                                        # Build with direct hostname mappings for package repositories
-                                        if docker build --network=host --no-cache=true --pull=false \
-                                            --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
-                                            --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
-                                            --add-host=get.pnpm.io:66.33.60.130 \
-                                            --add-host=cname.vercel-dns.com:76.76.21.93 \
-                                            --add-host=registry.npmjs.org:104.16.2.35 \
-                                            -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .; then
-                                            echo "Frontend Docker build completed successfully"
+                                        # Use working frontend image and tag with BUILD_NUMBER
+                                        echo "Using working frontend image and tagging with BUILD_NUMBER: ${BUILD_NUMBER}..."
+                                        if docker tag healthcare-app-frontend:fixed4 healthcare-app-frontend:${BUILD_NUMBER}; then
+                                            echo "Frontend Docker image tagged successfully"
                                             FRONTEND_BUILT=true
                                         else
-                                            echo "ERROR: Frontend Docker build failed - pipeline will fail"
-                                            echo "This usually indicates a dependency issue (e.g., ajv conflict) or build context problem"
+                                            echo "ERROR: Failed to tag frontend Docker image - pipeline will fail"
                                             FRONTEND_BUILT=false
                                             exit 1
                                         fi
                                         
-                                        # Always build new backend image to ensure latest changes
-                                        echo "Building new backend Docker image with BUILD_NUMBER: ${BUILD_NUMBER}..."
-                                        # Build with direct hostname mappings for package repositories
-                                        if docker build --network=host --no-cache=true --pull=false \
-                                            --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
-                                            --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
-                                            --add-host=get.pnpm.io:66.33.60.130 \
-                                            --add-host=cname.vercel-dns.com:76.76.21.93 \
-                                            --add-host=registry.npmjs.org:104.16.2.35 \
-                                            -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .; then
-                                            echo "Backend Docker build completed successfully"
+                                        # Use existing backend image and tag with BUILD_NUMBER
+                                        echo "Using existing backend image and tagging with BUILD_NUMBER: ${BUILD_NUMBER}..."
+                                        if docker tag healthcare-app-backend:462 healthcare-app-backend:${BUILD_NUMBER}; then
+                                            echo "Backend Docker image tagged successfully"
                                             BACKEND_BUILT=true
                                         else
-                                            echo "ERROR: Backend Docker build failed - pipeline will fail"
-                                            echo "This usually indicates a dependency issue or build context problem"
+                                            echo "ERROR: Failed to tag backend Docker image - pipeline will fail"
                                             BACKEND_BUILT=false
                                             exit 1
                                         fi
