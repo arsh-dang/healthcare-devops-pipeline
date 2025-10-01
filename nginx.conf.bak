@@ -46,7 +46,7 @@ server {
 
     # Monitoring service proxies with robust error handling
     location /grafana/ {
-        resolver 10.96.0.10 valid=10s;
+        resolver 10.96.0.10 valid=10s backup=8.8.8.8;
         set $grafana_upstream "grafana-external.monitoring-staging.svc.cluster.local:3000";
         
         # Only proxy if we can resolve the upstream
@@ -65,7 +65,7 @@ server {
     }
 
     location /prometheus/ {
-        resolver 10.96.0.10 valid=10s;
+        resolver 10.96.0.10 valid=10s backup=8.8.8.8;
         set $prometheus_upstream "prometheus-external.monitoring-staging.svc.cluster.local:9090";
         
         proxy_pass http://$prometheus_upstream/;
@@ -82,7 +82,7 @@ server {
     }
 
     location /alertmanager/ {
-        resolver 10.96.0.10 valid=10s;
+        resolver 10.96.0.10 valid=10s backup=8.8.8.8;
         set $alertmanager_upstream "alertmanager-external.monitoring-staging.svc.cluster.local:9093";
         
         proxy_pass http://$alertmanager_upstream/;
@@ -99,7 +99,7 @@ server {
     }
 
     location /jaeger/ {
-        resolver 10.96.0.10 valid=10s;
+        resolver 10.96.0.10 valid=10s backup=8.8.8.8;
         set $jaeger_upstream "jaeger-external.monitoring-staging.svc.cluster.local:16686";
         
         proxy_pass http://$jaeger_upstream/;
