@@ -1,0 +1,49 @@
+# Multi-stage build for React frontend
+FROM node:20-alpine AS builder
+
+# Accept build arguments
+ARG NODE_OPTIONS="--max-old-space-size=4096"
+
+# Set working directory
+WORKDIR /app
+
+# Set Node.js options for memory management
+ENV NODE_OPTIONS=${NODE_OPTIONS}
+
+# Copy package files
+COPY package*.json ./
+COPY pnpm-lock.yaml* ./
+
+# Install pnpm if available, otherwise use npm
+RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm install --legacy-peer-deps; fi
+
+# Copy source code
+COPY . .
+
+# Build the React application with robust dependency handling
+RUN echo "Installing dependencies with legacy peer deps..." && \
+    npm install --legacy-peer-deps --no-audit --no-fund && \
+    echo "Clearing npm cache..." && \
+    npm cache clean --force && \
+    echo "Running build with increased memory..." && \
+    NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
+# Production stage with nginx
+FROM nginx:1.25.3-alpine
+
+# Copy built React app from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Create health check endpoint
+RUN echo '{"status":"ok","service":"frontend","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}' > /usr/share/nginx/html/health
+
+# Remove default nginx config
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+# Keep nginx running on port 80 as expected by Kubernetes
+CMD ["nginx", "-g", "daemon off;"]
