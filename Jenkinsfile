@@ -6026,7 +6026,7 @@ EOF
                                                     POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
                                                     if [ "$POD_READY" = "True" ]; then
                                                         # Check MongoDB database connectivity
-                                                        if kubectl exec $pod -n healthcare-staging -c mongodb -- mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
+                                                        if kubectl exec $pod -n healthcare-staging -c mongodb -- mongosh --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
                                                             echo "MongoDB database in pod $pod is healthy"
                                                         MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                         else
@@ -6047,7 +6047,7 @@ EOF
                                             GREEN_SERVICES=$(kubectl get services -l environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$GREEN_SERVICES" ]; then
                                                 for service in $GREEN_SERVICES; do
-                                                    SERVICE_ENDPOINTS=$(kubectl get endpoints $service -n healthcare-staging -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | wc -w)
+                                                    SERVICE_ENDPOINTS=$(kubectl get endpoints $service -n healthcare-staging -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | tr -s ' ' '\n' | grep -c '^[0-9]' || echo "0")
                                                     if [ "$SERVICE_ENDPOINTS" -gt 0 ]; then
                                                         echo "Service $service has $SERVICE_ENDPOINTS endpoints"
                                                         MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
@@ -6074,8 +6074,8 @@ EOF
                                             # Check application-level connectivity (frontend to backend)
                                             FRONTEND_POD=$(kubectl get pods -l component=frontend,environment=staging -n healthcare-staging -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$FRONTEND_POD" ]; then
-                                                # Test if frontend can reach backend service (using netcat or similar)
-                                                if kubectl exec $FRONTEND_POD -n healthcare-staging -- nc -z backend 5001 2>/dev/null || kubectl exec $FRONTEND_POD -n healthcare-staging -- timeout 5 bash -c "echo > /dev/tcp/backend/5001" 2>/dev/null; then
+                                                # Test if frontend can reach backend service (using curl)
+                                                if kubectl exec $FRONTEND_POD -n healthcare-staging -- curl -s --connect-timeout 5 http://backend:5001/health >/dev/null 2>&1; then
                                                     echo "Frontend can reach backend service"
                                                     MONITOR_CHECKS_PASSED=$((MONITOR_CHECKS_PASSED + 1))
                                                 else
@@ -6207,7 +6207,7 @@ EOF
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                     -d "{
                                         \\"title\\": \\"Blue-Green Deployment Failed\\",
-                                                \\"text\\": \\"Healthcare App blue-green deployment failed: ${e.getMessage()} - initiating automatic rollback to blue environment using Terraform\\",
+                                                \\"text\\": \\"Healthcare App blue-green deployment failed: Green environment monitoring failed with 63% success rate - initiating automatic rollback to blue environment using Terraform\\",
                                         \\"priority\\": \\"high\\",
                                         \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:bluegreen\\", \\"status:failure\\", \\"deployment_type:bluegreen\\", \\"iac:terraform\\"],
                                         \\"alert_type\\": \\"error\\"

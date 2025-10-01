@@ -38,6 +38,11 @@ variable "backend_labels" {
   type        = map(string)
 }
 
+variable "mongodb_labels" {
+  description = "MongoDB labels for resources"
+  type        = map(string)
+}
+
 variable "monitoring_namespace" {
   description = "Kubernetes namespace for monitoring stack"
   type        = string
@@ -276,7 +281,7 @@ resource "kubernetes_service" "backend_external" {
   }
 
   spec {
-    selector = var.backend_labels
+    selector = var.mongodb_labels
 
     port {
       port        = 5001

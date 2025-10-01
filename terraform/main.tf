@@ -118,12 +118,12 @@ resource "kubernetes_stateful_set" "mongodb" {
     replicas     = 1
 
     selector {
-      match_labels = merge(local.mongodb_labels, local.backend_labels)
+      match_labels = local.mongodb_labels
     }
 
     template {
       metadata {
-        labels = merge(local.mongodb_labels, local.backend_labels)
+        labels = local.mongodb_labels
       }
 
       spec {
@@ -527,7 +527,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = local.backend_labels  # Backend runs as sidecar in MongoDB StatefulSet
+    selector = local.mongodb_labels  # Backend runs as sidecar in MongoDB StatefulSet
 
     port {
       port        = 5001
