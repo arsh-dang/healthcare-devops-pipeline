@@ -1,9 +1,13 @@
-# Minimal .dockerignore to test
+# Aggressive .dockerignore to minimize build context
 node_modules/
 terraform/
+.terraform/
+terraform.tfstate*
+terraform.tfplan*
 dependency-check/
 server/
 .git/
+.gitignore
 *.md
 scripts/
 Jenkinsfile
@@ -14,3 +18,32 @@ chaos-reports/
 postman/
 .DS_Store
 *.log
+*.tfplan
+*.tfstate
+*.tfstate.d
+*.tfvars
+*.tfvars.example
+docs/
+compliance-reports/
+datadog/
+load-tests/
+kubernetes/
+test-*.js
+setup-*.sh
+deploy-*.sh
+nginx.conf
+nginx-*.conf
+nginx.base.conf
+*.config.*
+.eslintrc.json
+.env*
+vite.config.js
+validate_*.sh
+test-*.sh
+*.txt
+*.properties
+docker-compose*
+.vscode/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
