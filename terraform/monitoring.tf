@@ -3419,16 +3419,12 @@ resource "kubernetes_deployment" "sonarqube" {
     replicas = 1
 
     selector {
-      match_labels = {
-        app = "sonarqube"
-      }
+      match_labels = merge(local.common_labels, { component = "sonarqube" })
     }
 
     template {
       metadata {
-        labels = {
-          app = "sonarqube"
-        }
+        labels = merge(local.common_labels, { component = "sonarqube" })
       }
 
       spec {
@@ -3588,9 +3584,7 @@ resource "kubernetes_service" "sonarqube" {
   }
 
   spec {
-    selector = {
-      app = "sonarqube"
-    }
+    selector = merge(local.common_labels, { component = "sonarqube" })
 
     port {
       name        = "http"
@@ -3613,9 +3607,7 @@ resource "kubernetes_service" "sonarqube_external" {
   }
 
   spec {
-    selector = {
-      app = "sonarqube"
-    }
+    selector = merge(local.common_labels, { component = "sonarqube" })
 
     port {
       name        = "http"
