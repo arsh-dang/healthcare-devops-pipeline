@@ -4490,39 +4490,29 @@ EOF
                                             REGISTRY_AVAILABLE=false
                                         fi
                                         
-                                        # Check for existing frontend image in local registry
-                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-frontend:staging-latest 2>/dev/null; then
-                                            echo "Using existing frontend image from local registry"
-                                            docker tag localhost:5000/healthcare-app-frontend:staging-latest healthcare-app-frontend:${BUILD_NUMBER}
-                                            FRONTEND_BUILT=false
-                                        else
-                                            echo "Building frontend Docker image..."
-                                            # Build with direct hostname mappings for package repositories
-                                            docker build --network=host --no-cache=true --pull=false \
-                                                --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
-                                                --add-host=get.pnpm.io:66.33.60.130 \
-                                                --add-host=cname.vercel-dns.com:76.76.21.93 \
-                                                --add-host=registry.npmjs.org:104.16.2.35 \
-                                                -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
-                                            FRONTEND_BUILT=true
-                                        fi
+                                        # Always build new frontend image to ensure latest changes
+                                        echo "Building new frontend Docker image with BUILD_NUMBER: ${BUILD_NUMBER}..."
+                                        # Build with direct hostname mappings for package repositories
+                                        docker build --network=host --no-cache=true --pull=false \
+                                            --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
+                                            --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
+                                            --add-host=get.pnpm.io:66.33.60.130 \
+                                            --add-host=cname.vercel-dns.com:76.76.21.93 \
+                                            --add-host=registry.npmjs.org:104.16.2.35 \
+                                            -t healthcare-app-frontend:${BUILD_NUMBER} -f Dockerfile.frontend .
+                                        FRONTEND_BUILT=true
                                         
-                                        # Check for existing backend image in local registry
-                                        if [ "$REGISTRY_AVAILABLE" = true ] && docker pull localhost:5000/healthcare-app-backend:staging-latest 2>/dev/null; then
-                                            echo "Using existing backend image from local registry"
-                                            docker tag localhost:5000/healthcare-app-backend:staging-latest healthcare-app-backend:${BUILD_NUMBER}
-                                            BACKEND_BUILT=false
-                                        else
-                                            echo "Building backend Docker image..."
-                                            # Build with direct hostname mappings for package repositories
-                                            docker build --network=host --no-cache=true --pull=false \
-                                                --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
-                                                --add-host=get.pnpm.io:66.33.60.130 \
-                                                --add-host=cname.vercel-dns.com:76.76.21.93 \
-                                                --add-host=registry.npmjs.org:104.16.2.35 \
-                                                -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
-                                            BACKEND_BUILT=true
-                                        fi
+                                        # Always build new backend image to ensure latest changes
+                                        echo "Building new backend Docker image with BUILD_NUMBER: ${BUILD_NUMBER}..."
+                                        # Build with direct hostname mappings for package repositories
+                                        docker build --network=host --no-cache=true --pull=false \
+                                            --build-arg NODE_OPTIONS="--max-old-space-size=4096" \
+                                            --add-host=dl-cdn.alpinelinux.org:151.101.82.132 \
+                                            --add-host=get.pnpm.io:66.33.60.130 \
+                                            --add-host=cname.vercel-dns.com:76.76.21.93 \
+                                            --add-host=registry.npmjs.org:104.16.2.35 \
+                                            -t healthcare-app-backend:${BUILD_NUMBER} -f Dockerfile.backend .
+                                        BACKEND_BUILT=true
                                         
                                         # Create staging tags
                                         docker tag healthcare-app-frontend:${BUILD_NUMBER} healthcare-app-frontend:staging-latest
