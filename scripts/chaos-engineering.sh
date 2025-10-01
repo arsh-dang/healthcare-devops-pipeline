@@ -289,8 +289,8 @@ run_health_checks() {
         chmod +x scripts/health-check.sh
 
         # Set environment variables for health checks
-        export APP_URL="${APP_URL:-http://localhost:80}"
-        export API_URL="${API_URL:-http://localhost:8083}"
+        export APP_URL="${APP_URL:-http://localhost:32710}"
+        export API_URL="${API_URL:-http://localhost:32711}"
 
         if ./scripts/health-check.sh; then
             print_info "Health checks passed"
