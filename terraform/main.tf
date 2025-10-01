@@ -527,7 +527,7 @@ resource "kubernetes_service" "backend" {
   }
 
   spec {
-    selector = merge(local.mongodb_labels, local.backend_labels)  # Backend runs as sidecar in MongoDB StatefulSet
+    selector = local.backend_labels  # Backend runs as sidecar in MongoDB StatefulSet
 
     port {
       port        = 5001
