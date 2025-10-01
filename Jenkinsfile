@@ -4170,7 +4170,7 @@ EOF
 EOF
                                     fi
                                 '''
-                            },
+                            }
                         )
                         
                         def infraDuration = System.currentTimeMillis() - infraStartTime
