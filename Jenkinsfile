@@ -798,9 +798,11 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                                     echo "Frontend build completed successfully"
                                                     FRONTEND_BUILT=true
                                                 else
-                                                    echo "Frontend build failed"
+                                                    echo "ERROR: Frontend build failed - pipeline will fail"
+                                                    echo "This usually indicates a dependency issue (e.g., ajv conflict) or build context problem"
                                                     FRONTEND_BUILT=false
                                                     FRONTEND_FAILED=true
+                                                    exit 1
                                                 fi
                                             fi
                                         fi
@@ -823,9 +825,11 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                                     echo "Backend build completed successfully"
                                                     BACKEND_BUILT=true
                                                 else
-                                                    echo "Backend build failed"
+                                                    echo "ERROR: Backend build failed - pipeline will fail"
+                                                    echo "This usually indicates a dependency issue or build context problem"
                                                     BACKEND_BUILT=false
                                                     BACKEND_FAILED=true
+                                                    exit 1
                                                 fi
                                             fi
                                         fi
@@ -4427,13 +4431,10 @@ EOF
                                             echo "Frontend Docker build completed successfully"
                                             FRONTEND_BUILT=true
                                         else
-                                            echo "Frontend Docker build failed - using existing image"
+                                            echo "ERROR: Frontend Docker build failed - pipeline will fail"
+                                            echo "This usually indicates a dependency issue (e.g., ajv conflict) or build context problem"
                                             FRONTEND_BUILT=false
-                                            # Tag an existing working image as fallback
-                                            if docker tag healthcare-app-frontend:fixed4 healthcare-app-frontend:${BUILD_NUMBER} 2>/dev/null; then
-                                                echo "Tagged healthcare-app-frontend:fixed4 as healthcare-app-frontend:${BUILD_NUMBER}"
-                                                FRONTEND_BUILT=true
-                                            fi
+                                            exit 1
                                         fi
                                         
                                         # Always build new backend image to ensure latest changes
@@ -4449,13 +4450,10 @@ EOF
                                             echo "Backend Docker build completed successfully"
                                             BACKEND_BUILT=true
                                         else
-                                            echo "Backend Docker build failed - using existing image"
+                                            echo "ERROR: Backend Docker build failed - pipeline will fail"
+                                            echo "This usually indicates a dependency issue or build context problem"
                                             BACKEND_BUILT=false
-                                            # Tag an existing working image as fallback
-                                            if docker tag healthcare-app-backend:latest healthcare-app-backend:${BUILD_NUMBER} 2>/dev/null; then
-                                                echo "Tagged healthcare-app-backend:latest as healthcare-app-backend:${BUILD_NUMBER}"
-                                                BACKEND_BUILT=true
-                                            fi
+                                            exit 1
                                         fi
                                         
                                         # Create staging tags
