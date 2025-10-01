@@ -4016,96 +4016,6 @@ EOF
                                     fi
                                 '''
                             },
-                            'Infrastructure Application': {
-                                echo 'Applying Terraform configuration'
-                                sh '''
-                                            # Change to terraform directory
-                                            cd terraform
-                                    
-                                    # Send application start metric
-                                            if [ -n "\$DATADOG_API_KEY" ]; then
-                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                            -H "Content-Type: application/json" \
-                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
-                                            -d @-
-{
-    "series": [{
-        "metric": "jenkins.infra.application.start",
-                "points": [[\$(date +%s), 1]],
-        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
-    }]
-}
-EOF
-                                    fi
-                                    
-                                    echo "Applying Terraform configuration..."
-                                    
-                                    if command -v terraform >/dev/null 2>&1; then
-                                        # Initialize Terraform
-                                        terraform init -upgrade
-                                        
-                                        # Apply Terraform configuration with proper image variables
-                                        terraform apply -auto-approve \
-                                            -var="environment=staging" \
-                                            -var="app_version=${BUILD_NUMBER}" \
-                                            -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
-                                            -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
-                                            -var="mongodb_root_password=healthcare-staging-2024" \
-                                            -var="enable_monitoring=true" \
-                                            -var="enable_datadog=false" \
-                                            -var="replica_count={\"frontend\":1,\"backend\":1}" \
-                                            -var="smtp_server=smtp.gmail.com" \
-                                            -var="smtp_port=587" \
-                                            -var="smtp_username=admin@healthcare.local" \
-                                            -var="smtp_password=mock-password" \
-                                            -var="smtp_from_email=alerts@healthcare-staging.local" \
-                                            -var="alert_email_critical=admin@healthcare.local" \
-                                            -var="alert_email_warning=team@healthcare.local" \
-                                            -var="alert_email_info=info@healthcare.local" \
-                                            -var="slack_webhook_critical=" \
-                                            -var="slack_webhook_warning=" \
-                                            -var="slack_webhook_info=" \
-                                            -var="slack_channel_critical=#alerts-critical" \
-                                            -var="slack_channel_warning=#alerts-warning" \
-                                            -var="slack_channel_info=#alerts-info" \
-                                            -var="enable_persistent_storage=true" \
-                                            -var="enable_network_policies=true" \
-                                            -var="enable_data_transfer_controls=true" \
-                                            -var="enable_ingress_monitoring=false" \
-                                            -var="enable_log_aggregation=false" \
-                                            -var="enable_synthetic_monitoring=false" \
-                                            -var="enable_distributed_tracing=true"
-                                        
-                                        if [ $? -eq 0 ]; then
-                                            APPLICATION_STATUS="success"
-                                            echo "Terraform application completed successfully"
-                                        else
-                                            APPLICATION_STATUS="failure"
-                                            echo "Terraform application failed"
-                                            exit 1
-                                        fi
-                                        
-                                        # Send application metrics
-                                                if [ -n "\$DATADOG_API_KEY" ]; then
-                                            cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
-                                                -H "Content-Type: application/json" \
-                                                        -H "DD-API-KEY: \$DATADOG_API_KEY" \
-                                                -d @-
-{
-    "series": [{
-        "metric": "jenkins.infra.application.result",
-                "points": [[\$(date +%s), $([ "$APPLICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
-        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
-    }]
-}
-EOF
-                                        fi
-                                    else
-                                        echo "Terraform not available - skipping application"
-                                        echo "Infrastructure application would run here with proper Terraform setup"
-                                    fi
-                                '''
-                            },
                             'Security Compliance Check': {
                                 echo 'Checking infrastructure security compliance'
                                 sh '''
@@ -4238,6 +4148,143 @@ Action Required: Check Terraform configuration and cloud provider status"""
 
                         // Now, call the function with the correct positional arguments.
                         sendSlackNotification(failureMessage, 'danger')
+                        throw e
+                    }
+                }
+            }
+            } // End of script block
+            infrastructureApplicationBlock: { // Add missing opening brace
+            stage('Infrastructure Application') {
+                echo 'Applying Terraform configuration with new Docker images'
+                
+                script {
+                    def applyStartTime = System.currentTimeMillis()
+                    
+                    try {
+                        sh '''
+                                    # Change to terraform directory
+                                    cd terraform
+                            
+                            # Send application start metric
+                                    if [ -n "\$DATADOG_API_KEY" ]; then
+                                cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                    -H "Content-Type: application/json" \
+                                            -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.application.start",
+                "points": [[\$(date +%s), 1]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
+    }]
+}
+EOF
+                                fi
+                                
+                                echo "Applying Terraform configuration with BUILD_NUMBER: ${BUILD_NUMBER}..."
+                                
+                                if command -v terraform >/dev/null 2>&1; then
+                                    # Initialize Terraform
+                                    terraform init -upgrade
+                                    
+                                    # Apply Terraform configuration with proper image variables
+                                    terraform apply -auto-approve \
+                                        -var="environment=staging" \
+                                        -var="app_version=${BUILD_NUMBER}" \
+                                        -var="frontend_image=healthcare-app-frontend:${BUILD_NUMBER}" \
+                                        -var="backend_image=healthcare-app-backend:${BUILD_NUMBER}" \
+                                        -var="mongodb_root_password=healthcare-staging-2024" \
+                                        -var="enable_monitoring=true" \
+                                        -var="enable_datadog=false" \
+                                        -var="replica_count={\"frontend\":1,\"backend\":1}" \
+                                        -var="smtp_server=smtp.gmail.com" \
+                                        -var="smtp_port=587" \
+                                        -var="smtp_username=admin@healthcare.local" \
+                                        -var="smtp_password=mock-password" \
+                                        -var="smtp_from_email=alerts@healthcare-staging.local" \
+                                        -var="alert_email_critical=admin@healthcare.local" \
+                                        -var="alert_email_warning=team@healthcare.local" \
+                                        -var="alert_email_info=info@healthcare.local" \
+                                        -var="slack_webhook_critical=" \
+                                        -var="slack_webhook_warning=" \
+                                        -var="slack_webhook_info=" \
+                                        -var="slack_channel_critical=#alerts-critical" \
+                                        -var="slack_channel_warning=#alerts-warning" \
+                                        -var="slack_channel_info=#alerts-info" \
+                                        -var="enable_persistent_storage=true" \
+                                        -var="enable_network_policies=true" \
+                                        -var="enable_data_transfer_controls=true" \
+                                        -var="enable_ingress_monitoring=false" \
+                                        -var="enable_log_aggregation=false" \
+                                        -var="enable_synthetic_monitoring=false" \
+                                        -var="enable_distributed_tracing=true"
+                                    
+                                    if [ $? -eq 0 ]; then
+                                        APPLICATION_STATUS="success"
+                                        echo "Terraform application completed successfully with new Docker images"
+                                    else
+                                        APPLICATION_STATUS="failure"
+                                        echo "Terraform application failed"
+                                        exit 1
+                                    fi
+                                    
+                                    # Send application metrics
+                                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                        cat <<EOF | curl -X POST "https://api.datadoghq.com/api/v1/series" \
+                                            -H "Content-Type: application/json" \
+                                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                            -d @-
+{
+    "series": [{
+        "metric": "jenkins.infra.application.result",
+                "points": [[\$(date +%s), $([ "$APPLICATION_STATUS" = "success" ] && echo 1 || echo 0)]],
+        "tags": ["env:staging", "service:healthcare-app", "stage:infra", "task:application"]
+    }]
+}
+EOF
+                                    fi
+                                else
+                                    echo "Terraform not available - skipping application"
+                                    echo "Infrastructure application would run here with proper Terraform setup"
+                                fi
+                            '''
+                        
+                        def applyDuration = System.currentTimeMillis() - applyStartTime
+                        
+                        // Send infrastructure application completion event
+                        sh '''
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \
+                                    -H "Content-Type: application/json" \
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -d @- << EOF
+{
+    "title": "Infrastructure Application Completed",
+    "text": "Healthcare App infrastructure application completed successfully in ${applyDuration}ms with new Docker images (BUILD_NUMBER: ${BUILD_NUMBER})",
+    "priority": "normal",
+    "tags": ["env:staging", "service:healthcare-app", "stage:infra", "status:success"],
+    "alert_type": "success"
+}
+EOF
+                            fi
+                        '''
+                        
+                    } catch (Exception e) {
+                        // Send infrastructure application failure event
+                        sh '''
+                            if [ -n "\$DATADOG_API_KEY" ]; then
+                                curl -X POST "https://api.datadoghq.com/api/v1/events" \\
+                                    -H "Content-Type: application/json" \\
+                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                    -d "{
+                                        \\"title\\": \\"Infrastructure Application Failed\\",
+                                        \\"text\\": \\"Healthcare App infrastructure application failed: ${e.getMessage()}\\",
+                                        \\"priority\\": \\"high\\",
+                                        \\"tags\\": [\\"env:staging\\", \\"service:healthcare-app\\", \\"stage:infra\\", \\"status:failure\\"],
+                                        \\"alert_type\\": \\"error\\"
+                                    }" || echo "Failed to send Datadog event"
+                            fi
+                        '''
                         throw e
                     }
                 }
