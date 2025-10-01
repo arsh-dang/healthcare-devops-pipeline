@@ -5748,11 +5748,11 @@ EOF
                                     
                                     # Also check MongoDB pods specifically
                                     echo "Checking for MongoDB pods..."
-                                    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=mongodb,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
+                                    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=backend,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
                                         echo "✅ MongoDB pods are ready"
                                     else
                                         echo "⚠️ MongoDB pods not found with Terraform labels, checking any MongoDB pods..."
-                                        kubectl get pods -n healthcare-staging -l component=mongodb 2>/dev/null || echo "No MongoDB pods found"
+                                        kubectl get pods -n healthcare-staging -l component=backend 2>/dev/null || echo "No MongoDB pods found"
                                     fi
                                     
                                     if [ "$POD_READY" = false ]; then
@@ -5795,8 +5795,8 @@ EOF
                                         if curl -s --max-time 10 http://$GREEN_INGRESS_IP/health >/dev/null 2>&1; then
                                             echo "Green environment backend health check passed"
                                             GREEN_HEALTH_STATUS="healthy"
-                                        elif curl -s --max-time 10 http://$GREEN_INGRESS_IP/api/health >/dev/null 2>&1; then
-                                            echo "Green environment backend health check passed via /api/health"
+                                        elif curl -s --max-time 10 http://$GREEN_INGRESS_IP/health >/dev/null 2>&1; then
+                                            echo "Green environment backend health check passed via /health"
                                             GREEN_HEALTH_STATUS="healthy"
                                         else
                                             echo "Green environment backend health check failed - trying direct pod access"
@@ -5991,7 +5991,7 @@ EOF
                                         fi
                                             
                                             # Check backend containers (running as sidecars in MongoDB StatefulSet)
-                                            MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            MONGODB_PODS=$(kubectl get pods -l component=backend,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$MONGODB_PODS" ]; then
                                                 for pod in $MONGODB_PODS; do
                                                     POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
@@ -7382,7 +7382,7 @@ EOF
                                             \\"configVariables\\": [],
                                             \\"request\\": {
                                                 \\"method\\": \\"GET\\",
-                                                \\"url\\": \\"http://localhost:32711/api/health\\",
+                                                \\"url\\": \\"http://localhost:32711/health\\",
                                                 \\"timeout\\": 30
                                             }
                                         },
@@ -7722,7 +7722,7 @@ EOF
                             
                             # Test backend health via nginx proxy
                             echo "Testing backend health via nginx proxy..."
-                            if curl -f -s http://localhost:8082/api/health | grep -q "ok"; then
+                            if curl -f -s http://localhost:8083/health | grep -q "ok"; then
                                 echo "✅ Backend health check via nginx proxy passed"
                             else
                                 echo "❌ Backend health check via nginx proxy failed"
