@@ -1294,7 +1294,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         echo "Waiting for backend service to be ready..."
                                         BACKEND_READY=false
                                         for i in {1..60}; do
-                                            if curl -s --max-time 5 http://localhost:8083/health >/dev/null 2>&1; then
+                                            if curl -s --max-time 5 http://localhost:8083/api/health >/dev/null 2>&1; then
                                                 echo "Backend service is ready on port 8083"
                                                 BACKEND_READY=true
                                                 break
@@ -5146,7 +5146,7 @@ EOF
                                             echo "Running health check iteration $i..."
                                             
                                             # Check if applications are running first
-                                            if curl -s --max-time 3 http://localhost:8082 >/dev/null 2>&1 && curl -s --max-time 3 http://localhost:8083/health >/dev/null 2>&1; then
+                                            if curl -s --max-time 3 http://localhost:8082 >/dev/null 2>&1 && curl -s --max-time 3 http://localhost:8083/api/health >/dev/null 2>&1; then
                                                 # Applications are running, use real health check
                                                 if ./scripts/health-check.sh >/dev/null 2>&1; then
                                                     HEALTH_CHECKS_PASSED=$((HEALTH_CHECKS_PASSED + 1))
@@ -7722,7 +7722,7 @@ EOF
                             
                             # Test backend health via nginx proxy
                             echo "Testing backend health via nginx proxy..."
-                            if curl -f -s http://localhost:8083/health | grep -q "ok"; then
+                            if curl -f -s http://localhost:8083/api/health | grep -q "ok"; then
                                 echo "✅ Backend health check via nginx proxy passed"
                             else
                                 echo "❌ Backend health check via nginx proxy failed"
