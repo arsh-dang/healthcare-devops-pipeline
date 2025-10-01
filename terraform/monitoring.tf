@@ -3405,9 +3405,30 @@ output "enhanced_monitoring_features" {
   }
 }
 
-# SonarQube Configuration with HostPath for persistence
+# SonarQube Persistent Volume Claim
+resource "kubernetes_persistent_volume_claim" "sonarqube_data" {
+  count = var.enable_monitoring ? 1 : 0
+  
+  metadata {
+    name      = "sonarqube-data"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
+    labels = merge(local.common_labels, { component = "sonarqube" })
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "5Gi"
+      }
+    }
+    storage_class_name = "local-path"
+  }
+}
+
+# SonarQube Configuration with PVC for persistence
 resource "kubernetes_deployment" "sonarqube" {
-  depends_on = [kubernetes_namespace.monitoring]
+  depends_on = [kubernetes_namespace.monitoring, kubernetes_persistent_volume_claim.sonarqube_data]
 
   metadata {
     name      = "sonarqube"
@@ -3554,9 +3575,8 @@ resource "kubernetes_deployment" "sonarqube" {
 
         volume {
           name = "sonarqube-data"
-          host_path {
-            path = "/var/lib/sonarqube-data"
-            type = "DirectoryOrCreate"
+          persistent_volume_claim {
+            claim_name = kubernetes_persistent_volume_claim.sonarqube_data[0].metadata[0].name
           }
         }
 
