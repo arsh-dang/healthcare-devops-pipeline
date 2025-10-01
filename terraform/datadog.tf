@@ -8,7 +8,7 @@
 
 # Healthcare Application Dashboard
 resource "datadog_dashboard" "healthcare_app_dashboard" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   title       = "Healthcare Application - Comprehensive Monitoring"
   description = "Complete monitoring dashboard for healthcare application with business metrics, infrastructure monitoring, and performance tracking"
@@ -330,7 +330,7 @@ resource "datadog_dashboard" "healthcare_app_dashboard" {
 
 # Jenkins CI/CD Dashboard
 resource "datadog_dashboard" "jenkins_cicd_dashboard" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   title       = "Healthcare App - Jenkins CI/CD Pipeline"
   description = "Jenkins pipeline monitoring and metrics for healthcare application"
@@ -469,7 +469,7 @@ resource "datadog_dashboard" "jenkins_cicd_dashboard" {
 
 # High Error Rate Monitor
 resource "datadog_monitor" "healthcare_high_error_rate" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name               = "Healthcare App - High Error Rate"
   type               = "metric alert"
@@ -495,7 +495,7 @@ resource "datadog_monitor" "healthcare_high_error_rate" {
 
 # High Response Time Monitor
 resource "datadog_monitor" "healthcare_high_response_time" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - High Response Time"
   type    = "metric alert"
@@ -519,7 +519,7 @@ resource "datadog_monitor" "healthcare_high_response_time" {
 
 # Database Connection Issues Monitor
 resource "datadog_monitor" "healthcare_database_connections" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - Database Connection Issues"
   type    = "metric alert"
@@ -543,7 +543,7 @@ resource "datadog_monitor" "healthcare_database_connections" {
 
 # High CPU Usage Monitor
 resource "datadog_monitor" "healthcare_high_cpu" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - High CPU Usage"
   type    = "metric alert"
@@ -567,7 +567,7 @@ resource "datadog_monitor" "healthcare_high_cpu" {
 
 # High Memory Usage Monitor
 resource "datadog_monitor" "healthcare_high_memory" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - High Memory Usage"
   type    = "metric alert"
@@ -591,7 +591,7 @@ resource "datadog_monitor" "healthcare_high_memory" {
 
 # Service Unavailable Monitor
 resource "datadog_monitor" "healthcare_service_unavailable" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name               = "Healthcare App - Service Unavailable"
   type               = "metric alert"
@@ -618,7 +618,7 @@ resource "datadog_monitor" "healthcare_service_unavailable" {
 
 # Security Events Monitor
 resource "datadog_monitor" "healthcare_security_events" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - Security Events"
   type    = "metric alert"
@@ -643,7 +643,7 @@ resource "datadog_monitor" "healthcare_security_events" {
 
 # SLA Breach Monitor
 resource "datadog_monitor" "healthcare_sla_breach" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - SLA Breach"
   type    = "metric alert"
@@ -668,7 +668,7 @@ resource "datadog_monitor" "healthcare_sla_breach" {
 
 # Deployment Failure Monitor
 resource "datadog_monitor" "healthcare_deployment_failure" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Healthcare App - Deployment Failure"
   type    = "metric alert"
@@ -692,7 +692,7 @@ resource "datadog_monitor" "healthcare_deployment_failure" {
 
 # Jenkins Pipeline Failure Monitor
 resource "datadog_monitor" "jenkins_pipeline_failure" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   name    = "Jenkins Pipeline - Build Failure"
   type    = "metric alert"
@@ -720,7 +720,7 @@ resource "datadog_monitor" "jenkins_pipeline_failure" {
 
 # API Health Check Synthetic Test
 resource "datadog_synthetics_test" "healthcare_api_health_check" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   type    = "api"
   subtype = "http"
@@ -764,7 +764,7 @@ resource "datadog_synthetics_test" "healthcare_api_health_check" {
 
 # Frontend Availability Synthetic Test
 resource "datadog_synthetics_test" "healthcare_frontend_availability" {
-  count = var.enable_datadog && var.datadog_api_key != "" ? 1 : 0
+  count = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? 1 : 0
 
   type    = "browser"
   name    = "Healthcare Frontend Availability"
@@ -804,12 +804,12 @@ resource "datadog_synthetics_test" "healthcare_frontend_availability" {
 
 output "datadog_dashboard_url" {
   description = "URL of the healthcare application dashboard"
-  value       = var.enable_datadog && var.datadog_api_key != "" ? datadog_dashboard.healthcare_app_dashboard[0].url : null
+  value       = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? datadog_dashboard.healthcare_app_dashboard[0].url : null
 }
 
 output "datadog_jenkins_dashboard_url" {
   description = "URL of the Jenkins CI/CD dashboard"
-  value       = var.enable_datadog && var.datadog_api_key != "" ? datadog_dashboard.jenkins_cicd_dashboard[0].url : null
+  value       = var.enable_datadog && var.datadog_api_key != "" && var.datadog_app_key != "" ? datadog_dashboard.jenkins_cicd_dashboard[0].url : null
 }
 
 output "datadog_monitors_count" {

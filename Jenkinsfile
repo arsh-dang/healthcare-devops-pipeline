@@ -334,7 +334,10 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                 
                 script {
                     try {
-                        withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+                        withCredentials([
+                            string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY'),
+                            string(credentialsId: 'datadog-app-key', variable: 'DATADOG_APP_KEY')
+                        ]) {
                             sh '''
                                 echo "Setting up Datadog monitoring infrastructure..."
                                 
@@ -351,14 +354,23 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                 # Set environment variables for the deployment script
                                 export ENVIRONMENT="${ENVIRONMENT:-staging}"
                                 export DATADOG_API_KEY="${DATADOG_API_KEY}"
+                                export DATADOG_APP_KEY="${DATADOG_APP_KEY}"
                                 echo "DEBUG: DATADOG_API_KEY length: ${#DATADOG_API_KEY}"
                                 echo "DEBUG: DATADOG_API_KEY first 10 chars: ${DATADOG_API_KEY:0:10}"
                                 echo "DEBUG: DATADOG_API_KEY last 10 chars: ${DATADOG_API_KEY: -10}"
+                                echo "DEBUG: DATADOG_APP_KEY length: ${#DATADOG_APP_KEY}"
+                                echo "DEBUG: DATADOG_APP_KEY first 10 chars: ${DATADOG_APP_KEY:0:10}"
+                                echo "DEBUG: DATADOG_APP_KEY last 10 chars: ${DATADOG_APP_KEY: -10}"
                                 echo "DEBUG: Testing Datadog API key validity..."
                                 if [ -n "$DATADOG_API_KEY" ]; then
                                     curl -s -H "DD-API-KEY: $DATADOG_API_KEY" "https://api.datadoghq.com/api/v1/validate" | jq . || echo "API key validation failed"
                                 else
                                     echo "ERROR: DATADOG_API_KEY is empty or not set"
+                                fi
+                                if [ -n "$DATADOG_APP_KEY" ]; then
+                                    echo "DEBUG: DATADOG_APP_KEY is set and ready for use"
+                                else
+                                    echo "ERROR: DATADOG_APP_KEY is empty or not set"
                                 fi
                                 
                                 # Run deployment with proper error handling
@@ -390,7 +402,10 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                         echo "ERROR: Datadog setup failed: ${e.getMessage()}"
                         // Try to send error event to Datadog if possible
                         try {
-                            withCredentials([string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY')]) {
+                            withCredentials([
+                                string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY'),
+                                string(credentialsId: 'datadog-app-key', variable: 'DATADOG_APP_KEY')
+                            ]) {
                                 def errorMessage = e.getMessage()
                                 sh """
                                     cd \$WORKSPACE/datadog/scripts

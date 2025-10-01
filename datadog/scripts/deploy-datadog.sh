@@ -95,6 +95,7 @@ plan_terraform() {
     
     # Create plan
     terraform plan \
+        -var="enable_datadog=true" \
         -var="datadog_api_key=${DATADOG_API_KEY}" \
         -var="datadog_app_key=${DATADOG_APP_KEY:-}" \
         -var="environment=${ENVIRONMENT}" \
@@ -115,6 +116,7 @@ apply_terraform() {
     
     # Apply the plan
     terraform apply -auto-approve \
+        -var="enable_datadog=true" \
         -var="datadog_api_key=${DATADOG_API_KEY}" \
         -var="datadog_app_key=${DATADOG_APP_KEY:-}" \
         -var="environment=${ENVIRONMENT}"
