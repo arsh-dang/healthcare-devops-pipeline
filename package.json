@@ -155,7 +155,8 @@
       "form-data": "^4.0.4",
       "brace-expansion": "^2.0.2",
       "on-headers": "^1.1.0",
-      "ajv": "^6.12.6"
+      "ajv": "^6.12.6",
+      "ajv-keywords": "^3.5.2"
     }
   }
 }
