@@ -129,6 +129,15 @@ run_pod_failure_simulation() {
 
     # Real Kubernetes pod failure simulation
     print_info "Found Kubernetes cluster and deployments - running real chaos test"
+    
+    # Clean up any crashed pods first
+    print_info "Cleaning up any crashed pods before starting chaos test..."
+    CRASHED_PODS=$(kubectl get pods -n "$NAMESPACE" -l app=healthcare-app,component=frontend --field-selector=status.phase!=Running -o name 2>/dev/null || echo "")
+    if [ -n "$CRASHED_PODS" ]; then
+        print_warn "Found crashed pods, cleaning them up..."
+        echo "$CRASHED_PODS" | xargs -r kubectl delete -n "$NAMESPACE" --force --grace-period=0 2>/dev/null || true
+        sleep 5
+    fi
 
     # Get original replica count for frontend deployment
     ORIGINAL_REPLICAS=$(kubectl get deployment frontend -n "$NAMESPACE" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
@@ -160,10 +169,32 @@ run_pod_failure_simulation() {
 
     # Wait for pods to be ready
     print_info "Waiting for frontend pods to be ready..."
-    kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend -n "$NAMESPACE" --timeout=300s || {
-        print_error "Frontend pods failed to become ready"
-        return 1
-    }
+    
+    # First, check if there are any running pods
+    RUNNING_PODS=$(kubectl get pods -n "$NAMESPACE" -l app=healthcare-app,component=frontend --field-selector=status.phase=Running -o name | wc -l)
+    
+    if [ "$RUNNING_PODS" -gt 0 ]; then
+        print_info "Found $RUNNING_PODS running frontend pod(s), checking readiness..."
+        kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend -n "$NAMESPACE" --timeout=300s || {
+            print_error "Frontend pods failed to become ready"
+            return 1
+        }
+    else
+        print_warn "No running frontend pods found, waiting for new pods to start..."
+        # Wait a bit for new pods to be created
+        sleep 15
+        # Check again
+        RUNNING_PODS=$(kubectl get pods -n "$NAMESPACE" -l app=healthcare-app,component=frontend --field-selector=status.phase=Running -o name | wc -l)
+        if [ "$RUNNING_PODS" -gt 0 ]; then
+            kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend -n "$NAMESPACE" --timeout=300s || {
+                print_error "Frontend pods failed to become ready"
+                return 1
+            }
+        else
+            print_error "No frontend pods are running after restoration"
+            return 1
+        fi
+    fi
 
     # Run health checks
     if run_health_checks; then
