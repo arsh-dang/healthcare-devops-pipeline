@@ -467,11 +467,11 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                             fi
                                             
                                         elif [ -f "package-lock.json" ]; then
-                                            echo "Found package-lock.json - using npm ci"
-                                            npm ci --cache .npm --prefer-offline
+                                            echo "Found package-lock.json - using npm ci with legacy peer deps"
+                                            npm ci --cache .npm --prefer-offline --legacy-peer-deps
                                         else
-                                            echo "No lock file found - using npm install"
-                                            npm install --prefer-offline
+                                            echo "No lock file found - using npm install with legacy peer deps"
+                                            npm install --prefer-offline --legacy-peer-deps
                                         fi
                                         
                                         # Try to build, but don't fail if build script doesn't exist
@@ -552,10 +552,10 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
                                         # Backend dependency installation
                                         if [ -f "server/package.json" ]; then
                                             cd server
-                                            npm install --prefer-offline || echo "Backend dependencies installed"
+                                            npm install --prefer-offline --legacy-peer-deps || echo "Backend dependencies installed"
                                             cd ..
                                         else
-                                            npm install --prefer-offline || echo "Backend dependencies installed"
+                                            npm install --prefer-offline --legacy-peer-deps || echo "Backend dependencies installed"
                                         fi
                                         
                                         # Backend build/compilation if needed
@@ -1098,7 +1098,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         if [ -f "pnpm-lock.yaml" ]; then
                                             pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         elif [ -f "package-lock.json" ]; then
-                                            npm ci --cache .npm --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                            npm ci --cache .npm --prefer-offline --legacy-peer-deps >/dev/null 2>&1 || echo "Dependencies already installed"
                                         else
                                             pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         fi
@@ -1170,7 +1170,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         if [ -f "pnpm-lock.yaml" ]; then
                                             pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         elif [ -f "package-lock.json" ]; then
-                                            npm ci --cache .npm --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"  
+                                            npm ci --cache .npm --prefer-offline --legacy-peer-deps >/dev/null 2>&1 || echo "Dependencies already installed"  
                                         else
                                             pnpm install --no-frozen-lockfile >/dev/null 2>&1 || echo "Dependencies already installed"
                                         fi
@@ -1773,7 +1773,7 @@ EOF
                                         echo "Running ESLint for code quality..."
                                         
                                         # Install dependencies if needed
-                                        npm install --prefer-offline >/dev/null 2>&1 || echo "Dependencies already installed"
+                                        npm install --prefer-offline --legacy-peer-deps >/dev/null 2>&1 || echo "Dependencies already installed"
                                         
                                         # Run ESLint
                                         if pnpm run lint 2>/dev/null; then
