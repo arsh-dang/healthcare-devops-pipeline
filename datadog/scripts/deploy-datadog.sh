@@ -194,7 +194,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_sample_metrics_response \
-        -X POST "https://api.datadoghq.com/api/v1/series" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/series" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$metrics_payload")

@@ -103,7 +103,7 @@ terraform apply -var="datadog_api_key=your-key"
 ### Option 2: Manual Dashboard Creation
 ```bash
 # Create dashboard via API
-curl -X POST "https://api.datadoghq.com/api/v1/dashboard" \
+curl -X POST "https://api.us5.datadoghq.com/api/v1/dashboard" \
   -H "Content-Type: application/json" \
   -H "DD-API-KEY: your-api-key" \
   -d @datadog/dashboards/healthcare-dashboard.json
@@ -113,7 +113,7 @@ curl -X POST "https://api.datadoghq.com/api/v1/dashboard" \
 ```bash
 # Create monitors via API
 jq -c '.alerts[]' datadog/alerts/healthcare-alerts.json | while read alert; do
-  curl -X POST "https://api.datadoghq.com/api/v1/monitor" \
+  curl -X POST "https://api.us5.datadoghq.com/api/v1/monitor" \
     -H "Content-Type: application/json" \
     -H "DD-API-KEY: your-api-key" \
     -d "$alert"
@@ -194,7 +194,7 @@ The integration sends custom healthcare metrics:
 1. **API Key Invalid**
    ```bash
    # Test API key
-   curl -X GET "https://api.datadoghq.com/api/v1/validate" \
+   curl -X GET "https://api.us5.datadoghq.com/api/v1/validate" \
      -H "DD-API-KEY: your-api-key"
    ```
 

@@ -67,7 +67,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_event_response \
-        -X POST "https://api.datadoghq.com/api/v1/events" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/events" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$event_payload")
@@ -123,7 +123,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_metrics_response \
-        -X POST "https://api.datadoghq.com/api/v1/series" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/series" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$metrics_payload")
@@ -191,7 +191,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_test_response \
-        -X POST "https://api.datadoghq.com/api/v1/series" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/series" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$metrics_payload")
@@ -234,7 +234,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_deployment_response \
-        -X POST "https://api.datadoghq.com/api/v1/series" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/series" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$metrics_payload")
@@ -289,7 +289,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_completion_response \
-        -X POST "https://api.datadoghq.com/api/v1/events" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/events" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$event_payload")
@@ -334,7 +334,7 @@ EOF
 )
     
     local response=$(curl -s -w "%{http_code}" -o /tmp/datadog_error_response \
-        -X POST "https://api.datadoghq.com/api/v1/events" \
+        -X POST "https://api.us5.datadoghq.com/api/v1/events" \
         -H "Content-Type: application/json" \
         -H "DD-API-KEY: ${DATADOG_API_KEY}" \
         -d "$event_payload")
