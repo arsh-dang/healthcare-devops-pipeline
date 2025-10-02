@@ -3413,6 +3413,11 @@ resource "kubernetes_persistent_volume_claim" "sonarqube_data" {
     name      = "sonarqube-data"
     namespace = kubernetes_namespace.monitoring.metadata[0].name
     labels = merge(local.common_labels, { component = "sonarqube" })
+    annotations = {
+      "protected" = "true"
+      "do-not-delete" = "true"
+      "managed-by" = "terraform"
+    }
   }
 
   spec {
