@@ -105,30 +105,74 @@ setup_services() {
     echo ""
     echo "🌐 Setting up main application services..."
     
-    # Frontend - use port 8082 (avoiding Jenkins on 8080)
+    # Frontend - port forward from NodePort to standard port 8082
     echo "⏳ Waiting for frontend pods to be ready..."
     if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=frontend,environment=staging -n $NAMESPACE --timeout=120s 2>/dev/null; then
         echo "✅ Frontend pods are ready"
-        if check_port 8082; then
-            setup_port_forward "frontend" 8082 80 $NAMESPACE "Healthcare App Frontend"
+        # Get the actual NodePort for frontend-external service
+        FRONTEND_NODEPORT=$(kubectl get service frontend-external -n $NAMESPACE -o jsonpath='{.spec.ports[0].nodePort}')
+        if [ -n "$FRONTEND_NODEPORT" ]; then
+            echo "   NodePort: $FRONTEND_NODEPORT -> Local: 8082"
+            if check_port 8082; then
+                # Port forward from NodePort to local port 8082
+                kubectl port-forward -n $NAMESPACE service/frontend-external 8082:80 > /dev/null 2>&1 &
+                local pid=$!
+                sleep 2
+                if kill -0 $pid 2>/dev/null; then
+                    echo "   ✅ Frontend port forward established (PID: $pid)"
+                    echo $pid >> /tmp/healthcare-port-forwards.pids
+                else
+                    echo "   ❌ Failed to establish frontend port forward"
+                fi
+            else
+                echo "   ⚠️  Port 8082 busy, using alternative port 8084"
+                kubectl port-forward -n $NAMESPACE service/frontend-external 8084:80 > /dev/null 2>&1 &
+                local pid=$!
+                sleep 2
+                if kill -0 $pid 2>/dev/null; then
+                    echo "   ✅ Frontend port forward established on 8084 (PID: $pid)"
+                    echo $pid >> /tmp/healthcare-port-forwards.pids
+                fi
+            fi
         else
-            echo "⚠️  Using alternative port for frontend..."
-            setup_port_forward "frontend" 8084 80 $NAMESPACE "Healthcare App Frontend"
+            echo "⚠️  Could not determine frontend NodePort"
         fi
     else
         echo "⚠️  Frontend pods not ready, skipping frontend port forward"
         echo "   You can manually set up frontend access once pods are ready"
     fi
     
-    # Backend - use port 8083
+    # Backend - port forward from NodePort to standard port 8083
     echo "⏳ Waiting for backend pods to be ready..."
     if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=backend,environment=staging -n $NAMESPACE --timeout=120s 2>/dev/null; then
         echo "✅ Backend pods are ready"
-        if check_port 8083; then
-            setup_port_forward "backend" 8083 5001 $NAMESPACE "Healthcare App Backend API"
+        # Get the actual NodePort for backend-external service
+        BACKEND_NODEPORT=$(kubectl get service backend-external -n $NAMESPACE -o jsonpath='{.spec.ports[0].nodePort}')
+        if [ -n "$BACKEND_NODEPORT" ]; then
+            echo "   NodePort: $BACKEND_NODEPORT -> Local: 8083"
+            if check_port 8083; then
+                # Port forward from NodePort to local port 8083
+                kubectl port-forward -n $NAMESPACE service/backend-external 8083:5001 > /dev/null 2>&1 &
+                local pid=$!
+                sleep 2
+                if kill -0 $pid 2>/dev/null; then
+                    echo "   ✅ Backend port forward established (PID: $pid)"
+                    echo $pid >> /tmp/healthcare-port-forwards.pids
+                else
+                    echo "   ❌ Failed to establish backend port forward"
+                fi
+            else
+                echo "   ⚠️  Port 8083 busy, using alternative port 8085"
+                kubectl port-forward -n $NAMESPACE service/backend-external 8085:5001 > /dev/null 2>&1 &
+                local pid=$!
+                sleep 2
+                if kill -0 $pid 2>/dev/null; then
+                    echo "   ✅ Backend port forward established on 8085 (PID: $pid)"
+                    echo $pid >> /tmp/healthcare-port-forwards.pids
+                fi
+            fi
         else
-            echo "⚠️  Using alternative port for backend..."
-            setup_port_forward "backend" 8085 5001 $NAMESPACE "Healthcare App Backend API"
+            echo "⚠️  Could not determine backend NodePort"
         fi
     else
         echo "⚠️  Backend pods not ready, skipping backend port forward"
@@ -139,39 +183,69 @@ setup_services() {
     echo ""
     echo "📊 Setting up monitoring services..."
     
-    # Grafana
+    # Grafana - port forward from NodePort to standard port 3000
     if kubectl get service grafana-external -n $MONITORING_NAMESPACE >/dev/null 2>&1; then
         echo "⏳ Waiting for Grafana pods to be ready..."
         if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=grafana,environment=staging -n $MONITORING_NAMESPACE --timeout=60s 2>/dev/null; then
             echo "✅ Grafana pods are ready"
-            if check_port 3000; then
-                setup_port_forward "grafana-external" 3000 3000 $MONITORING_NAMESPACE "Grafana Dashboard"
+            GRAFANA_NODEPORT=$(kubectl get service grafana-external -n $MONITORING_NAMESPACE -o jsonpath='{.spec.ports[0].nodePort}')
+            if [ -n "$GRAFANA_NODEPORT" ]; then
+                echo "   NodePort: $GRAFANA_NODEPORT -> Local: 3000"
+                if check_port 3000; then
+                    kubectl port-forward -n $MONITORING_NAMESPACE service/grafana-external 3000:3000 > /dev/null 2>&1 &
+                    local pid=$!
+                    sleep 2
+                    if kill -0 $pid 2>/dev/null; then
+                        echo "   ✅ Grafana port forward established (PID: $pid)"
+                        echo $pid >> /tmp/healthcare-port-forwards.pids
+                    fi
+                fi
             fi
         else
             echo "⚠️  Grafana pods not ready, skipping port forward"
         fi
     fi
     
-    # Prometheus
+    # Prometheus - port forward from NodePort to standard port 9090
     if kubectl get service prometheus-external -n $MONITORING_NAMESPACE >/dev/null 2>&1; then
         echo "⏳ Waiting for Prometheus pods to be ready..."
         if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=prometheus,environment=staging -n $MONITORING_NAMESPACE --timeout=60s 2>/dev/null; then
             echo "✅ Prometheus pods are ready"
-            if check_port 9090; then
-                setup_port_forward "prometheus-external" 9090 9090 $MONITORING_NAMESPACE "Prometheus Metrics"
+            PROMETHEUS_NODEPORT=$(kubectl get service prometheus-external -n $MONITORING_NAMESPACE -o jsonpath='{.spec.ports[0].nodePort}')
+            if [ -n "$PROMETHEUS_NODEPORT" ]; then
+                echo "   NodePort: $PROMETHEUS_NODEPORT -> Local: 9090"
+                if check_port 9090; then
+                    kubectl port-forward -n $MONITORING_NAMESPACE service/prometheus-external 9090:9090 > /dev/null 2>&1 &
+                    local pid=$!
+                    sleep 2
+                    if kill -0 $pid 2>/dev/null; then
+                        echo "   ✅ Prometheus port forward established (PID: $pid)"
+                        echo $pid >> /tmp/healthcare-port-forwards.pids
+                    fi
+                fi
             fi
         else
             echo "⚠️  Prometheus pods not ready, skipping port forward"
         fi
     fi
     
-    # Jaeger
+    # Jaeger - port forward from NodePort to standard port 16686
     if kubectl get service jaeger-external -n $MONITORING_NAMESPACE >/dev/null 2>&1; then
         echo "⏳ Waiting for Jaeger pods to be ready..."
         if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=jaeger,environment=staging -n $MONITORING_NAMESPACE --timeout=60s 2>/dev/null; then
             echo "✅ Jaeger pods are ready"
-            if check_port 16686; then
-                setup_port_forward "jaeger-external" 16686 16686 $MONITORING_NAMESPACE "Jaeger Tracing"
+            JAEGER_NODEPORT=$(kubectl get service jaeger-external -n $MONITORING_NAMESPACE -o jsonpath='{.spec.ports[0].nodePort}')
+            if [ -n "$JAEGER_NODEPORT" ]; then
+                echo "   NodePort: $JAEGER_NODEPORT -> Local: 16686"
+                if check_port 16686; then
+                    kubectl port-forward -n $MONITORING_NAMESPACE service/jaeger-external 16686:16686 > /dev/null 2>&1 &
+                    local pid=$!
+                    sleep 2
+                    if kill -0 $pid 2>/dev/null; then
+                        echo "   ✅ Jaeger port forward established (PID: $pid)"
+                        echo $pid >> /tmp/healthcare-port-forwards.pids
+                    fi
+                fi
             fi
         else
             echo "⚠️  Jaeger pods not ready, skipping port forward"
