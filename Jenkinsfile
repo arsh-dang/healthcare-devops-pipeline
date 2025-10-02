@@ -6847,7 +6847,11 @@ EOF
                 script {
                     def monitoringStartTime = System.currentTimeMillis()
                     
-                    try {
+                    withCredentials([
+                        string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY'),
+                        string(credentialsId: 'datadog-app-key', variable: 'DATADOG_APP_KEY')
+                    ]) {
+                        try {
                         // Send monitoring setup start event
                         sh '''
                                     if [ -n "\$DATADOG_API_KEY" ]; then
@@ -7576,23 +7580,24 @@ EOF
                             fi
                                 '''
                         
-                    } catch (Exception e) {
-                        // Send monitoring setup failure event
-                        sh '''
-                                    if [ -n "\$DATADOG_API_KEY" ]; then
-                                curl -X POST "https://api.us5.datadoghq.com/api/v1/events" \\
-                                    -H "Content-Type: application/json" \\
-                                    -H "DD-API-KEY: \$DATADOG_API_KEY" \\
-                                    -d "{
-                                        \\"title\\": \\"Monitoring Setup Failed\\",
-                                        \\"text\\": \\"Healthcare App monitoring setup failed: Pipeline monitoring setup error - dashboard creation, alerting configuration, or synthetic tests encountered an error\\",
-                                        \\"priority\\": \\"high\\",
-                                        \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"status:failure\\"],
-                                        \\"alert_type\\": \\"error\\"
-                                    }" || echo "Failed to send Datadog event"
-                            fi
-                        '''
-                        throw e
+                        } catch (Exception e) {
+                            // Send monitoring setup failure event
+                            sh '''
+                                        if [ -n "\$DATADOG_API_KEY" ]; then
+                                    curl -X POST "https://api.us5.datadoghq.com/api/v1/events" \\
+                                        -H "Content-Type: application/json" \\
+                                        -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                        -d "{
+                                            \\"title\\": \\"Monitoring Setup Failed\\",
+                                            \\"text\\": \\"Healthcare App monitoring setup failed: Pipeline monitoring setup error - dashboard creation, alerting configuration, or synthetic tests encountered an error\\",
+                                            \\"priority\\": \\"high\\",
+                                            \\"tags\\": [\\"env:production\\", \\"service:healthcare-app\\", \\"stage:monitoring\\", \\"status:failure\\"],
+                                            \\"alert_type\\": \\"error\\"
+                                        }" || echo "Failed to send Datadog event"
+                                fi
+                            '''
+                            throw e
+                        }
                     }
                 }
             }
