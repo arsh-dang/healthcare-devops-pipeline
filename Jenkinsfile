@@ -6962,6 +6962,7 @@ EOF
                                         DASHBOARD_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/dashboard" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$DASHBOARD_CONFIG")
                                         
                                         DASHBOARD_ID=$(echo $DASHBOARD_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
@@ -7043,6 +7044,7 @@ EOF
                                         PERF_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/dashboard" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$PERFORMANCE_CONFIG")
                                         
                                         PERF_DASHBOARD_ID=$(echo $PERF_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
@@ -7167,6 +7169,7 @@ EOF
                                         ERROR_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$ERROR_ALERT_CONFIG")
                                         
                                         if echo $ERROR_RESPONSE | grep -q '"id":'; then
@@ -7179,6 +7182,7 @@ EOF
                                         RT_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$RESPONSE_TIME_ALERT_CONFIG")
                                         
                                         if echo $RT_RESPONSE | grep -q '"id":'; then
@@ -7191,6 +7195,7 @@ EOF
                                         AVAIL_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/monitor" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$AVAILABILITY_ALERT_CONFIG")
                                         
                                         if echo $AVAIL_RESPONSE | grep -q '"id":'; then
@@ -7301,6 +7306,7 @@ EOF
                                         PIPELINE_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/logs/config/pipelines" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$LOG_PIPELINE_CONFIG")
                                         
                                         if echo $PIPELINE_RESPONSE | grep -q '"id":'; then
@@ -7313,6 +7319,7 @@ EOF
                                         METRIC_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/logs/config/metrics" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$LOG_METRIC_CONFIG")
                                         
                                         if echo $METRIC_RESPONSE | grep -q '"name":'; then
@@ -7480,6 +7487,7 @@ EOF
                                         API_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/synthetics/tests" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$API_TEST_CONFIG")
                                         
                                         if echo $API_RESPONSE | grep -q '"test_id":'; then
@@ -7492,6 +7500,7 @@ EOF
                                         BROWSER_RESPONSE=$(curl -s -X POST "https://api.us5.datadoghq.com/api/v1/synthetics/tests" \\
                                             -H "Content-Type: application/json" \\
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                             -d "$BROWSER_TEST_CONFIG")
                                         
                                         if echo $BROWSER_RESPONSE | grep -q '"test_id":'; then
