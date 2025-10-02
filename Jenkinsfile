@@ -2089,7 +2089,7 @@ EOF
                                             -Dsonar.projectKey=healthcare-app \\
                                             -Dsonar.projectName="Healthcare App" \\
                                             -Dsonar.sources="src,server" \\
-                                            -Dsonar.host.url="${SONAR_HOST_URL:-http://localhost:9000}" \\
+                                            -Dsonar.host.url="${SONAR_HOST_URL:-http://localhost:9001}" \\
                                             -Dsonar.login="${SONAR_TOKEN:-}"; then
                                             
                                             SONARQUBE_STATUS="success"
