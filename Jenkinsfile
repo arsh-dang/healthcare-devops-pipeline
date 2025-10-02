@@ -6954,7 +6954,6 @@ EOF
                                             }
                                         ],
                                         \\"layout_type\\": \\"ordered\\",
-                                        \\"is_read_only\\": false,
                                         \\"notify_list\\": []
                                     }'
                                     
@@ -7036,7 +7035,6 @@ EOF
                                             }
                                         ],
                                         \\"layout_type\\": \\"ordered\\",
-                                        \\"is_read_only\\": false,
                                         \\"notify_list\\": []
                                     }'
                                     
