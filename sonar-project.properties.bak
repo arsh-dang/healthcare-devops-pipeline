@@ -1,0 +1,23 @@
+# SonarQube Project Configuration for Healthcare App
+sonar.projectKey=healthcare-app
+sonar.projectName=Healthcare App
+sonar.projectVersion=1.0
+
+# Source code location
+sonar.sources=src,server
+sonar.tests=src
+
+# Exclude files
+sonar.exclusions=node_modules/**,build/**,dist/**,coverage/**,*.min.js
+
+# SonarQube server configuration
+sonar.host.url=http://localhost:9001
+sonar.login=admin
+sonar.password=admin
+
+# Language settings
+sonar.javascript.lcov.reportPaths=coverage/lcov.info
+sonar.typescript.lcov.reportPaths=coverage/lcov.info
+
+# Quality gate
+sonar.qualitygate.wait=true

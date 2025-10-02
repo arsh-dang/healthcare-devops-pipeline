@@ -1,0 +1,6 @@
+projectKey=healthcare-app
+serverUrl=http://127.0.0.1:9002
+serverVersion=10.4.1.88267
+dashboardUrl=http://127.0.0.1:9002/dashboard?id=healthcare-app
+ceTaskId=34751f5a-d834-4e87-bf84-53278301b7b1
+ceTaskUrl=http://127.0.0.1:9002/api/ce/task?id=34751f5a-d834-4e87-bf84-53278301b7b1
