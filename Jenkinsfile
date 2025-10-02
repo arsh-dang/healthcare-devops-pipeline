@@ -179,18 +179,19 @@ Please check the pipeline logs and fix the initialization error.""", 'danger')
         try {
             withCredentials([
                 string(credentialsId: 'datadog-api-key', variable: 'DATADOG_API_KEY'),
-                string(credentialsId: 'sonarqube-token', variable: 'SONARQUBE_TOKEN'),
+                usernamePassword(credentialsId: 'sonarqube-credentials', usernameVariable: 'SONARQUBE_USER', passwordVariable: 'SONARQUBE_PASS'),
                 usernamePassword(credentialsId: 'smtp-credentials',
                                usernameVariable: 'SMTP_USER',
                                passwordVariable: 'SMTP_PASS'),
                 string(credentialsId: 'smtp-recipient', variable: 'SMTP_RECIPIENT')
             ]) {
                 env.DATADOG_API_KEY = DATADOG_API_KEY
-                env.SONARQUBE_TOKEN = SONARQUBE_TOKEN
+                env.SONARQUBE_USER = SONARQUBE_USER
+                env.SONARQUBE_PASS = SONARQUBE_PASS
                 echo "SUCCESS: Datadog API key loaded!"
-                echo "SUCCESS: SonarQube token loaded!"
+                echo "SUCCESS: SonarQube credentials loaded!"
                 echo "API key length: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.length() : 0}"
-                echo "SonarQube token length: ${env.SONARQUBE_TOKEN ? env.SONARQUBE_TOKEN.length() : 0}"
+                echo "SonarQube user: ${env.SONARQUBE_USER ? env.SONARQUBE_USER : 'N/A'}"
                 echo "First 5 chars: ${env.DATADOG_API_KEY ? env.DATADOG_API_KEY.substring(0, Math.min(5, env.DATADOG_API_KEY.length())) : 'N/A'}..."
                 
                 script {
@@ -2048,7 +2049,8 @@ EOF
                                         
                                         # Set SonarQube properties for local instance
                                         export SONAR_HOST_URL="http://localhost:9002"
-                                        export SONAR_TOKEN="\$SONARQUBE_TOKEN"
+                                        export SONAR_LOGIN="\$SONARQUBE_USER"
+                                        export SONAR_PASSWORD="\$SONARQUBE_PASS"
                                         export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-healthcare-app}"
                                         export SONAR_PROJECT_NAME="${SONAR_PROJECT_NAME:-Healthcare App}"
                                         export SONAR_SOURCES="${SONAR_SOURCES:-src,server}"
@@ -2059,7 +2061,7 @@ EOF
                                             -Dsonar.projectName="$SONAR_PROJECT_NAME" \\
                                             -Dsonar.sources=$SONAR_SOURCES \\
                                             -Dsonar.host.url=$SONAR_HOST_URL \\
-                                            -Dsonar.login="\$SONAR_TOKEN" \\
+                                            -Dsonar.login="\$SONAR_LOGIN" -Dsonar.password="\$SONAR_PASSWORD" \\
                                             -Dsonar.javascript.node.maxspace=4096 \\
                                             -Dsonar.typescript.node.maxspace=4096; then
                                             
@@ -2090,7 +2092,7 @@ EOF
                                             -Dsonar.projectName="Healthcare App" \\
                                             -Dsonar.sources="src,server" \\
                                             -Dsonar.host.url="${SONAR_HOST_URL:-http://localhost:9002}" \\
-                                            -Dsonar.login="${SONAR_TOKEN:-}"; then
+                                            -Dsonar.login="${SONAR_LOGIN:-admin}" -Dsonar.password="${SONAR_PASSWORD:-Password@123}"; then
                                             
                                             SONARQUBE_STATUS="success"
                                             echo "SonarQube analysis completed successfully via npx"
