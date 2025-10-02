@@ -160,7 +160,7 @@ if [ -n "$DATADOG_API_KEY" ]; then
         local avg_response_time=$(jq '.performance_metrics.avg_response_time_ms' "$REPORT_DIR/load-test-results.json" 2>/dev/null || echo "0")
 
         # Send metrics to Datadog
-        curl -X POST "https://api.datadoghq.com/api/v1/series" \
+        curl -X POST "https://api.us5.datadoghq.com/api/v1/series" \
             -H "Content-Type: application/json" \
             -H "DD-API-KEY: $DATADOG_API_KEY" \
             -d "{
