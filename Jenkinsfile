@@ -4078,6 +4078,7 @@ EOF
                                         cat <<EOF | curl -X POST "https://api.us5.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \
                                             -d @-
 {
     "series": [{
@@ -4114,6 +4115,7 @@ EOF
                                         cat <<EOF | curl -X POST "https://api.us5.datadoghq.com/api/v1/series" \
                                             -H "Content-Type: application/json" \
                                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \
                                             -d @-
 {
     "series": [
@@ -4143,6 +4145,7 @@ EOF
                                         curl -X POST "https://api.us5.datadoghq.com/api/v1/series" \\
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
+                                            -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
                                     -d @- << EOF
 {
     "series": [{
@@ -4157,6 +4160,7 @@ EOF
                                 curl -X POST "https://api.us5.datadoghq.com/api/v1/events" \
                                     -H "Content-Type: application/json" \
                                     -H "DD-API-KEY: \$DATADOG_API_KEY" \
+                                    -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \
                                     -d @- << EOF
 {
     "title": "Infrastructure as Code Completed",
