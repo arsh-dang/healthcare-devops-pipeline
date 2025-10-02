@@ -6967,7 +6967,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$DASHBOARD_CONFIG")
+                                            -d '{"title":"Healthcare App - Production Overview","description":"Comprehensive monitoring dashboard for Healthcare App production environment","widgets":[{"definition":{"type":"timeseries","requests":[{"q":"avg:healthcare.response_time{env:production,service:healthcare-app}","display_type":"line"}],"title":"Application Response Time"},"layout":{"x":0,"y":0,"width":6,"height":4}}],"template_variables":[{"name":"env","prefix":"env","default":"production"}],"layout_type":"ordered","notify_list":[]}')
                                         
                                         DASHBOARD_ID=$(echo $DASHBOARD_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
                                         
@@ -7049,7 +7049,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$PERFORMANCE_CONFIG")
+                                            -d '{"title":"Healthcare App - Performance Metrics","description":"Detailed performance monitoring for Healthcare App","widgets":[{"definition":{"type":"timeseries","requests":[{"q":"avg:healthcare.memory_usage{env:production,service:healthcare-app}","display_type":"area"}],"title":"Memory Usage"},"layout":{"x":0,"y":0,"width":6,"height":4}}],"template_variables":[{"name":"env","prefix":"env","default":"production"}],"layout_type":"ordered","notify_list":[]}')
                                         
                                         PERF_DASHBOARD_ID=$(echo $PERF_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
                                         
@@ -7174,7 +7174,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$ERROR_ALERT_CONFIG")
+                                            -d '{"name":"Healthcare App - High Error Rate","type":"metric alert","query":"avg(last_5m):avg:healthcare.error_rate{env:production,service:healthcare-app} > 5","message":"Healthcare App error rate is above 5% in production","tags":["env:production","service:healthcare-app","alert_type:error_rate"],"options":{"thresholds":{"critical":5,"warning":2},"notify_audit":false,"notify_no_data":true,"no_data_timeframe":10,"include_tags":true}}')
                                         
                                         if echo $ERROR_RESPONSE | grep -q '"id":'; then
                                             ERROR_ALERT_ID=$(echo $ERROR_RESPONSE | grep -o '"id":[0-9]*' | cut -d':' -f2)
@@ -7187,7 +7187,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$RESPONSE_TIME_ALERT_CONFIG")
+                                            -d '{"name":"Healthcare App - High Response Time","type":"metric alert","query":"avg(last_5m):avg:healthcare.response_time{env:production,service:healthcare-app} > 3000","message":"Healthcare App response time exceeds 3 seconds in production","tags":["env:production","service:healthcare-app","alert_type:response_time"],"options":{"thresholds":{"critical":3000,"warning":2000},"notify_audit":false,"notify_no_data":true,"no_data_timeframe":10,"include_tags":true}}')
                                         
                                         if echo $RT_RESPONSE | grep -q '"id":'; then
                                             RT_ALERT_ID=$(echo $RT_RESPONSE | grep -o '"id":[0-9]*' | cut -d':' -f2)
@@ -7200,7 +7200,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$AVAILABILITY_ALERT_CONFIG")
+                                            -d '{"name":"Healthcare App - Service Unavailable","type":"service check","query":"\"healthcare.health_check\" by \"host\".last(2).count_by_status()","message":"Healthcare App health check is failing. Service may be unavailable","tags":["env:production","service:healthcare-app","alert_type:availability"],"options":{"thresholds":{"critical":1,"warning":1,"ok":1},"notify_audit":false,"notify_no_data":true,"no_data_timeframe":5,"include_tags":true}}')
                                         
                                         if echo $AVAIL_RESPONSE | grep -q '"id":'; then
                                             AVAIL_ALERT_ID=$(echo $AVAIL_RESPONSE | grep -o '"id":[0-9]*' | cut -d':' -f2)
@@ -7311,7 +7311,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$LOG_PIPELINE_CONFIG")
+                                            -d '{"name":"Healthcare App Production Logs","is_enabled":true,"filter":{"query":"service:healthcare-app env:production"},"processors":[]}')
                                         
                                         if echo $PIPELINE_RESPONSE | grep -q '"id":'; then
                                             PIPELINE_ID=$(echo $PIPELINE_RESPONSE | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
@@ -7324,7 +7324,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$LOG_METRIC_CONFIG")
+                                            -d '{"name":"healthcare.log.errors","compute":{"aggregation_type":"count"},"filter":{"query":"service:healthcare-app env:production status:error OR level:error"},"group_by":["service","env"]}')
                                         
                                         if echo $METRIC_RESPONSE | grep -q '"name":'; then
                                             echo "Log metric created: healthcare.log.errors"
@@ -7492,7 +7492,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$API_TEST_CONFIG")
+                                            -d '{"name":"Healthcare App API Health Check","type":"api","subtype":"http","config":{"assertions":[{"type":"statusCode","operator":"is","target":200}],"request":{"method":"GET","url":"http://localhost:32711/health","timeout":30}},"message":"Healthcare App API health check is failing or slow","locations":["aws:us-east-1"],"options":{"tick_every":300,"min_failure_duration":0,"min_location_failed":1},"tags":["env:production","service:healthcare-app","test_type:api"]}')
                                         
                                         if echo $API_RESPONSE | grep -q '"test_id":'; then
                                             API_TEST_ID=$(echo $API_RESPONSE | grep -o '"test_id":"[^"]*"' | cut -d'"' -f4)
@@ -7505,7 +7505,7 @@ EOF
                                             -H "Content-Type: application/json" \\
                                             -H "DD-API-KEY: \$DATADOG_API_KEY" \\
                                             -H "DD-APPLICATION-KEY: \$DATADOG_APP_KEY" \\
-                                            -d "\$BROWSER_TEST_CONFIG")
+                                            -d '{"name":"Healthcare App Login Flow","type":"browser","config":{"assertions":[{"type":"pageContains","operator":"contains","target":"Welcome"}],"request":{"url":"http://localhost:32710","timeout":60}},"message":"Healthcare App login flow is failing","locations":["aws:us-east-1"],"options":{"tick_every":600,"min_failure_duration":0,"min_location_failed":1},"tags":["env:production","service:healthcare-app","test_type:browser"]}')
                                         
                                         if echo $BROWSER_RESPONSE | grep -q '"test_id":'; then
                                             BROWSER_TEST_ID=$(echo $BROWSER_RESPONSE | grep -o '"test_id":"[^"]*"' | cut -d'"' -f4)
