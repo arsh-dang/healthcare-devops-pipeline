@@ -2047,7 +2047,7 @@ EOF
                                         echo "SonarQube scanner found, running analysis..."
                                         
                                         # Set SonarQube properties for local instance
-                                        export SONAR_HOST_URL="http://localhost:9001"
+                                        export SONAR_HOST_URL="http://localhost:9002"
                                         export SONAR_TOKEN="\$SONARQUBE_TOKEN"
                                         export SONAR_PROJECT_KEY="${SONAR_PROJECT_KEY:-healthcare-app}"
                                         export SONAR_PROJECT_NAME="${SONAR_PROJECT_NAME:-Healthcare App}"
@@ -2089,7 +2089,7 @@ EOF
                                             -Dsonar.projectKey=healthcare-app \\
                                             -Dsonar.projectName="Healthcare App" \\
                                             -Dsonar.sources="src,server" \\
-                                            -Dsonar.host.url="${SONAR_HOST_URL:-http://localhost:9001}" \\
+                                            -Dsonar.host.url="${SONAR_HOST_URL:-http://localhost:9002}" \\
                                             -Dsonar.login="${SONAR_TOKEN:-}"; then
                                             
                                             SONARQUBE_STATUS="success"
