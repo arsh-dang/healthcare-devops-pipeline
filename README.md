@@ -4,24 +4,8 @@ A comprehensive 7-stage CI/CD pipeline for healthcare web application deployment
 
 ## Technology Stack
 
-| Category | Technology### Monitoring & Observability
-
-### Access URLs
-- Grafana Dashboard: http://localhost:30285/staging/grafana/
-  - Username: admin
-  - Password: admin (change on first login)
-- Prometheus Metrics: http://localhost:30285/staging/prometheus/
-- Alertmanager: http://localhost:30285/staging/alertmanager/
-- MongoDB Exporter: http://localhost:30285/staging/mongodb-exporter/metrics
-
-### Monitoring Stack Features
-- **Prometheus**: Metrics collection and alerting
-- **Grafana**: Visualization dashboards with custom healthcare metrics
-- **Jaeger**: Distributed tracing for request flow analysis
-- **MongoDB Exporter**: Database performance monitoring
-- **Node Exporter**: System resource monitoring
-- **Alertmanager**: Alert routing and notification management
-- **NGINX Ingress**: Proper external access without port forwarding-------|------------|---------|
+| Category | Technology | Description |
+|----------|------------|-------------|
 | Frontend | React.js 18, CSS Modules | Modern, responsive user interface |
 | Backend | Node.js, Express.js | RESTful API and business logic |
 | Database | MongoDB | Healthcare data storage |
@@ -29,7 +13,7 @@ A comprehensive 7-stage CI/CD pipeline for healthcare web application deployment
 | Containerization | Docker, Docker Compose | Application packaging and deployment |
 | Orchestration | Kubernetes | Container orchestration and scaling |
 | Infrastructure | Terraform | Infrastructure as Code |
-| Monitoring | Prometheus, Grafana | Metrics collection and visualization |
+| Monitoring | Prometheus, Grafana, Jaeger | Metrics collection, visualization, and distributed tracing |
 | Security | Trivy, TruffleHog, SonarQube | Multi-layer security analysis |
 | Quality | Jest, ESLint, SonarQube | Code quality and testing |
 
@@ -76,7 +60,7 @@ A comprehensive 7-stage CI/CD pipeline for healthcare web application deployment
 - [x] Password Management: HD-grade password management system
 - [x] Infrastructure Ready: Terraform configuration for Kubernetes deployment
 - [x] Security Scanning: Comprehensive security analysis scripts
-- [x] Monitoring Setup: Prometheus and Grafana configuration
+- [x] Monitoring Setup: Prometheus, Grafana, and Jaeger distributed tracing
 - [x] CI/CD Pipeline: Complete 7-stage Jenkins pipeline
 - [x] Testing Suite: Unit, integration, and API testing configured
 
@@ -167,24 +151,26 @@ All Requirements Successfully Implemented:
 ## Monitoring & Observability
 
 ### Access URLs
-- Grafana Dashboard: http://localhost:30285/staging/grafana/
+- **Frontend Application**: http://localhost:8082
+- **Backend API**: http://localhost:8083/api/
+- **Grafana Dashboard**: http://localhost:3000
   - Username: admin
   - Password: admin (change on first login)
-- Prometheus Metrics: http://localhost:30285/staging/prometheus/
-- Alertmanager: http://localhost:30285/staging/alertmanager/
-- MongoDB Exporter: http://localhost:30285/staging/mongodb-exporter/metrics
+- **Prometheus Metrics**: http://localhost:9090
+- **Jaeger Tracing**: http://localhost:16686
+- **Alertmanager**: http://localhost:9093
 
 ### Monitoring Stack Features
-- Prometheus: Metrics collection and alerting
-- Grafana: Visualization dashboards with custom healthcare metrics
-- Jaeger: Distributed tracing for request flow analysis
-- MongoDB Exporter: Database performance monitoring
-- Node Exporter: System resource monitoring
-- Alertmanager: Alert routing and notification management
+- **Prometheus**: Metrics collection and alerting
+- **Grafana**: Visualization dashboards with custom healthcare metrics
+- **Jaeger**: Distributed tracing for request flow analysis with 100% sampling
+- **MongoDB Exporter**: Database performance monitoring
+- **Node Exporter**: System resource monitoring
+- **Alertmanager**: Alert routing and notification management
 
 ### Health Check Endpoints
-- Frontend Health: http://localhost:30285/health
-- Backend Health: http://localhost:30285/api/health
+- **Frontend Health**: http://localhost:8082/health
+- **Backend Health**: http://localhost:8083/api/health
 - MongoDB Health: Internal cluster connectivity monitoring
 
 ### Stage 1: Build & Package
@@ -282,11 +268,11 @@ npm install
 docker-compose up -d
 
 # Access the application
-# Frontend: http://localhost:30285
-# Backend API: http://localhost:30285/api
-# Grafana: http://localhost:30285/grafana
-# Prometheus: http://localhost:30285/prometheus
-# Jaeger: http://localhost:30285/jaeger
+# Frontend: http://localhost:8082
+# Backend API: http://localhost:8083/api
+# Grafana: http://localhost:3000
+# Prometheus: http://localhost:9090
+# Jaeger: http://localhost:16686
 ```
 
 ### Jenkins Pipeline Setup
@@ -477,25 +463,62 @@ docker-compose up -d
 ## Monitoring & Observability
 
 ### Access URLs
-- **Grafana Dashboard**: http://localhost:30285/staging/grafana/
+- **Frontend Application**: http://localhost:8082
+- **Backend API**: http://localhost:8083/api/
+- **Grafana Dashboard**: http://localhost:3000
   - Username: `admin`
   - Password: `admin` (change on first login)
-- **Prometheus Metrics**: http://localhost:30285/staging/prometheus/
-- **Jaeger Tracing**: http://localhost:30285/staging/jaeger/
-- **Alertmanager**: http://localhost:30285/staging/alertmanager/
+- **Prometheus Metrics**: http://localhost:9090
+- **Jaeger Tracing**: http://localhost:16686
+- **Alertmanager**: http://localhost:9093
 
 ### Monitoring Stack Features
 - **Prometheus**: Metrics collection and alerting
 - **Grafana**: Visualization dashboards with custom healthcare metrics
-- **Jaeger**: Distributed tracing for request flow analysis
+- **Jaeger**: Distributed tracing for request flow analysis with 100% sampling
 - **MongoDB Exporter**: Database performance monitoring
 - **Node Exporter**: System resource monitoring
 - **Alertmanager**: Alert routing and notification management
 
 ### Health Check Endpoints
-- **Frontend Health**: http://localhost:30285/health
-- **Backend Health**: http://localhost:30285/api/health
+- **Frontend Health**: http://localhost:8082/health
+- **Backend Health**: http://localhost:8083/api/health
 - **MongoDB Health**: Internal cluster connectivity monitoring
+
+### Distributed Tracing with Jaeger
+
+The healthcare application includes comprehensive distributed tracing using Jaeger:
+
+#### Features
+- **100% Sampling**: All requests are traced for demo purposes
+- **Service Name**: `healthcare-backend`
+- **Request Tracing**: Complete HTTP request flow tracking
+- **Operation Tags**: Detailed operation identification
+- **Error Tracking**: Automatic error detection and tagging
+- **Performance Metrics**: Request duration and timing analysis
+
+#### Trace Operations
+- `GET /api/appointments` - Retrieve all appointments
+- `POST /api/appointments` - Create new appointment
+- `DELETE /api/appointments/:id` - Delete appointment
+- `GET /api/health` - Health check endpoint
+- `GET /api/metrics` - Prometheus metrics endpoint
+
+#### Demo Usage
+1. **Access Jaeger UI**: http://localhost:16686
+2. **Generate Traces**: Make API calls to create traces
+3. **View Traces**: Select `healthcare-backend` service
+4. **Analyze Performance**: Review request timing and flow
+5. **Debug Issues**: Use trace data for troubleshooting
+
+#### Example Trace Generation
+```bash
+# Generate traces for demo
+curl http://localhost:8082/api/appointments
+curl -X POST http://localhost:8082/api/appointments \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Demo Appointment","description":"Testing Jaeger tracing"}'
+```
 
 ### Stage 1: Build & Package
 - **Frontend Build**: React application with production optimizations
@@ -592,12 +615,12 @@ npm install
 docker-compose up -d
 
 # Access the application
-# Frontend: http://localhost:30285
-# Backend API: http://localhost:30285/api
-# Grafana: http://localhost:30285/staging/grafana
-# Prometheus: http://localhost:30285/staging/prometheus
-# Alertmanager: http://localhost:30285/staging/alertmanager
-# MongoDB Exporter: http://localhost:30285/staging/mongodb-exporter
+# Frontend: http://localhost:8082
+# Backend API: http://localhost:8083/api
+# Grafana: http://localhost:3000
+# Prometheus: http://localhost:9090
+# Jaeger: http://localhost:16686
+# Alertmanager: http://localhost:9093
 ```
 
 ### Jenkins Pipeline Setup
