@@ -1298,7 +1298,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                         
                                         # Check if backend pods are running
                                         echo "Checking backend pod status..."
-                                        kubectl get pods -n healthcare-staging -l app=healthcare-app,component=backend
+                                        kubectl get pods -n healthcare-staging -l app=healthcare-app,component=mongodb
                                         
                                         # Set up port forwarding for backend service
                                         echo "Setting up port forwarding from localhost:8083 to backend:5001..."
@@ -1334,7 +1334,7 @@ Please check the Jenkins console output for complete build logs.""", 'danger')
                                             echo "Port forward logs:"
                                             cat /tmp/port-forward.log || true
                                             echo "Backend service logs:"
-                                            kubectl logs -n healthcare-staging -l app=healthcare-app,component=backend --tail=50 || true
+                                            kubectl logs -n healthcare-staging -l app=healthcare-app,component=mongodb --tail=50 || true
                                             echo "Skipping API tests - backend service not accessible"
                                             kill \$PORT_FORWARD_PID 2>/dev/null || true
                                             API_TESTS_TOTAL=0
@@ -5769,11 +5769,11 @@ EOF
                                     
                                     # Also check MongoDB pods specifically
                                     echo "Checking for MongoDB pods..."
-                                    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=backend,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
+                                    if kubectl wait --for=condition=ready pod -l app=healthcare-app,component=mongodb,environment=staging -n healthcare-staging --timeout=60s 2>/dev/null; then
                                         echo "✅ MongoDB pods are ready"
                                     else
                                         echo "⚠️ MongoDB pods not found with Terraform labels, checking any MongoDB pods..."
-                                        kubectl get pods -n healthcare-staging -l component=backend 2>/dev/null || echo "No MongoDB pods found"
+                                        kubectl get pods -n healthcare-staging -l component=mongodb 2>/dev/null || echo "No MongoDB pods found"
                                     fi
                                     
                                     if [ "$POD_READY" = false ]; then
@@ -6012,7 +6012,7 @@ EOF
                                         fi
                                             
                                             # Check backend containers (running as sidecars in MongoDB StatefulSet)
-                                            MONGODB_PODS=$(kubectl get pods -l component=backend,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
+                                            MONGODB_PODS=$(kubectl get pods -l component=mongodb,environment=staging -n healthcare-staging -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "")
                                             if [ -n "$MONGODB_PODS" ]; then
                                                 for pod in $MONGODB_PODS; do
                                                     POD_READY=$(kubectl get pod $pod -n healthcare-staging -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "False")
