@@ -19,6 +19,9 @@ RUN if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; else npm
 COPY server/ ./server/
 COPY .env* ./
 
+# Install backend-specific dependencies
+RUN cd server && npm install express mongoose cors prom-client dotenv jaeger-client
+
 # Create a simple package.json for the backend service
 RUN echo '{"name":"healthcare-app-backend","version":"1.0.0","main":"server/server.js","scripts":{"start":"node server/server.js"}}' > package.json
 

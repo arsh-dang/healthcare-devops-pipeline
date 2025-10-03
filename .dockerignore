@@ -12,3 +12,7 @@
 !.dockerignore
 !tsconfig.json
 !vite.config.ts
+
+# Include backend files for backend builds
+!server/
+!Dockerfile.backend

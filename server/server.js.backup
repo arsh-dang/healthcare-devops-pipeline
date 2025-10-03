@@ -12,37 +12,6 @@ try {
   console.warn("Datadog APM not initialized:", e.message);
 }
 
-// Initialize Jaeger tracing
-let tracer;
-try {
-  const { initTracer } = require('jaeger-client');
-  
-  const config = {
-    serviceName: 'healthcare-backend',
-    sampler: {
-      type: 'const',
-      param: 1, // Sample all traces for demo purposes
-    },
-    reporter: {
-      logSpans: true,
-      agentHost: process.env.JAEGER_AGENT_HOST || 'jaeger.monitoring-staging.svc.cluster.local',
-      agentPort: process.env.JAEGER_AGENT_PORT || 6832,
-    },
-  };
-  
-  const options = {
-    logger: {
-      info: (msg) => console.log('INFO:', msg),
-      error: (msg) => console.error('ERROR:', msg),
-    },
-  };
-  
-  tracer = initTracer(config, options);
-  console.log('Jaeger tracing initialized successfully');
-} catch (e) {
-  console.warn('Jaeger tracing not initialized:', e.message);
-}
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -82,24 +51,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Jaeger tracing middleware
-app.use((req, res, next) => {
-  if (tracer) {
-    const span = tracer.startSpan(`${req.method} ${req.path}`);
-    span.setTag('http.method', req.method);
-    span.setTag('http.url', req.url);
-    span.setTag('http.user_agent', req.get('User-Agent'));
-    
-    req.span = span;
-    
-    res.on('finish', () => {
-      span.setTag('http.status_code', res.statusCode);
-      span.finish();
-    });
-  }
-  next();
-});
-
 // Metrics middleware
 app.use((req, res, next) => {
   const start = process.hrtime();
@@ -119,6 +70,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Metrics endpoint
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    res.status(500).end(err);
+  }
+});
+
 // Routes
 app.use("/api/appointments", appointmentRoutes);
 
@@ -127,17 +88,10 @@ app.use("/api/gdpr", require("./routes/gdprRoutes"));
 
 // API routes for ingress rewriting
 app.get("/api/", (req, res) => {
-  if (req.span) {
-    req.span.setTag('operation', 'api-root');
-  }
   res.send("Healthcare Appointment API is running");
 });
 
 app.get("/api/health", (req, res) => {
-  if (req.span) {
-    req.span.setTag('operation', 'health-check');
-  }
-  
   // Check MongoDB connection status
   const mongoStatus = mongoose.connection.readyState;
   const isMongoConnected = mongoStatus === 1; // 1 = connected
@@ -150,10 +104,6 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/api/metrics", async (req, res) => {
-  if (req.span) {
-    req.span.setTag('operation', 'metrics');
-  }
-  
   try {
     res.set("Content-Type", register.contentType);
     res.end(await register.metrics());
@@ -164,18 +114,11 @@ app.get("/api/metrics", async (req, res) => {
 
 // Root route
 app.get("/", (req, res) => {
-  if (req.span) {
-    req.span.setTag('operation', 'root');
-  }
   res.send("Healthcare Appointment API is running");
 });
 
 // Health check endpoint
 app.get("/health", (req, res) => {
-  if (req.span) {
-    req.span.setTag('operation', 'health');
-  }
-  
   // Check MongoDB connection status
   const mongoStatus = mongoose.connection.readyState;
   const isMongoConnected = mongoStatus === 1; // 1 = connected
